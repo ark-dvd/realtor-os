@@ -1,32 +1,135 @@
+import Image from 'next/image'
+import Link from 'next/link'
+import { Phone, Mail, Award, Users, Home, Star } from 'lucide-react'
+import { CTASection } from '@/components/CTASection'
+
+export const metadata = {
+  title: 'About',
+  description: 'Learn more about Merav Berko, your trusted Austin real estate expert.',
+}
+
+const stats = [
+  { icon: Home, value: '12+', label: 'Years in Austin' },
+  { icon: Award, value: 'B.A.', label: 'Management' },
+  { icon: Star, value: '5★', label: 'Service' },
+  { icon: Users, value: '100%', label: 'Dedication' },
+]
+
 export default function AboutPage() {
   return (
     <>
-      <section className="pt-32 pb-20 bg-neutral-charcoal text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <span className="inline-block w-12 h-px bg-accent-gold mb-6" />
-          <h1 className="font-heading text-5xl md:text-6xl mb-6">About Us</h1>
-          <p className="text-white/70 text-xl">Dedicated to helping you find your perfect home</p>
+      {/* Hero */}
+      <section className="pt-32 pb-20 bg-brand-navy text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <Image
+            src="/images/hero-3.jpg"
+            alt=""
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="container-wide relative z-10">
+          <div className="max-w-3xl">
+            <div className="gold-line mb-6" />
+            <h1 className="font-display text-hero mb-6">About Merav</h1>
+            <p className="text-xl text-white/70">
+              Dedicated to helping you navigate Austin&apos;s real estate market with 
+              expertise, integrity, and personalized attention.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="py-24 bg-neutral-cream">
-        <div className="max-w-4xl mx-auto px-6">
-          <p className="text-lg text-neutral-slate leading-relaxed mb-6">
-            With over 15 years of experience in the luxury real estate market, 
-            we have dedicated our careers to helping clients find their perfect homes 
-            and achieve their real estate goals.
-          </p>
-          <p className="text-lg text-neutral-slate leading-relaxed mb-6">
-            Our approach combines deep market knowledge with personalized attention 
-            to ensure every transaction is seamless and successful.
-          </p>
-          <p className="text-lg text-neutral-slate leading-relaxed">
-            We believe that buying or selling a home is more than just a transaction—it&apos;s 
-            a life-changing decision. That&apos;s why we take the time to understand each 
-            client&apos;s unique needs.
-          </p>
+      {/* Main Content */}
+      <section className="section-padding bg-brand-cream">
+        <div className="container-wide">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+            {/* Image */}
+            <div className="relative lg:sticky lg:top-32">
+              <div className="relative aspect-[4/5] overflow-hidden">
+                <Image
+                  src="/images/merav-berko.jpg"
+                  alt="Merav Berko"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+              </div>
+              <div className="absolute -bottom-4 -right-4 w-full h-full border-2 border-brand-gold -z-10 hidden lg:block" />
+            </div>
+
+            {/* Content */}
+            <div>
+              <h2 className="font-display text-title text-brand-navy mb-2">
+                Merav Berko
+              </h2>
+              <p className="text-brand-gold font-medium mb-8">
+                REALTOR® | Austin Luxury Specialist
+              </p>
+
+              <div className="prose prose-lg max-w-none text-neutral-600">
+                <p className="drop-cap">
+                  Merav Berko holds a Bachelor of Arts in Management from Israel&apos;s Open University 
+                  and brings over 12 years of experience living in Austin to her work in real estate. 
+                  Her deep understanding of the city—its neighborhoods, culture, and evolving market—allows 
+                  her to guide clients with clarity and confidence.
+                </p>
+                
+                <p>
+                  With a refined eye for design, a strong foundation in investment strategy, and 
+                  meticulous attention to detail, Merav is committed to exceeding her clients&apos; 
+                  expectations at every step. She prides herself on delivering the highest level 
+                  of service, ensuring each client feels supported, informed, and fully understood 
+                  throughout their real estate journey.
+                </p>
+
+                <p>
+                  Whether you&apos;re buying, selling, or investing, Merav Berko is ready to help 
+                  you navigate the Austin market with expertise and care.
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 mt-8 border-y border-neutral-200">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <stat.icon className="w-8 h-8 text-brand-gold mx-auto mb-2" />
+                    <p className="font-display text-3xl text-brand-navy">{stat.value}</p>
+                    <p className="text-sm text-neutral-500 uppercase tracking-wider">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contact */}
+              <div className="bg-white p-8 mt-8 border border-neutral-200">
+                <h3 className="font-display text-2xl text-brand-navy mb-6">Get in Touch</h3>
+                <div className="space-y-4">
+                  <a 
+                    href="tel:+15125550123" 
+                    className="flex items-center gap-4 text-neutral-600 hover:text-brand-gold transition-colors"
+                  >
+                    <Phone size={20} className="text-brand-gold" />
+                    (512) 555-0123
+                  </a>
+                  <a 
+                    href="mailto:merav@meravberko.com" 
+                    className="flex items-center gap-4 text-neutral-600 hover:text-brand-gold transition-colors"
+                  >
+                    <Mail size={20} className="text-brand-gold" />
+                    merav@meravberko.com
+                  </a>
+                </div>
+                <Link href="/contact" className="btn-gold w-full justify-center mt-6">
+                  Schedule a Consultation
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
+
+      <CTASection />
     </>
   )
 }
