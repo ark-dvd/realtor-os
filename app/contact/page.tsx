@@ -174,40 +174,40 @@ export default function ContactPage() {
               <div className="flex items-center gap-6 mb-10">
                 <div className="relative w-24 h-24 rounded-full overflow-hidden">
                   <Image
-                    src="/images/merrav-berko.jpg"
-                    alt="Merrav Berko"
+                    src="/images/merav-berko.jpg"
+                    alt="Merav Berko"
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div>
-                  <h3 className="font-display text-2xl text-brand-navy">Merrav Berko</h3>
+                  <h3 className="font-display text-2xl text-brand-navy">Merav Berko</h3>
                   <p className="text-neutral-500">REALTOR® | Austin Specialist</p>
                 </div>
               </div>
 
               {/* Contact Details */}
               <div className="space-y-6 mb-10">
-                <a href="tel:+15125550123" className="flex items-start gap-4 group">
+                <a href="tel:+15125999995" className="flex items-start gap-4 group">
                   <div className="w-12 h-12 rounded-full bg-brand-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-gold transition-colors">
                     <Phone size={20} className="text-brand-gold group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <p className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Phone</p>
                     <p className="text-lg text-brand-navy group-hover:text-brand-gold transition-colors">
-                      (512) 555-0123
+                      (512) 599-9995
                     </p>
                   </div>
                 </a>
 
-                <a href="mailto:merrav@merravberko.com" className="flex items-start gap-4 group">
+                <a href="mailto:merav@meravberko.com" className="flex items-start gap-4 group">
                   <div className="w-12 h-12 rounded-full bg-brand-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-gold transition-colors">
                     <Mail size={20} className="text-brand-gold group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <p className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Email</p>
                     <p className="text-lg text-brand-navy group-hover:text-brand-gold transition-colors">
-                      merrav@merravberko.com
+                      merav@meravberko.com
                     </p>
                   </div>
                 </a>

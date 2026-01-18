@@ -43,18 +43,18 @@ export function CTASection() {
           {/* Contact Info */}
           <div className="mt-12 pt-12 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-8">
             <a 
-              href="tel:+15125550123" 
+              href="tel:+15125999995" 
               className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
             >
               <span className="text-brand-gold">📞</span>
-              (512) 555-0123
+              (512) 599-9995
             </a>
             <a 
-              href="mailto:merrav@merravberko.com" 
+              href="mailto:merav@meravberko.com" 
               className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
             >
               <span className="text-brand-gold">✉️</span>
-              merrav@merravberko.com
+              merav@meravberko.com
             </a>
           </div>
         </div>

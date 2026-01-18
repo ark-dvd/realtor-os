@@ -85,7 +85,7 @@ const defaultProperty = {
   lotSize: 0.25,
   yearBuilt: 2015,
   status: 'For Sale',
-  description: `This beautiful property is available for viewing. Contact Merrav Berko for more details about this listing and to schedule a private showing.`,
+  description: `This beautiful property is available for viewing. Contact Merav Berko for more details about this listing and to schedule a private showing.`,
   features: [
     'Modern finishes',
     'Open floor plan',
@@ -254,32 +254,32 @@ export default function PropertyPage({ params }: { params: { slug: string } }) {
                   <div className="flex items-center gap-4 mb-6">
                     <div className="relative w-16 h-16 rounded-full overflow-hidden">
                       <Image
-                        src="/images/merrav-berko.jpg"
-                        alt="Merrav Berko"
+                        src="/images/merav-berko.jpg"
+                        alt="Merav Berko"
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div>
-                      <p className="font-display text-lg text-brand-navy">Merrav Berko</p>
+                      <p className="font-display text-lg text-brand-navy">Merav Berko</p>
                       <p className="text-neutral-500 text-sm">REALTOR®</p>
                     </div>
                   </div>
 
                   <div className="space-y-3 mb-6">
                     <a 
-                      href="tel:+15125550123" 
+                      href="tel:+15125999995" 
                       className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
                     >
                       <Phone size={18} className="text-brand-gold" />
-                      (512) 555-0123
+                      (512) 599-9995
                     </a>
                     <a 
-                      href="mailto:merrav@merravberko.com" 
+                      href="mailto:merav@meravberko.com" 
                       className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
                     >
                       <Mail size={18} className="text-brand-gold" />
-                      merrav@merravberko.com
+                      merav@meravberko.com
                     </a>
                   </div>
 

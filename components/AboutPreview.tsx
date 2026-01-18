@@ -10,8 +10,8 @@ export function AboutPreview() {
           <div className="relative">
             <div className="relative aspect-[4/5] overflow-hidden">
               <Image
-                src="/images/merrav-berko.jpg"
-                alt="Merrav Berko - Austin Real Estate Agent"
+                src="/images/merav-berko.jpg"
+                alt="Merav Berko - Austin Real Estate Agent"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -25,17 +25,17 @@ export function AboutPreview() {
           <div>
             <div className="gold-line mb-8" />
             <h2 className="font-display text-display text-brand-navy mb-6">
-              Meet Merrav Berko
+              Meet Merav Berko
             </h2>
             <p className="text-neutral-600 text-lg leading-relaxed mb-6">
-              Merrav Berko holds a Bachelor of Arts in Management from Israel&apos;s Open University 
+              Merav Berko holds a Bachelor of Arts in Management from Israel&apos;s Open University 
               and brings over 12 years of experience living in Austin to her work in real estate. 
               Her deep understanding of the city—its neighborhoods, culture, and evolving market—allows 
               her to guide clients with clarity and confidence.
             </p>
             <p className="text-neutral-600 text-lg leading-relaxed mb-8">
               With a refined eye for design, a strong foundation in investment strategy, and 
-              meticulous attention to detail, Merrav is committed to exceeding her clients&apos; 
+              meticulous attention to detail, Merav is committed to exceeding her clients&apos; 
               expectations at every step.
             </p>
 

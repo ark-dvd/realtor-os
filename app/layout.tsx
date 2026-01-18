@@ -5,11 +5,11 @@ import { Footer } from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Merrav Berko Real Estate',
-    default: 'Merrav Berko - Austin Luxury Real Estate',
+    template: '%s | Merav Berko Real Estate',
+    default: 'Merav Berko - Austin Luxury Real Estate',
   },
   description: 'Your trusted partner for luxury real estate in Austin, Texas. Personalized service, local expertise, exceptional results.',
-  keywords: ['Austin real estate', 'luxury homes', 'Merrav Berko', 'Texas realtor', 'home buying', 'home selling'],
+  keywords: ['Austin real estate', 'luxury homes', 'Merav Berko', 'Texas realtor', 'home buying', 'home selling'],
 }
 
 export const viewport: Viewport = {

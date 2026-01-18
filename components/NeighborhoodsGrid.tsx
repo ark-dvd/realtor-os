@@ -1,40 +1,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
-
-const neighborhoods = [
-  {
-    name: 'Downtown Austin',
-    image: 'https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=600&q=80',
-    slug: 'downtown-austin',
-  },
-  {
-    name: 'Westlake',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80',
-    slug: 'westlake',
-  },
-  {
-    name: 'Tarrytown',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
-    slug: 'tarrytown',
-  },
-  {
-    name: 'Zilker',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600&q=80',
-    slug: 'zilker',
-  },
-  {
-    name: 'Travis Heights',
-    image: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600&q=80',
-    slug: 'travis-heights',
-  },
-  {
-    name: 'East Austin',
-    image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80',
-    slug: 'east-austin',
-  },
-]
+import { neighborhoods } from '@/lib/neighborhoods-data'
 
 export function NeighborhoodsGrid() {
+  // Show only 6 neighborhoods on homepage
+  const featuredNeighborhoods = neighborhoods.slice(0, 6)
+
   return (
     <section className="section-padding bg-white">
       <div className="container-wide">
@@ -52,7 +23,7 @@ export function NeighborhoodsGrid() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {neighborhoods.map((neighborhood, index) => (
+          {featuredNeighborhoods.map((neighborhood, index) => (
             <Link
               key={neighborhood.slug}
               href={`/neighborhoods/${neighborhood.slug}`}

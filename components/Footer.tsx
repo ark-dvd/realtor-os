@@ -10,7 +10,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="font-display text-3xl font-medium">
-              Merrav Berko
+              Merav Berko
             </Link>
             <p className="mt-4 text-white/70 leading-relaxed">
               Your trusted partner for luxury real estate in Austin. 
@@ -71,7 +71,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/about" className="text-white/70 hover:text-brand-gold transition-colors">
-                  About Merrav
+                  About Merav
                 </Link>
               </li>
             </ul>
@@ -115,20 +115,20 @@ export function Footer() {
             <ul className="space-y-4">
               <li>
                 <a 
-                  href="tel:+15125550123" 
+                  href="tel:+15125999995" 
                   className="flex items-center gap-3 text-white/70 hover:text-brand-gold transition-colors"
                 >
                   <Phone size={18} className="text-brand-gold" />
-                  (512) 555-0123
+                  (512) 599-9995
                 </a>
               </li>
               <li>
                 <a 
-                  href="mailto:merrav@merravberko.com" 
+                  href="mailto:merav@meravberko.com" 
                   className="flex items-center gap-3 text-white/70 hover:text-brand-gold transition-colors"
                 >
                   <Mail size={18} className="text-brand-gold" />
-                  merrav@merravberko.com
+                  merav@meravberko.com
                 </a>
               </li>
               <li>
@@ -148,7 +148,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container-wide py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/50 text-sm">
-            © {new Date().getFullYear()} Merrav Berko Real Estate. All rights reserved.
+            © {new Date().getFullYear()} Merav Berko Real Estate. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
             <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
@@ -165,6 +165,9 @@ export function Footer() {
             >
               TREC Consumer Protection
             </a>
+            <Link href="/admin" className="text-white/30 hover:text-white/50 transition-colors">
+              Admin
+            </Link>
           </div>
         </div>
       </div>
