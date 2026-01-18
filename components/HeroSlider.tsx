@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ArrowRight } from 'lucide-react'
 
 const slides = [
   {
@@ -65,7 +65,7 @@ export function HeroSlider() {
       ))}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-brand-navy/60 via-brand-navy/40 to-brand-navy/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
 
       {/* Content */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -76,7 +76,7 @@ export function HeroSlider() {
             Find Your Home in Austin
           </h1>
           
-          <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto mb-10 animate-slide-up animate-delay-200">
+          <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-10 animate-slide-up animate-delay-200">
             Luxury real estate with personalized service. 
             Your journey to the perfect home starts here.
           </p>
@@ -84,8 +84,12 @@ export function HeroSlider() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up animate-delay-300">
             <Link href="/properties" className="btn-gold">
               Browse Properties
+              <ArrowRight size={18} />
             </Link>
-            <Link href="/contact" className="btn-secondary border-white text-white hover:bg-white hover:text-brand-navy">
+            <Link 
+              href="/contact" 
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-navy font-medium tracking-wide transition-all duration-300 ease-out hover:bg-brand-cream"
+            >
               Schedule a Consultation
             </Link>
           </div>

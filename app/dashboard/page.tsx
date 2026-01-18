@@ -124,7 +124,7 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
         <p className="text-center text-sm text-neutral-500 mt-6">
           Not a client yet?{' '}
           <a href="/contact" className="text-brand-gold hover:underline">
-            Contact Merav
+            Contact Merrav
           </a>
         </p>
       </div>
@@ -218,14 +218,14 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-4 mb-6">
                     <div className="relative w-16 h-16 rounded-full overflow-hidden">
                       <Image
-                        src="/images/merav-berko.jpg"
-                        alt="Merav Berko"
+                        src="/images/merrav-berko.jpg"
+                        alt="Merrav Berko"
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div>
-                      <p className="font-display text-lg text-brand-navy">Merav Berko</p>
+                      <p className="font-display text-lg text-brand-navy">Merrav Berko</p>
                       <p className="text-neutral-500 text-sm">REALTOR®</p>
                     </div>
                   </div>
@@ -238,11 +238,11 @@ export default function DashboardPage() {
                       (512) 555-0123
                     </a>
                     <a 
-                      href="mailto:merav@meravberko.com" 
+                      href="mailto:merrav@merravberko.com" 
                       className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
                     >
                       <Mail size={18} className="text-brand-gold" />
-                      merav@meravberko.com
+                      merrav@merravberko.com
                     </a>
                   </div>
                   <a href="/contact" className="btn-primary w-full justify-center mt-6">

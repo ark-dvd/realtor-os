@@ -32,7 +32,10 @@ export function CTASection() {
             <Link href="/contact" className="btn-gold">
               Schedule a Consultation
             </Link>
-            <Link href="/properties" className="btn-secondary border-white text-white hover:bg-white hover:text-brand-navy">
+            <Link 
+              href="/properties" 
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-navy font-medium tracking-wide transition-all duration-300 ease-out hover:bg-brand-cream"
+            >
               Browse Properties
             </Link>
           </div>
@@ -47,11 +50,11 @@ export function CTASection() {
               (512) 555-0123
             </a>
             <a 
-              href="mailto:merav@meravberko.com" 
+              href="mailto:merrav@merravberko.com" 
               className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
             >
               <span className="text-brand-gold">✉️</span>
-              merav@meravberko.com
+              merrav@merravberko.com
             </a>
           </div>
         </div>

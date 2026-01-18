@@ -5,7 +5,7 @@ import { CTASection } from '@/components/CTASection'
 
 export const metadata = {
   title: 'About',
-  description: 'Learn more about Merav Berko, your trusted Austin real estate expert.',
+  description: 'Learn more about Merrav Berko, your trusted Austin real estate expert.',
 }
 
 const stats = [
@@ -31,7 +31,7 @@ export default function AboutPage() {
         <div className="container-wide relative z-10">
           <div className="max-w-3xl">
             <div className="gold-line mb-6" />
-            <h1 className="font-display text-hero mb-6">About Merav</h1>
+            <h1 className="font-display text-hero mb-6">About Merrav</h1>
             <p className="text-xl text-white/70">
               Dedicated to helping you navigate Austin&apos;s real estate market with 
               expertise, integrity, and personalized attention.
@@ -48,8 +48,8 @@ export default function AboutPage() {
             <div className="relative lg:sticky lg:top-32">
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image
-                  src="/images/merav-berko.jpg"
-                  alt="Merav Berko"
+                  src="/images/merrav-berko.jpg"
+                  alt="Merrav Berko"
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -62,7 +62,7 @@ export default function AboutPage() {
             {/* Content */}
             <div>
               <h2 className="font-display text-title text-brand-navy mb-2">
-                Merav Berko
+                Merrav Berko
               </h2>
               <p className="text-brand-gold font-medium mb-8">
                 REALTOR® | Austin Luxury Specialist
@@ -70,7 +70,7 @@ export default function AboutPage() {
 
               <div className="prose prose-lg max-w-none text-neutral-600">
                 <p className="drop-cap">
-                  Merav Berko holds a Bachelor of Arts in Management from Israel&apos;s Open University 
+                  Merrav Berko holds a Bachelor of Arts in Management from Israel&apos;s Open University 
                   and brings over 12 years of experience living in Austin to her work in real estate. 
                   Her deep understanding of the city—its neighborhoods, culture, and evolving market—allows 
                   her to guide clients with clarity and confidence.
@@ -78,14 +78,14 @@ export default function AboutPage() {
                 
                 <p>
                   With a refined eye for design, a strong foundation in investment strategy, and 
-                  meticulous attention to detail, Merav is committed to exceeding her clients&apos; 
+                  meticulous attention to detail, Merrav is committed to exceeding her clients&apos; 
                   expectations at every step. She prides herself on delivering the highest level 
                   of service, ensuring each client feels supported, informed, and fully understood 
                   throughout their real estate journey.
                 </p>
 
                 <p>
-                  Whether you&apos;re buying, selling, or investing, Merav Berko is ready to help 
+                  Whether you&apos;re buying, selling, or investing, Merrav Berko is ready to help 
                   you navigate the Austin market with expertise and care.
                 </p>
               </div>
@@ -113,11 +113,11 @@ export default function AboutPage() {
                     (512) 555-0123
                   </a>
                   <a 
-                    href="mailto:merav@meravberko.com" 
+                    href="mailto:merrav@merravberko.com" 
                     className="flex items-center gap-4 text-neutral-600 hover:text-brand-gold transition-colors"
                   >
                     <Mail size={20} className="text-brand-gold" />
-                    merav@meravberko.com
+                    merrav@merravberko.com
                   </a>
                 </div>
                 <Link href="/contact" className="btn-gold w-full justify-center mt-6">
