@@ -3,31 +3,8 @@
 // Listing page with filters and grid display
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { headers } from 'next/headers'
-import { sanityClient } from '@/lib/sanity/client'
-import { PROPERTIES_BY_TENANT } from '@/lib/sanity/queries'
 import { PropertiesGrid } from './PropertiesGrid'
-import type { PropertyCard } from '@/lib/types'
 import type { Metadata } from 'next'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DATA FETCHING
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function getProperties() {
-  const headersList = headers()
-  const domain = headersList.get('x-tenant-domain') || 
-                 process.env.DEFAULT_TENANT_DOMAIN ||
-                 'demo.realtoros.com'
-
-  const properties = await sanityClient.fetch<PropertyCard[]>(
-    PROPERTIES_BY_TENANT,
-    { currentDomain: domain },
-    { next: { revalidate: 60 } }
-  )
-
-  return properties || []
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // METADATA
@@ -42,8 +19,9 @@ export const metadata: Metadata = {
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function PropertiesPage() {
-  const properties = await getProperties()
+export default function PropertiesPage() {
+  // Empty array for demo (properties will be fetched from Sanity when configured)
+  const properties: never[] = []
 
   return (
     <>

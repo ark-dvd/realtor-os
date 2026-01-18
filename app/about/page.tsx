@@ -3,47 +3,18 @@
 // Agent biography and credentials
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { headers } from 'next/headers'
-import Image from 'next/image'
 import Link from 'next/link'
-import { PortableText } from '@portabletext/react'
 import { Award, Users, Home, Star, Phone, Mail, MapPin } from 'lucide-react'
-
-import { sanityClient, getImageUrl } from '@/lib/sanity/client'
-import { AGENT_SETTINGS_BY_DOMAIN } from '@/lib/sanity/queries'
-import type { AgentSettings } from '@/lib/types'
+import { DEMO_TENANT } from '@/lib/sanity/client'
 import type { Metadata } from 'next'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DATA FETCHING
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function getTenant() {
-  const headersList = headers()
-  const domain = headersList.get('x-tenant-domain') || 
-                 process.env.DEFAULT_TENANT_DOMAIN ||
-                 'demo.realtoros.com'
-
-  const tenant = await sanityClient.fetch<AgentSettings>(
-    AGENT_SETTINGS_BY_DOMAIN,
-    { currentDomain: domain },
-    { next: { revalidate: 60 } }
-  )
-
-  return tenant
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // METADATA
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function generateMetadata(): Promise<Metadata> {
-  const tenant = await getTenant()
-  
-  return {
-    title: `About ${tenant?.agentName || 'Us'}`,
-    description: `Learn more about ${tenant?.agentName || 'your trusted real estate professional'}`,
-  }
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn more about your trusted real estate professional',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,27 +29,11 @@ const STATS = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PORTABLE TEXT
-// ─────────────────────────────────────────────────────────────────────────────
-
-const portableTextComponents = {
-  block: {
-    normal: ({ children }: { children: React.ReactNode }) => (
-      <p className="text-neutral-slate leading-relaxed mb-6 text-lg">{children}</p>
-    ),
-  },
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function AboutPage() {
-  const tenant = await getTenant()
-
-  const agentImage = tenant?.agentImage
-    ? getImageUrl(tenant.agentImage, { width: 800, height: 1000, fit: 'crop' })
-    : '/images/placeholder-agent.jpg'
+export default function AboutPage() {
+  const tenant = DEMO_TENANT
 
   return (
     <>
@@ -103,15 +58,10 @@ export default async function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
             {/* Image Column */}
             <div className="relative lg:sticky lg:top-32">
-              <div className="relative aspect-[4/5] overflow-hidden">
-                <Image
-                  src={agentImage}
-                  alt={tenant?.agentName || 'Real Estate Agent'}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
+              <div className="relative aspect-[4/5] overflow-hidden bg-neutral-charcoal/10">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-6xl">👩‍💼</span>
+                </div>
               </div>
               {/* Decorative Frame */}
               <div className="absolute -bottom-4 -right-4 w-full h-full border border-accent-gold pointer-events-none -z-10" />
@@ -121,34 +71,25 @@ export default async function AboutPage() {
             <div>
               {/* Bio */}
               <div className="mb-12">
-                {tenant?.agentBio ? (
-                  <PortableText 
-                    value={tenant.agentBio} 
-                    components={portableTextComponents}
-                  />
-                ) : (
-                  <>
-                    <p className="text-neutral-slate leading-relaxed mb-6 text-lg drop-cap">
-                      With over 15 years of experience in the luxury real estate market, 
-                      I have dedicated my career to helping clients find their perfect homes 
-                      and achieve their real estate goals. My approach combines deep market 
-                      knowledge with personalized attention to ensure every transaction is 
-                      seamless and successful.
-                    </p>
-                    <p className="text-neutral-slate leading-relaxed mb-6 text-lg">
-                      I believe that buying or selling a home is more than just a transaction—it&apos;s 
-                      a life-changing decision. That&apos;s why I take the time to understand each 
-                      client&apos;s unique needs, preferences, and timeline, providing tailored 
-                      guidance every step of the way.
-                    </p>
-                    <p className="text-neutral-slate leading-relaxed text-lg">
-                      My commitment to excellence has earned me recognition as a top producer 
-                      in my market, but what I value most are the lasting relationships I build 
-                      with my clients. Many of them become friends for life, and their referrals 
-                      are the greatest compliment I can receive.
-                    </p>
-                  </>
-                )}
+                <p className="text-neutral-slate leading-relaxed mb-6 text-lg drop-cap">
+                  With over 15 years of experience in the luxury real estate market, 
+                  I have dedicated my career to helping clients find their perfect homes 
+                  and achieve their real estate goals. My approach combines deep market 
+                  knowledge with personalized attention to ensure every transaction is 
+                  seamless and successful.
+                </p>
+                <p className="text-neutral-slate leading-relaxed mb-6 text-lg">
+                  I believe that buying or selling a home is more than just a transaction—it&apos;s 
+                  a life-changing decision. That&apos;s why I take the time to understand each 
+                  client&apos;s unique needs, preferences, and timeline, providing tailored 
+                  guidance every step of the way.
+                </p>
+                <p className="text-neutral-slate leading-relaxed text-lg">
+                  My commitment to excellence has earned me recognition as a top producer 
+                  in my market, but what I value most are the lasting relationships I build 
+                  with my clients. Many of them become friends for life, and their referrals 
+                  are the greatest compliment I can receive.
+                </p>
               </div>
 
               {/* Stats */}
@@ -172,35 +113,24 @@ export default async function AboutPage() {
                   Get in Touch
                 </h3>
                 <div className="space-y-4">
-                  {tenant?.contactInfo?.phone && (
-                    <a
-                      href={`tel:${tenant.contactInfo.phone}`}
-                      className="flex items-center gap-4 text-neutral-slate hover:text-accent-gold transition-colors"
-                    >
-                      <Phone size={20} className="text-accent-gold" />
-                      <span>{tenant.contactInfo.phone}</span>
-                    </a>
-                  )}
-                  {tenant?.contactInfo?.email && (
-                    <a
-                      href={`mailto:${tenant.contactInfo.email}`}
-                      className="flex items-center gap-4 text-neutral-slate hover:text-accent-gold transition-colors"
-                    >
-                      <Mail size={20} className="text-accent-gold" />
-                      <span>{tenant.contactInfo.email}</span>
-                    </a>
-                  )}
-                  {tenant?.contactInfo?.address && (
-                    <div className="flex items-start gap-4 text-neutral-slate">
-                      <MapPin size={20} className="text-accent-gold flex-shrink-0 mt-0.5" />
-                      <span>
-                        {tenant.contactInfo.address}
-                        {tenant.contactInfo.city && `, ${tenant.contactInfo.city}`}
-                        {tenant.contactInfo.state && `, ${tenant.contactInfo.state}`}
-                        {tenant.contactInfo.zip && ` ${tenant.contactInfo.zip}`}
-                      </span>
-                    </div>
-                  )}
+                  <a
+                    href={`tel:${tenant?.contactInfo?.phone}`}
+                    className="flex items-center gap-4 text-neutral-slate hover:text-accent-gold transition-colors"
+                  >
+                    <Phone size={20} className="text-accent-gold" />
+                    <span>{tenant?.contactInfo?.phone || '(512) 555-0123'}</span>
+                  </a>
+                  <a
+                    href={`mailto:${tenant?.contactInfo?.email}`}
+                    className="flex items-center gap-4 text-neutral-slate hover:text-accent-gold transition-colors"
+                  >
+                    <Mail size={20} className="text-accent-gold" />
+                    <span>{tenant?.contactInfo?.email || 'agent@realtoros.com'}</span>
+                  </a>
+                  <div className="flex items-start gap-4 text-neutral-slate">
+                    <MapPin size={20} className="text-accent-gold flex-shrink-0 mt-0.5" />
+                    <span>Austin, TX</span>
+                  </div>
                 </div>
                 
                 <Link href="/contact" className="btn-accent mt-8 w-full justify-center">

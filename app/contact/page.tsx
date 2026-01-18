@@ -3,34 +3,10 @@
 // Contact form and agent information
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { headers } from 'next/headers'
-import Image from 'next/image'
-import { Phone, Mail, MapPin, Clock, Instagram, Facebook, Linkedin } from 'lucide-react'
-
-import { sanityClient, getImageUrl } from '@/lib/sanity/client'
-import { AGENT_SETTINGS_BY_DOMAIN } from '@/lib/sanity/queries'
+import { Phone, Mail, MapPin, Clock } from 'lucide-react'
 import { ContactForm } from '@/components/ui/ContactForm'
-import type { AgentSettings } from '@/lib/types'
+import { DEMO_TENANT } from '@/lib/sanity/client'
 import type { Metadata } from 'next'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DATA FETCHING
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function getTenant() {
-  const headersList = headers()
-  const domain = headersList.get('x-tenant-domain') || 
-                 process.env.DEFAULT_TENANT_DOMAIN ||
-                 'demo.realtoros.com'
-
-  const tenant = await sanityClient.fetch<AgentSettings>(
-    AGENT_SETTINGS_BY_DOMAIN,
-    { currentDomain: domain },
-    { next: { revalidate: 60 } }
-  )
-
-  return tenant
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // METADATA
@@ -42,25 +18,11 @@ export const metadata: Metadata = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SOCIAL ICONS
-// ─────────────────────────────────────────────────────────────────────────────
-
-const SOCIAL_ICONS: Record<string, React.ElementType> = {
-  instagram: Instagram,
-  facebook: Facebook,
-  linkedin: Linkedin,
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default async function ContactPage() {
-  const tenant = await getTenant()
-
-  const agentImage = tenant?.agentImage
-    ? getImageUrl(tenant.agentImage, { width: 400, height: 400, fit: 'crop' })
-    : '/images/placeholder-agent.jpg'
+export default function ContactPage() {
+  const tenant = DEMO_TENANT
 
   return (
     <>
@@ -100,13 +62,9 @@ export default async function ContactPage() {
             <div className="order-1 lg:order-2">
               {/* Agent Card */}
               <div className="flex items-center gap-6 mb-10">
-                <Image
-                  src={agentImage}
-                  alt={tenant?.agentName || 'Agent'}
-                  width={100}
-                  height={100}
-                  className="rounded-full object-cover"
-                />
+                <div className="w-24 h-24 rounded-full bg-neutral-charcoal/10 flex items-center justify-center">
+                  <span className="text-4xl">👩‍💼</span>
+                </div>
                 <div>
                   <h3 className="font-heading text-2xl text-neutral-charcoal">
                     {tenant?.agentName || 'Your Agent'}
@@ -122,56 +80,47 @@ export default async function ContactPage() {
 
               {/* Contact Details */}
               <div className="space-y-6 mb-10">
-                {tenant?.contactInfo?.phone && (
-                  <a
-                    href={`tel:${tenant.contactInfo.phone}`}
-                    className="flex items-start gap-4 group"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-gold transition-colors">
-                      <Phone size={20} className="text-accent-gold group-hover:text-white transition-colors" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Phone</p>
-                      <p className="text-lg text-neutral-charcoal group-hover:text-accent-gold transition-colors">
-                        {tenant.contactInfo.phone}
-                      </p>
-                    </div>
-                  </a>
-                )}
-
-                {tenant?.contactInfo?.email && (
-                  <a
-                    href={`mailto:${tenant.contactInfo.email}`}
-                    className="flex items-start gap-4 group"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-gold transition-colors">
-                      <Mail size={20} className="text-accent-gold group-hover:text-white transition-colors" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Email</p>
-                      <p className="text-lg text-neutral-charcoal group-hover:text-accent-gold transition-colors">
-                        {tenant.contactInfo.email}
-                      </p>
-                    </div>
-                  </a>
-                )}
-
-                {tenant?.contactInfo?.address && (
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
-                      <MapPin size={20} className="text-accent-gold" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Office</p>
-                      <p className="text-lg text-neutral-charcoal">
-                        {tenant.contactInfo.address}
-                        {tenant.contactInfo.city && <br />}
-                        {tenant.contactInfo.city && `${tenant.contactInfo.city}, `}
-                        {tenant.contactInfo.state} {tenant.contactInfo.zip}
-                      </p>
-                    </div>
+                <a
+                  href={`tel:${tenant?.contactInfo?.phone}`}
+                  className="flex items-start gap-4 group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-gold transition-colors">
+                    <Phone size={20} className="text-accent-gold group-hover:text-white transition-colors" />
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Phone</p>
+                    <p className="text-lg text-neutral-charcoal group-hover:text-accent-gold transition-colors">
+                      {tenant?.contactInfo?.phone || '(512) 555-0123'}
+                    </p>
+                  </div>
+                </a>
+
+                <a
+                  href={`mailto:${tenant?.contactInfo?.email}`}
+                  className="flex items-start gap-4 group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-accent-gold transition-colors">
+                    <Mail size={20} className="text-accent-gold group-hover:text-white transition-colors" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Email</p>
+                    <p className="text-lg text-neutral-charcoal group-hover:text-accent-gold transition-colors">
+                      {tenant?.contactInfo?.email || 'agent@realtoros.com'}
+                    </p>
+                  </div>
+                </a>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
+                    <MapPin size={20} className="text-accent-gold" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-silver uppercase tracking-wider mb-1">Office</p>
+                    <p className="text-lg text-neutral-charcoal">
+                      Austin, TX 78701
+                    </p>
+                  </div>
+                </div>
 
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
@@ -187,34 +136,6 @@ export default async function ContactPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Social Links */}
-              {tenant?.socialLinks && (
-                <div>
-                  <p className="text-sm text-neutral-silver uppercase tracking-wider mb-4">
-                    Follow Me
-                  </p>
-                  <div className="flex gap-3">
-                    {Object.entries(tenant.socialLinks).map(([platform, url]) => {
-                      const Icon = SOCIAL_ICONS[platform]
-                      if (!url || !Icon) return null
-                      
-                      return (
-                        <a
-                          key={platform}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 rounded-full bg-neutral-charcoal text-white flex items-center justify-center hover:bg-accent-gold transition-colors"
-                          aria-label={`Follow on ${platform}`}
-                        >
-                          <Icon size={20} />
-                        </a>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
