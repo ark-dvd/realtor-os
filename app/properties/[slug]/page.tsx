@@ -85,7 +85,7 @@ const defaultProperty = {
   lotSize: 0.25,
   yearBuilt: 2015,
   status: 'For Sale',
-  description: `This beautiful property is available for viewing. Contact Merav Berko for more details about this listing and to schedule a private showing.`,
+  description: `This beautiful property is available for viewing. Contact Merrav Berko for more details about this listing and to schedule a private showing.`,
   features: [
     'Modern finishes',
     'Open floor plan',
@@ -255,13 +255,13 @@ export default function PropertyPage({ params }: { params: { slug: string } }) {
                     <div className="relative w-16 h-16 rounded-full overflow-hidden">
                       <Image
                         src="/images/merav-berko.jpg"
-                        alt="Merav Berko"
+                        alt="Merrav Berko"
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div>
-                      <p className="font-display text-lg text-brand-navy">Merav Berko</p>
+                      <p className="font-display text-lg text-brand-navy">Merrav Berko</p>
                       <p className="text-neutral-500 text-sm">REALTOR®</p>
                     </div>
                   </div>
@@ -275,11 +275,11 @@ export default function PropertyPage({ params }: { params: { slug: string } }) {
                       (512) 599-9995
                     </a>
                     <a 
-                      href="mailto:merav@meravberko.com" 
+                      href="mailto:merrav@merravberko.com" 
                       className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
                     >
                       <Mail size={18} className="text-brand-gold" />
-                      merav@meravberko.com
+                      merrav@merravberko.com
                     </a>
                   </div>
 

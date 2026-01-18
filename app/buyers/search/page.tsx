@@ -5,7 +5,7 @@ import { CTASection } from '@/components/CTASection'
 
 export const metadata = {
   title: 'Find Your Dream Home',
-  description: 'Search for your perfect home in Austin, Texas with Merav Berko.',
+  description: 'Search for your perfect home in Austin, Texas with Merrav Berko.',
 }
 
 export default function BuyersSearchPage() {

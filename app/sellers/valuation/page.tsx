@@ -5,7 +5,7 @@ import { CTASection } from '@/components/CTASection'
 
 export const metadata = {
   title: "Your Home's Value",
-  description: 'Get a free home valuation from Merav Berko, Austin real estate expert.',
+  description: 'Get a free home valuation from Merrav Berko, Austin real estate expert.',
 }
 
 export default function SellersValuationPage() {

@@ -29,26 +29,44 @@ export default {
           { title: 'Buying', value: 'buying' },
           { title: 'Selling', value: 'selling' },
         ],
+        layout: 'radio',
       },
       validation: (Rule: any) => Rule.required(),
     },
     {
       name: 'property',
-      title: 'Property',
+      title: 'Property (if in system)',
       type: 'reference',
       to: [{ type: 'property' }],
     },
     {
       name: 'propertyAddress',
-      title: 'Property Address (if not in system)',
+      title: 'Property Address',
       type: 'string',
+      description: 'Use this if property is not in the system',
+    },
+    {
+      name: 'price',
+      title: 'Transaction Price',
+      type: 'number',
     },
     {
       name: 'transactionStage',
       title: 'Transaction Stage',
       type: 'number',
-      description: '1-8 stages of the transaction',
-      validation: (Rule: any) => Rule.min(1).max(8),
+      description: 'Stage 1-8',
+      options: {
+        list: [
+          { title: '1 - Contract Signed', value: 1 },
+          { title: '2 - Option Period', value: 2 },
+          { title: '3 - Inspection', value: 3 },
+          { title: '4 - Appraisal', value: 4 },
+          { title: '5 - Financing', value: 5 },
+          { title: '6 - Title Work', value: 6 },
+          { title: '7 - Final Walk', value: 7 },
+          { title: '8 - Closing', value: 8 },
+        ],
+      },
       initialValue: 1,
     },
     {
@@ -65,14 +83,10 @@ export default {
       ],
     },
     {
-      name: 'price',
-      title: 'Transaction Price',
-      type: 'number',
-    },
-    {
       name: 'notes',
       title: 'Internal Notes',
       type: 'text',
+      rows: 4,
     },
     {
       name: 'documents',
@@ -82,10 +96,10 @@ export default {
         {
           type: 'file',
           fields: [
-            { name: 'title', title: 'Title', type: 'string' },
-            { 
-              name: 'isPrivate', 
-              title: 'Private (agent only)', 
+            { name: 'title', title: 'Document Title', type: 'string' },
+            {
+              name: 'isPrivate',
+              title: 'Private (Agent Only)',
               type: 'boolean',
               initialValue: false,
             },
@@ -93,18 +107,27 @@ export default {
         },
       ],
     },
+    {
+      name: 'isActive',
+      title: 'Active Deal',
+      type: 'boolean',
+      initialValue: true,
+      description: 'Uncheck when deal is closed',
+    },
   ],
   preview: {
     select: {
       title: 'clientName',
-      subtitle: 'propertyAddress',
+      propertyAddress: 'propertyAddress',
       stage: 'transactionStage',
+      dealType: 'dealType',
+      isActive: 'isActive',
     },
-    prepare({ title, subtitle, stage }: any) {
-      const stages = ['', 'Contract', 'Option Period', 'Inspection', 'Appraisal', 'Financing', 'Title', 'Final Walk', 'Closing']
+    prepare({ title, propertyAddress, stage, dealType, isActive }: any) {
+      const stages = ['', 'Contract', 'Option', 'Inspection', 'Appraisal', 'Financing', 'Title', 'Final Walk', 'Closing']
       return {
-        title,
-        subtitle: `${subtitle || 'Property'} - Stage ${stage}: ${stages[stage] || 'Unknown'}`,
+        title: `${title} ${isActive ? '' : '(Closed)'}`,
+        subtitle: `${dealType === 'buying' ? '🏠 Buying' : '🏷️ Selling'} - Stage ${stage}: ${stages[stage]}`,
       }
     },
   },

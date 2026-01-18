@@ -10,7 +10,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="font-display text-3xl font-medium">
-              Merav Berko
+              Merrav Berko
             </Link>
             <p className="mt-4 text-white/70 leading-relaxed">
               Your trusted partner for luxury real estate in Austin. 
@@ -71,7 +71,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/about" className="text-white/70 hover:text-brand-gold transition-colors">
-                  About Merav
+                  About Merrav
                 </Link>
               </li>
             </ul>
@@ -124,11 +124,11 @@ export function Footer() {
               </li>
               <li>
                 <a 
-                  href="mailto:merav@meravberko.com" 
+                  href="mailto:merrav@merravberko.com" 
                   className="flex items-center gap-3 text-white/70 hover:text-brand-gold transition-colors"
                 >
                   <Mail size={18} className="text-brand-gold" />
-                  merav@meravberko.com
+                  merrav@merravberko.com
                 </a>
               </li>
               <li>
@@ -148,7 +148,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container-wide py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/50 text-sm">
-            © {new Date().getFullYear()} Merav Berko Real Estate. All rights reserved.
+            © {new Date().getFullYear()} Merrav Berko Real Estate. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
             <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">

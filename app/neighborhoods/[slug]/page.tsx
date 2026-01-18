@@ -205,13 +205,13 @@ export default function NeighborhoodPage({ params }: { params: { slug: string } 
                     <div className="relative w-16 h-16 rounded-full overflow-hidden">
                       <Image
                         src="/images/merav-berko.jpg"
-                        alt="Merav Berko"
+                        alt="Merrav Berko"
                         fill
                         className="object-cover"
                       />
                     </div>
                     <div>
-                      <p className="font-display text-lg text-brand-navy">Merav Berko</p>
+                      <p className="font-display text-lg text-brand-navy">Merrav Berko</p>
                       <p className="text-neutral-500 text-sm">Local Expert</p>
                     </div>
                   </div>

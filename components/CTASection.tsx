@@ -50,11 +50,11 @@ export function CTASection() {
               (512) 599-9995
             </a>
             <a 
-              href="mailto:merav@meravberko.com" 
+              href="mailto:merrav@merravberko.com" 
               className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
             >
               <span className="text-brand-gold">✉️</span>
-              merav@meravberko.com
+              merrav@merravberko.com
             </a>
           </div>
         </div>

@@ -30,7 +30,7 @@ export function ServicesSection() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="gold-line mx-auto mb-6" />
           <h2 className="font-display text-display text-brand-navy mb-4">
-            The Merav Berko Experience
+            The Merrav Berko Experience
           </h2>
           <p className="text-neutral-600 text-lg leading-relaxed">
             Whether you&apos;re buying, selling, or investing, I provide personalized service 

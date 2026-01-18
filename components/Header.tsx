@@ -21,7 +21,7 @@ const navigation = {
     { name: 'School Finder', href: '/community/schools' },
   ],
   about: [
-    { name: 'About Merav', href: '/about' },
+    { name: 'About Merrav', href: '/about' },
     { name: 'Testimonials', href: '/about/testimonials' },
     { name: 'Contact', href: '/contact' },
   ],
@@ -55,7 +55,7 @@ export function Header() {
             <span className={`font-display text-2xl lg:text-3xl font-medium tracking-tight transition-colors duration-300 ${
               isScrolled ? 'text-brand-navy' : 'text-white'
             }`}>
-              Merav Berko
+              Merrav Berko
             </span>
           </Link>
 
@@ -256,7 +256,7 @@ export function Header() {
                 className="btn-gold w-full justify-center mt-4"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Contact Merav
+                Contact Merrav
               </Link>
             </div>
           </div>
