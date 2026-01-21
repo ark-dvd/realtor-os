@@ -12,7 +12,7 @@ const client = createClient({
 // GET site settings
 export async function GET() {
   try {
-    let settings = await client.fetch(`
+    const settings = await client.fetch(`
       *[_type == "siteSettings"][0] {
         _id,
         siteTitle,
@@ -20,6 +20,7 @@ export async function GET() {
         heroSubheadline,
         heroMediaType,
         heroImages[] {
+          _key,
           "url": asset->url,
           alt
         },
@@ -45,29 +46,14 @@ export async function GET() {
       }
     `)
 
-    // If no settings exist, return defaults
-    if (!settings) {
-      settings = {
-        heroHeadline: 'Find Your Home in Austin',
-        heroSubheadline: 'Luxury real estate with personalized service.',
-        heroMediaType: 'images',
-        heroImages: [],
-        agentName: 'Merrav Berko',
-        agentTitle: 'REALTOR® | Austin Luxury Specialist',
-        phone: '(512) 599-9995',
-        email: 'merrav@merravberko.com',
-        address: 'Austin, Texas',
-      }
-    }
-
-    return NextResponse.json(settings)
+    return NextResponse.json(settings || {})
   } catch (error) {
     console.error('Error fetching site settings:', error)
-    return NextResponse.json({ error: 'Failed to fetch site settings' }, { status: 500 })
+    return NextResponse.json({})
   }
 }
 
-// PUT update site settings (or create if doesn't exist)
+// PUT update site settings
 export async function PUT(request: NextRequest) {
   try {
     const data = await request.json()
@@ -84,7 +70,11 @@ export async function PUT(request: NextRequest) {
       agentTitle: data.agentTitle,
       aboutHeadline: data.aboutHeadline,
       aboutText: data.aboutText,
-      aboutStats: data.aboutStats,
+      aboutStats: data.aboutStats?.map((stat: any, idx: number) => ({
+        _key: stat._key || `stat-${idx}-${Date.now()}`,
+        value: stat.value,
+        label: stat.label,
+      })),
       phone: data.phone,
       email: data.email,
       address: data.address,
@@ -115,13 +105,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Handle hero images
-    if (data.heroImageAssetIds && data.heroImageAssetIds.length > 0) {
-      updates.heroImages = data.heroImageAssetIds.map((assetId: string, index: number) => ({
+    if (data.heroImages && data.heroImages.length > 0) {
+      updates.heroImages = data.heroImages.map((img: any, index: number) => ({
         _type: 'image',
-        _key: `hero-${index}`,
-        asset: { _type: 'reference', _ref: assetId },
-        alt: data.heroImageAlts?.[index] || ''
-      }))
+        _key: img._key || `hero-${index}-${Date.now()}`,
+        asset: img.assetId ? { _type: 'reference', _ref: img.assetId } : undefined,
+        alt: img.alt || ''
+      })).filter((img: any) => img.asset)
     }
 
     let result
@@ -130,7 +120,6 @@ export async function PUT(request: NextRequest) {
     } else {
       result = await client.create({
         _type: 'siteSettings',
-        _id: 'siteSettings',
         ...updates
       })
     }

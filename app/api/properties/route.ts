@@ -23,15 +23,24 @@ export async function GET() {
         beds,
         baths,
         sqft,
-        "image": heroImage.asset->url,
+        lotSize,
+        yearBuilt,
+        garage,
+        mlsNumber,
+        shortDescription,
+        description,
+        features,
+        "heroImage": heroImage.asset->url,
+        "gallery": gallery[].asset->url,
+        "neighborhoodName": neighborhood->name,
         _createdAt,
         _updatedAt
       }
     `)
-    return NextResponse.json(properties)
+    return NextResponse.json(properties || [])
   } catch (error) {
     console.error('Error fetching properties:', error)
-    return NextResponse.json({ error: 'Failed to fetch properties' }, { status: 500 })
+    return NextResponse.json([])
   }
 }
 
@@ -43,10 +52,10 @@ export async function POST(request: NextRequest) {
     const doc: any = {
       _type: 'property',
       title: data.title,
-      slug: { _type: 'slug', current: data.slug },
+      slug: { _type: 'slug', current: data.slug || data.title.toLowerCase().replace(/\s+/g, '-') },
       status: data.status || 'for-sale',
       price: data.price,
-      address: data.address,
+      address: data.address || {},
       beds: data.beds,
       baths: data.baths,
       sqft: data.sqft,
@@ -55,14 +64,18 @@ export async function POST(request: NextRequest) {
       garage: data.garage,
       mlsNumber: data.mlsNumber,
       shortDescription: data.shortDescription,
-      features: data.features,
+      features: data.features || [],
     }
 
-    if (data.imageAssetId) {
+    if (data.heroImageAssetId) {
       doc.heroImage = {
         _type: 'image',
-        asset: { _type: 'reference', _ref: data.imageAssetId }
+        asset: { _type: 'reference', _ref: data.heroImageAssetId }
       }
+    }
+
+    if (data.neighborhoodId) {
+      doc.neighborhood = { _type: 'reference', _ref: data.neighborhoodId }
     }
 
     const result = await client.create(doc)
@@ -91,17 +104,27 @@ export async function PUT(request: NextRequest) {
       beds: updateData.beds,
       baths: updateData.baths,
       sqft: updateData.sqft,
+      lotSize: updateData.lotSize,
+      yearBuilt: updateData.yearBuilt,
+      garage: updateData.garage,
+      mlsNumber: updateData.mlsNumber,
+      shortDescription: updateData.shortDescription,
+      features: updateData.features,
     }
 
     if (updateData.slug) {
       updates.slug = { _type: 'slug', current: updateData.slug }
     }
 
-    if (updateData.imageAssetId) {
+    if (updateData.heroImageAssetId) {
       updates.heroImage = {
         _type: 'image',
-        asset: { _type: 'reference', _ref: updateData.imageAssetId }
+        asset: { _type: 'reference', _ref: updateData.heroImageAssetId }
       }
+    }
+
+    if (updateData.neighborhoodId) {
+      updates.neighborhood = { _type: 'reference', _ref: updateData.neighborhoodId }
     }
 
     const result = await client.patch(_id).set(updates).commit()

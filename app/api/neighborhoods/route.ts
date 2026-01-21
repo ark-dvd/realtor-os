@@ -32,10 +32,10 @@ export async function GET() {
         isActive
       }
     `)
-    return NextResponse.json(neighborhoods)
+    return NextResponse.json(neighborhoods || [])
   } catch (error) {
     console.error('Error fetching neighborhoods:', error)
-    return NextResponse.json({ error: 'Failed to fetch neighborhoods' }, { status: 500 })
+    return NextResponse.json([])
   }
 }
 
@@ -44,25 +44,34 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     
-    const doc = {
+    const doc: any = {
       _type: 'neighborhood',
       name: data.name,
-      slug: { _type: 'slug', current: data.slug },
+      slug: { _type: 'slug', current: data.slug || data.name.toLowerCase().replace(/\s+/g, '-') },
       tagline: data.tagline,
       vibe: data.vibe,
       description: data.description,
       population: data.population,
-      commute: data.commute,
+      commute: data.commute || { toDowntown: '', toDomain: '' },
       schoolDistrict: data.schoolDistrict,
-      schools: data.schools,
-      whyPeopleLove: data.whyPeopleLove,
-      highlights: data.highlights,
+      schools: data.schools?.map((s: any, idx: number) => ({
+        _key: `school-${idx}-${Date.now()}`,
+        name: s.name,
+        type: s.type,
+        rating: s.rating,
+        note: s.note,
+      })) || [],
+      whyPeopleLove: data.whyPeopleLove || [],
+      highlights: data.highlights?.map((h: any, idx: number) => ({
+        _key: `highlight-${idx}-${Date.now()}`,
+        name: h.name,
+        description: h.description,
+      })) || [],
       avgPrice: data.avgPrice,
       order: data.order || 10,
       isActive: data.isActive ?? true,
     }
 
-    // If there's an image URL, we'll handle it separately
     if (data.imageAssetId) {
       doc.image = {
         _type: 'image',
@@ -96,9 +105,19 @@ export async function PUT(request: NextRequest) {
       population: updateData.population,
       commute: updateData.commute,
       schoolDistrict: updateData.schoolDistrict,
-      schools: updateData.schools,
+      schools: updateData.schools?.map((s: any, idx: number) => ({
+        _key: s._key || `school-${idx}-${Date.now()}`,
+        name: s.name,
+        type: s.type,
+        rating: s.rating,
+        note: s.note,
+      })),
       whyPeopleLove: updateData.whyPeopleLove,
-      highlights: updateData.highlights,
+      highlights: updateData.highlights?.map((h: any, idx: number) => ({
+        _key: h._key || `highlight-${idx}-${Date.now()}`,
+        name: h.name,
+        description: h.description,
+      })),
       avgPrice: updateData.avgPrice,
       order: updateData.order,
       isActive: updateData.isActive,

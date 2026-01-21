@@ -25,13 +25,13 @@ export async function GET() {
         keyDates,
         notes,
         isActive,
-        "property": property->{title, "slug": slug.current}
+        "property": property->{title, "slug": slug.current, "image": heroImage.asset->url}
       }
     `)
-    return NextResponse.json(deals)
+    return NextResponse.json(deals || [])
   } catch (error) {
     console.error('Error fetching deals:', error)
-    return NextResponse.json({ error: 'Failed to fetch deals' }, { status: 500 })
+    return NextResponse.json([])
   }
 }
 
@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
       isActive: data.isActive ?? true,
     }
 
+    if (data.propertyId) {
+      doc.property = { _type: 'reference', _ref: data.propertyId }
+    }
+
     const result = await client.create(doc)
     return NextResponse.json(result)
   } catch (error) {
@@ -72,7 +76,24 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing _id' }, { status: 400 })
     }
 
-    const result = await client.patch(_id).set(updateData).commit()
+    const updates: any = {
+      clientName: updateData.clientName,
+      clientEmail: updateData.clientEmail,
+      clientPhone: updateData.clientPhone,
+      dealType: updateData.dealType,
+      propertyAddress: updateData.propertyAddress,
+      price: updateData.price,
+      transactionStage: updateData.transactionStage,
+      keyDates: updateData.keyDates,
+      notes: updateData.notes,
+      isActive: updateData.isActive,
+    }
+
+    if (updateData.propertyId) {
+      updates.property = { _type: 'reference', _ref: updateData.propertyId }
+    }
+
+    const result = await client.patch(_id).set(updates).commit()
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error updating deal:', error)
