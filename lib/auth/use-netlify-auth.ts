@@ -1,122 +1,41 @@
 'use client'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
-import { useState, useEffect, useCallback } from 'react'
-import type { User } from 'netlify-identity-widget'
-
-// Dynamic import for client-side only
-let netlifyIdentity: typeof import('netlify-identity-widget').default | null = null
-
-export interface AuthState {
-  user: User | null
-  loading: boolean
-  error: string | null
-}
+interface NetlifyUser { id: string; email: string; user_metadata?: { full_name?: string }; app_metadata?: { roles?: string[] }; token?: { access_token: string; expires_at: number } }
+interface NetlifyIdentityAPI { init: (options?: { APIUrl?: string }) => void; open: (tab?: 'login' | 'signup') => void; close: () => void; logout: () => Promise<void>; refresh: (force?: boolean) => Promise<string>; currentUser: () => NetlifyUser | null; on: (event: string, callback: (user?: NetlifyUser) => void) => void; off: (event: string) => void }
+declare global { interface Window { netlifyIdentity?: NetlifyIdentityAPI } }
+export interface AuthState { user: NetlifyUser | null; loading: boolean; error: string | null }
 
 export function useNetlifyAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null,
-  })
+  const [state, setState] = useState<AuthState>({ user: null, loading: true, error: null })
+  const identityRef = useRef<NetlifyIdentityAPI | null>(null)
+  const scriptLoadedRef = useRef(false)
 
   useEffect(() => {
-    // Only run on client
-    if (typeof window === 'undefined') return
-
-    // Dynamically import netlify-identity-widget
-    import('netlify-identity-widget').then((module) => {
-      netlifyIdentity = module.default
-      
-      // Initialize
-      netlifyIdentity.init()
-
-      // Set initial user
-      const currentUser = netlifyIdentity.currentUser()
-      setState(prev => ({ ...prev, user: currentUser, loading: false }))
-
-      // Listen for auth events
-      netlifyIdentity.on('login', (user) => {
-        setState(prev => ({ ...prev, user, loading: false, error: null }))
-        netlifyIdentity?.close()
-      })
-
-      netlifyIdentity.on('logout', () => {
-        setState(prev => ({ ...prev, user: null, loading: false }))
-      })
-
-      netlifyIdentity.on('error', (err) => {
-        console.error('Netlify Identity error:', err)
-        setState(prev => ({ ...prev, error: String(err), loading: false }))
-      })
-    }).catch((err) => {
-      console.error('Failed to load netlify-identity-widget:', err)
-      setState(prev => ({ ...prev, loading: false, error: 'Failed to load authentication' }))
-    })
-
-    return () => {
-      netlifyIdentity?.off('login')
-      netlifyIdentity?.off('logout')
-      netlifyIdentity?.off('error')
+    if (typeof window === 'undefined' || scriptLoadedRef.current) return
+    scriptLoadedRef.current = true
+    const script = document.createElement('script')
+    script.src = 'https://identity.netlify.com/v1/netlify-identity-widget.js'
+    script.async = true
+    script.onload = () => {
+      const identity = window.netlifyIdentity
+      if (!identity) { setState(s => ({ ...s, loading: false, error: 'Identity widget failed' })); return }
+      identityRef.current = identity
+      identity.init()
+      setState(s => ({ ...s, user: identity.currentUser(), loading: false }))
+      identity.on('login', (user) => { setState(s => ({ ...s, user: user || null, error: null })); identity.close() })
+      identity.on('logout', () => setState(s => ({ ...s, user: null })))
     }
+    script.onerror = () => setState(s => ({ ...s, loading: false, error: 'Failed to load identity' }))
+    document.head.appendChild(script)
+    return () => { identityRef.current?.off('login'); identityRef.current?.off('logout') }
   }, [])
 
-  const login = useCallback(() => {
-    netlifyIdentity?.open('login')
-  }, [])
-
-  const signup = useCallback(() => {
-    netlifyIdentity?.open('signup')
-  }, [])
-
-  const logout = useCallback(async () => {
-    try {
-      await netlifyIdentity?.logout()
-    } catch (err) {
-      console.error('Logout error:', err)
-    }
-  }, [])
-
+  const login = useCallback(() => identityRef.current?.open('login'), [])
+  const logout = useCallback(async () => { try { await identityRef.current?.logout() } catch {} }, [])
   const getToken = useCallback(async (): Promise<string | null> => {
-    try {
-      if (!netlifyIdentity) return null
-      const token = await netlifyIdentity.refresh()
-      return token
-    } catch (err) {
-      console.error('Token refresh error:', err)
-      return null
-    }
+    try { return await identityRef.current?.refresh(true) || null } catch { return null }
   }, [])
 
-  return {
-    user: state.user,
-    loading: state.loading,
-    error: state.error,
-    isAuthenticated: !!state.user,
-    login,
-    signup,
-    logout,
-    getToken,
-  }
-}
-
-// Helper to make authenticated API calls
-export async function authFetch(
-  url: string,
-  options: RequestInit = {},
-  getToken: () => Promise<string | null>
-): Promise<Response> {
-  const token = await getToken()
-  
-  if (!token) {
-    throw new Error('Not authenticated')
-  }
-
-  const headers = new Headers(options.headers)
-  headers.set('Authorization', `Bearer ${token}`)
-  headers.set('Content-Type', 'application/json')
-
-  return fetch(url, {
-    ...options,
-    headers,
-  })
+  return { user: state.user, loading: state.loading, error: state.error, isAuthenticated: !!state.user, login, logout, getToken }
 }

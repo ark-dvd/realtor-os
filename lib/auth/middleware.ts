@@ -1,175 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as jose from 'jose'
 
-/**
- * User information extracted from Netlify Identity JWT
- */
 export interface AuthUser {
   id: string
   email: string
   fullName?: string
-  roles?: string[]
+  roles: string[]
 }
 
-/**
- * Verify Netlify Identity JWT token
- * 
- * Netlify Identity JWTs are signed with a secret specific to your site.
- * In production, you can verify against the JWKS endpoint or use
- * the shared secret. For simplicity, we decode and validate claims.
- */
-export async function verifyToken(token: string): Promise<AuthUser | null> {
+interface JWKSCache { keySet: jose.JWTVerifyGetKey; fetchedAt: number }
+let jwksCache: JWKSCache | null = null
+const JWKS_CACHE_TTL_MS = 5 * 60 * 1000
+
+function getConfig() {
+  const siteUrl = process.env.URL || process.env.NETLIFY_SITE_URL || ''
+  return {
+    jwksUrl: siteUrl ? `${siteUrl}/.netlify/identity/.well-known/jwks.json` : '',
+    issuer: siteUrl ? `${siteUrl}/.netlify/identity` : '',
+    adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean),
+    allowAnyAuthenticated: process.env.ADMIN_ALLOW_ANY_AUTHENTICATED === 'true',
+  }
+}
+
+async function getJWKS(): Promise<jose.JWTVerifyGetKey> {
+  const config = getConfig()
+  const now = Date.now()
+  if (jwksCache && (now - jwksCache.fetchedAt) < JWKS_CACHE_TTL_MS) return jwksCache.keySet
+  if (!config.jwksUrl) throw new Error('JWKS URL not configured')
+  const keySet = jose.createRemoteJWKSet(new URL(config.jwksUrl))
+  jwksCache = { keySet, fetchedAt: now }
+  return keySet
+}
+
+async function verifyToken(token: string): Promise<AuthUser | null> {
+  const config = getConfig()
   try {
-    // Decode the JWT (without full signature verification for Netlify Identity)
-    // Netlify Identity tokens are already validated by the widget
-    const decoded = jose.decodeJwt(token)
-    
-    if (!decoded || !decoded.sub) {
-      console.error('Invalid token: missing subject')
-      return null
-    }
-
-    // Check expiration
-    const now = Math.floor(Date.now() / 1000)
-    if (decoded.exp && decoded.exp < now) {
-      console.error('Token expired')
-      return null
-    }
-
-    // Extract user info
-    const user: AuthUser = {
-      id: decoded.sub,
-      email: (decoded.email as string) || '',
-      fullName: (decoded as Record<string, unknown>).user_metadata?.full_name as string | undefined,
-      roles: (decoded as Record<string, unknown>).app_metadata?.roles as string[] | undefined,
-    }
-
-    return user
+    const jwks = await getJWKS()
+    const { payload } = await jose.jwtVerify(token, jwks, { issuer: config.issuer || undefined, clockTolerance: 60 })
+    if (!payload.sub) return null
+    const email = (payload.email as string) || ''
+    const appMetadata = (payload.app_metadata as Record<string, unknown>) || {}
+    const userMetadata = (payload.user_metadata as Record<string, unknown>) || {}
+    const roles: string[] = Array.isArray(appMetadata.roles) ? appMetadata.roles.map(r => String(r)) : []
+    return { id: payload.sub, email, fullName: (userMetadata.full_name as string) || undefined, roles }
   } catch (error) {
-    console.error('Token verification error:', error)
+    if (error instanceof jose.errors.JWSSignatureVerificationFailed) console.error('Auth: SIGNATURE VERIFICATION FAILED')
+    else console.error('Auth: Token verification error')
     return null
   }
 }
 
-/**
- * Middleware to protect API routes
- * Returns the authenticated user or an error response
- */
+function isAdmin(user: AuthUser): boolean {
+  const config = getConfig()
+  if (config.allowAnyAuthenticated) { console.warn('⚠️ ADMIN_ALLOW_ANY_AUTHENTICATED=true - DEV ONLY!'); return true }
+  if (user.roles.includes('admin')) return true
+  if (config.adminEmails.length > 0 && user.email && config.adminEmails.includes(user.email.toLowerCase())) return true
+  return false
+}
+
 export async function requireAuth(request: NextRequest): Promise<{ user: AuthUser } | { error: NextResponse }> {
-  // Get authorization header
   const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader) {
-    return {
-      error: NextResponse.json(
-        { error: 'Unauthorized', message: 'No authorization header' },
-        { status: 401 }
-      )
-    }
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: NextResponse.json({ error: 'Unauthorized', message: 'Bearer token required' }, { status: 401 }) }
   }
-
-  // Check Bearer token format
-  if (!authHeader.startsWith('Bearer ')) {
-    return {
-      error: NextResponse.json(
-        { error: 'Unauthorized', message: 'Invalid authorization format' },
-        { status: 401 }
-      )
-    }
-  }
-
-  const token = authHeader.substring(7)
-  
-  if (!token) {
-    return {
-      error: NextResponse.json(
-        { error: 'Unauthorized', message: 'No token provided' },
-        { status: 401 }
-      )
-    }
-  }
-
-  // Verify token
+  const token = authHeader.slice(7)
+  if (!token) return { error: NextResponse.json({ error: 'Unauthorized', message: 'Token is empty' }, { status: 401 }) }
   const user = await verifyToken(token)
-  
-  if (!user) {
-    return {
-      error: NextResponse.json(
-        { error: 'Unauthorized', message: 'Invalid or expired token' },
-        { status: 401 }
-      )
-    }
-  }
-
+  if (!user) return { error: NextResponse.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, { status: 401 }) }
   return { user }
 }
 
-/**
- * Check if user has a specific role
- */
-export function hasRole(user: AuthUser, role: string): boolean {
-  return user.roles?.includes(role) ?? false
-}
-
-/**
- * Middleware to require admin role
- */
 export async function requireAdmin(request: NextRequest): Promise<{ user: AuthUser } | { error: NextResponse }> {
   const authResult = await requireAuth(request)
-  
-  if ('error' in authResult) {
-    return authResult
+  if ('error' in authResult) return authResult
+  if (!isAdmin(authResult.user)) {
+    console.warn(`Admin access DENIED for: ${authResult.user.email}`)
+    return { error: NextResponse.json({ error: 'Forbidden', message: 'Admin privileges required' }, { status: 403 }) }
   }
-
-  // For now, any authenticated user is considered admin
-  // In production, check for admin role:
-  // if (!hasRole(authResult.user, 'admin')) {
-  //   return {
-  //     error: NextResponse.json(
-  //       { error: 'Forbidden', message: 'Admin access required' },
-  //       { status: 403 }
-  //     )
-  //   }
-  // }
-
   return authResult
 }
 
-/**
- * Rate limiting helper (simple in-memory implementation)
- * In production, use Redis or similar
- */
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-
-export function checkRateLimit(
-  identifier: string, 
-  limit: number = 10, 
-  windowMs: number = 60000
-): boolean {
+export function checkRateLimit(identifier: string, limit: number = 10, windowMs: number = 60000): boolean {
   const now = Date.now()
   const record = rateLimitMap.get(identifier)
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs })
-    return true
-  }
-
-  if (record.count >= limit) {
-    return false
-  }
-
+  if (!record || now > record.resetTime) { rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs }); return true }
+  if (record.count >= limit) return false
   record.count++
   return true
-}
-
-/**
- * Clean up old rate limit entries (call periodically)
- */
-export function cleanupRateLimits(): void {
-  const now = Date.now()
-  for (const [key, value] of rateLimitMap.entries()) {
-    if (now > value.resetTime) {
-      rateLimitMap.delete(key)
-    }
-  }
 }
