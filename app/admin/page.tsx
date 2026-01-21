@@ -1,48 +1,76 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { 
   Lock, Home, Users, FileText, Settings, LogOut, Plus, 
-  Search, Edit, Trash2, Eye, MapPin, TrendingUp, Calendar, 
-  Bell, Save, X, ChevronDown, Upload, Star, GraduationCap,
-  Building2, Image as ImageIcon, Video, Phone, Mail, Globe
+  Search, Edit, Trash2, MapPin, TrendingUp, 
+  Save, X, Upload, Star, GraduationCap,
+  Building2, Image as ImageIcon, Phone, Globe, Loader2, RefreshCw
 } from 'lucide-react'
-
-// Import static data as fallback
-import { neighborhoods as staticNeighborhoods, Neighborhood } from '@/lib/neighborhoods-data'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
+interface School {
+  _key?: string
+  name: string
+  type: string
+  rating: number
+  note?: string
+}
+
+interface Highlight {
+  _key?: string
+  name: string
+  description: string
+}
+
+interface Neighborhood {
+  _id?: string
+  name: string
+  slug: string
+  tagline: string
+  vibe: string
+  description: string
+  population: string
+  commute: { toDowntown: string; toDomain: string }
+  schoolDistrict: string
+  schools: School[]
+  whyPeopleLove: string[]
+  highlights: Highlight[]
+  avgPrice: string
+  image?: string
+  imageAssetId?: string
+  order: number
+  isActive: boolean
+}
+
 interface Property {
-  id: string
+  _id?: string
   title: string
   slug: string
-  address: string
+  address: any
   price: number
   status: string
   beds: number
   baths: number
   sqft: number
-  image: string
-  views?: number
-  inquiries?: number
-  lastUpdated: string
+  image?: string
+  imageAssetId?: string
 }
 
 interface Deal {
-  id: string
+  _id?: string
   clientName: string
   clientEmail: string
   clientPhone?: string
-  property: string
   propertyAddress?: string
   price: number
-  stage: number
-  type: 'buying' | 'selling'
+  transactionStage: number
+  dealType: 'buying' | 'selling'
   keyDates: {
     contractDate?: string
     optionPeriodEnds?: string
@@ -54,132 +82,21 @@ interface Deal {
 }
 
 interface SiteSettings {
+  _id?: string
   heroHeadline: string
   heroSubheadline: string
   heroMediaType: 'images' | 'video'
-  heroImages: { url: string; alt: string }[]
+  heroImages?: { url: string; alt?: string }[]
   agentName: string
   agentTitle: string
-  agentPhoto: string
-  aboutText: string
+  agentPhoto?: string
+  aboutText?: string
   phone: string
   email: string
   address: string
-  instagram: string
-  facebook: string
-  linkedin: string
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// DEMO DATA (Used when Sanity is not configured)
-// ═══════════════════════════════════════════════════════════════════════════
-
-const demoProperties: Property[] = [
-  {
-    id: '1',
-    title: 'Modern Lakefront Estate',
-    slug: 'modern-lakefront-estate',
-    address: '1234 Lake Austin Blvd',
-    price: 2850000,
-    status: 'For Sale',
-    beds: 5,
-    baths: 4.5,
-    sqft: 4800,
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400',
-    views: 342,
-    inquiries: 12,
-    lastUpdated: '2024-01-15',
-  },
-  {
-    id: '2',
-    title: 'Downtown Luxury Condo',
-    slug: 'downtown-luxury-condo',
-    address: '200 Congress Ave #2001',
-    price: 975000,
-    status: 'For Sale',
-    beds: 2,
-    baths: 2,
-    sqft: 1650,
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
-    views: 256,
-    inquiries: 8,
-    lastUpdated: '2024-01-14',
-  },
-  {
-    id: '3',
-    title: 'Tarrytown Family Home',
-    slug: 'tarrytown-family-home',
-    address: '3456 Windsor Rd',
-    price: 1650000,
-    status: 'Pending',
-    beds: 4,
-    baths: 3,
-    sqft: 3200,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400',
-    views: 189,
-    inquiries: 15,
-    lastUpdated: '2024-01-13',
-  },
-]
-
-const demoDeals: Deal[] = [
-  { 
-    id: '1', 
-    clientName: 'John Smith', 
-    clientEmail: 'john@email.com',
-    clientPhone: '512-555-1234',
-    property: 'Modern Lakefront Estate', 
-    price: 2850000,
-    stage: 4, 
-    type: 'buying',
-    keyDates: {
-      contractDate: '2024-01-15',
-      optionPeriodEnds: '2024-01-25',
-      inspectionDate: '2024-01-22',
-      appraisalDate: '2024-02-01',
-      closingDate: '2024-02-28',
-    },
-    isActive: true,
-  },
-  { 
-    id: '2', 
-    clientName: 'Sarah Johnson', 
-    clientEmail: 'sarah@email.com',
-    property: '456 Oak Lane', 
-    propertyAddress: '456 Oak Lane, Austin TX',
-    price: 725000,
-    stage: 6, 
-    type: 'selling',
-    keyDates: {
-      contractDate: '2024-01-10',
-      closingDate: '2024-02-15',
-    },
-    isActive: true,
-  },
-]
-
-const demoSiteSettings: SiteSettings = {
-  heroHeadline: 'Find Your Home in Austin',
-  heroSubheadline: 'Luxury real estate with personalized service. Your journey to the perfect home starts here.',
-  heroMediaType: 'images',
-  heroImages: [
-    { url: '/images/hero-1.jpg', alt: 'Austin skyline' },
-    { url: '/images/hero-2.jpg', alt: 'Luxury home' },
-    { url: '/images/hero-3.jpg', alt: 'Austin neighborhood' },
-    { url: '/images/hero-4.jpg', alt: 'Pennybacker Bridge' },
-  ],
-  agentName: 'Merrav Berko',
-  agentTitle: 'REALTOR® | Austin Luxury Specialist',
-  agentPhoto: '/images/merrav-berko.jpg',
-  aboutText: `Merrav Berko holds a Bachelor of Arts in Management from Israel's Open University and brings over 12 years of experience living in Austin to her work in real estate. Her deep understanding of the city—its neighborhoods, culture, and evolving market—allows her to guide clients with clarity and confidence.
-
-With a refined eye for design, a strong foundation in investment strategy, and meticulous attention to detail, Merrav is committed to exceeding her clients' expectations at every step.`,
-  phone: '(512) 599-9995',
-  email: 'merrav@merravberko.com',
-  address: 'Austin, Texas',
-  instagram: 'https://instagram.com',
-  facebook: 'https://facebook.com',
-  linkedin: 'https://linkedin.com',
+  instagram?: string
+  facebook?: string
+  linkedin?: string
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -195,6 +112,94 @@ function formatPrice(price: number) {
 }
 
 const stageNames = ['', 'Contract Signed', 'Option Period', 'Inspection', 'Appraisal', 'Financing', 'Title Work', 'Final Walk', 'Closing']
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IMAGE UPLOAD COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ImageUpload({ 
+  currentImage, 
+  onUpload,
+  label = 'Image'
+}: { 
+  currentImage?: string
+  onUpload: (assetId: string, url: string) => void
+  label?: string
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState(currentImage)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setPreview(currentImage)
+  }, [currentImage])
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Show preview immediately
+    const reader = new FileReader()
+    reader.onload = (e) => setPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+
+    // Upload to Sanity
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error('Upload failed')
+
+      const data = await res.json()
+      onUpload(data.assetId, data.url)
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Failed to upload image')
+      setPreview(currentImage)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-brand-navy mb-2">{label}</label>
+      <div 
+        onClick={() => fileInputRef.current?.click()}
+        className="relative border-2 border-dashed border-neutral-300 rounded-lg p-4 hover:border-brand-gold transition-colors cursor-pointer"
+      >
+        {preview ? (
+          <div className="relative h-48 rounded overflow-hidden">
+            <Image src={preview} alt="Preview" fill className="object-cover" />
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <Loader2 className="animate-spin text-white" size={32} />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="h-48 flex flex-col items-center justify-center text-neutral-400">
+            <Upload size={32} className="mb-2" />
+            <p className="text-sm">Click to upload image</p>
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+    </div>
+  )
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LOGIN COMPONENT
@@ -228,18 +233,13 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-brand-navy mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-brand-navy mb-2">Password</label>
               <input
                 type="password"
                 required
                 className="input-field"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value)
-                  setError('')
-                }}
+                onChange={(e) => { setPassword(e.target.value); setError('') }}
                 placeholder="Enter admin password"
               />
               {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -291,17 +291,25 @@ function Modal({
       <div className={`bg-white w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto`}>
         <div className="sticky top-0 bg-white p-6 border-b border-neutral-200 flex items-center justify-between z-10">
           <h2 className="font-display text-xl text-brand-navy">{title}</h2>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-neutral-100 rounded transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded transition-colors">
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">
-          {children}
-        </div>
+        <div className="p-6">{children}</div>
       </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOADING SPINNER
+// ═══════════════════════════════════════════════════════════════════════════
+
+function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <Loader2 className="animate-spin text-brand-gold mb-4" size={40} />
+      <p className="text-neutral-500">{message}</p>
     </div>
   )
 }
@@ -313,18 +321,22 @@ function Modal({
 function DashboardTab({ 
   properties, 
   deals, 
-  neighborhoods 
+  neighborhoods,
+  onSeedData,
+  seeding
 }: { 
   properties: Property[]
   deals: Deal[]
   neighborhoods: Neighborhood[]
+  onSeedData: (type: string) => void
+  seeding: boolean
 }) {
   const activeDeals = deals.filter(d => d.isActive)
   const stats = [
-    { label: 'Active Listings', value: properties.filter(p => p.status === 'For Sale').length.toString(), icon: Home, color: 'bg-blue-500' },
+    { label: 'Active Listings', value: properties.filter(p => p.status === 'for-sale').length.toString(), icon: Home, color: 'bg-blue-500' },
     { label: 'Neighborhoods', value: neighborhoods.length.toString(), icon: MapPin, color: 'bg-green-500' },
     { label: 'Active Deals', value: activeDeals.length.toString(), icon: FileText, color: 'bg-amber-500' },
-    { label: 'Total Inquiries', value: properties.reduce((acc, p) => acc + (p.inquiries || 0), 0).toString(), icon: Users, color: 'bg-purple-500' },
+    { label: 'Total Properties', value: properties.length.toString(), icon: Building2, color: 'bg-purple-500' },
   ]
 
   return (
@@ -344,50 +356,72 @@ function DashboardTab({
         ))}
       </div>
 
+      {/* Seed Data Section - Only show if no data */}
+      {neighborhoods.length === 0 && (
+        <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg">
+          <h3 className="font-display text-lg text-amber-800 mb-2">Initialize Database</h3>
+          <p className="text-amber-700 mb-4">
+            Your Sanity database is empty. Click below to populate it with the initial Austin neighborhoods data.
+          </p>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => onSeedData('neighborhoods')}
+              disabled={seeding}
+              className="btn-gold"
+            >
+              {seeding ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+              Load Neighborhoods
+            </button>
+            <button 
+              onClick={() => onSeedData('settings')}
+              disabled={seeding}
+              className="btn-secondary"
+            >
+              {seeding ? <Loader2 className="animate-spin" size={18} /> : <Settings size={18} />}
+              Initialize Settings
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Properties */}
+        {/* Recent Neighborhoods */}
         <div className="bg-white p-6 border border-neutral-200">
-          <h3 className="font-display text-lg text-brand-navy mb-4">Recent Properties</h3>
-          <div className="space-y-4">
-            {properties.slice(0, 4).map((property) => (
-              <div key={property.id} className="flex items-center gap-4 py-3 border-b border-neutral-100 last:border-0">
-                <div className="relative w-16 h-12 rounded overflow-hidden flex-shrink-0">
-                  <Image src={property.image} alt={property.title} fill className="object-cover" />
+          <h3 className="font-display text-lg text-brand-navy mb-4">Neighborhoods ({neighborhoods.length})</h3>
+          <div className="space-y-3">
+            {neighborhoods.slice(0, 5).map((n) => (
+              <div key={n._id || n.slug} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                <div>
+                  <p className="font-medium text-brand-navy">{n.name}</p>
+                  <p className="text-sm text-neutral-500">{n.avgPrice}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-brand-navy truncate">{property.title}</p>
-                  <p className="text-sm text-neutral-500">{formatPrice(property.price)}</p>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded ${
-                  property.status === 'For Sale' ? 'bg-green-100 text-green-700' :
-                  property.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                  'bg-neutral-100 text-neutral-700'
-                }`}>
-                  {property.status}
+                <span className={`text-xs px-2 py-1 rounded ${n.isActive ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                  {n.isActive ? 'Active' : 'Hidden'}
                 </span>
               </div>
             ))}
+            {neighborhoods.length === 0 && (
+              <p className="text-neutral-500 text-center py-4">No neighborhoods yet</p>
+            )}
           </div>
         </div>
 
         {/* Active Deals */}
         <div className="bg-white p-6 border border-neutral-200">
-          <h3 className="font-display text-lg text-brand-navy mb-4">Active Deals</h3>
-          <div className="space-y-4">
-            {activeDeals.slice(0, 4).map((deal) => (
-              <div key={deal.id} className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0">
+          <h3 className="font-display text-lg text-brand-navy mb-4">Active Deals ({activeDeals.length})</h3>
+          <div className="space-y-3">
+            {activeDeals.slice(0, 5).map((deal) => (
+              <div key={deal._id} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
                 <div>
                   <p className="font-medium text-brand-navy">{deal.clientName}</p>
-                  <p className="text-sm text-neutral-500">{deal.property}</p>
+                  <p className="text-sm text-neutral-500">{deal.propertyAddress}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    deal.type === 'buying' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                  }`}>
-                    {deal.type === 'buying' ? 'Buying' : 'Selling'}
+                  <span className={`text-xs px-2 py-1 rounded ${deal.dealType === 'buying' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    {deal.dealType === 'buying' ? 'Buying' : 'Selling'}
                   </span>
-                  <p className="text-xs text-neutral-400 mt-1">Stage {deal.stage}/8</p>
+                  <p className="text-xs text-neutral-400 mt-1">Stage {deal.transactionStage}/8</p>
                 </div>
               </div>
             ))}
@@ -397,292 +431,7 @@ function DashboardTab({
           </div>
         </div>
       </div>
-
-      {/* Sanity Status */}
-      <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-        <p className="text-amber-800 text-sm">
-          <strong>Note:</strong> This Back Office is currently in demo mode. To enable full functionality 
-          (saving changes, uploading images), connect your Sanity CMS by setting up environment variables.
-        </p>
-      </div>
     </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// PROPERTIES TAB
-// ═══════════════════════════════════════════════════════════════════════════
-
-function PropertiesTab({ 
-  properties, 
-  setProperties 
-}: { 
-  properties: Property[]
-  setProperties: (p: Property[]) => void 
-}) {
-  const [showForm, setShowForm] = useState(false)
-  const [editingProperty, setEditingProperty] = useState<Property | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-
-  const filteredProperties = properties.filter(p => 
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.address.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this property?')) {
-      setProperties(properties.filter(p => p.id !== id))
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search properties..."
-            className="input-field pl-10 w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <button 
-          onClick={() => { setEditingProperty(null); setShowForm(true) }}
-          className="btn-gold whitespace-nowrap"
-        >
-          <Plus size={18} />
-          Add Property
-        </button>
-      </div>
-
-      {/* Properties Table */}
-      <div className="bg-white border border-neutral-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase tracking-wider">Property</th>
-                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase tracking-wider">Price</th>
-                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
-                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase tracking-wider hidden md:table-cell">Details</th>
-                <th className="text-right px-6 py-4 text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200">
-              {filteredProperties.map((property) => (
-                <tr key={property.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-12 rounded overflow-hidden flex-shrink-0 hidden sm:block">
-                        <Image src={property.image} alt={property.title} fill className="object-cover" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-brand-navy">{property.title}</p>
-                        <p className="text-sm text-neutral-500">{property.address}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-display text-lg text-brand-navy">{formatPrice(property.price)}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${
-                      property.status === 'For Sale' ? 'bg-green-100 text-green-700' :
-                      property.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                      property.status === 'Sold' ? 'bg-neutral-100 text-neutral-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {property.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 hidden md:table-cell">
-                    <p className="text-sm text-neutral-600">
-                      {property.beds} bed • {property.baths} bath • {property.sqft.toLocaleString()} sqft
-                    </p>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => { setEditingProperty(property); setShowForm(true) }}
-                        className="p-2 hover:bg-neutral-100 rounded transition-colors" 
-                        title="Edit"
-                      >
-                        <Edit size={16} className="text-neutral-500" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(property.id)}
-                        className="p-2 hover:bg-red-50 rounded transition-colors" 
-                        title="Delete"
-                      >
-                        <Trash2 size={16} className="text-red-500" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredProperties.length === 0 && (
-          <div className="text-center py-12 text-neutral-500">
-            No properties found
-          </div>
-        )}
-      </div>
-
-      {/* Property Form Modal */}
-      <Modal 
-        isOpen={showForm} 
-        onClose={() => setShowForm(false)} 
-        title={editingProperty ? 'Edit Property' : 'Add New Property'}
-        size="lg"
-      >
-        <PropertyForm 
-          property={editingProperty}
-          onSave={(property) => {
-            if (editingProperty) {
-              setProperties(properties.map(p => p.id === property.id ? property : p))
-            } else {
-              setProperties([...properties, { ...property, id: Date.now().toString() }])
-            }
-            setShowForm(false)
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      </Modal>
-    </div>
-  )
-}
-
-function PropertyForm({ 
-  property, 
-  onSave, 
-  onCancel 
-}: { 
-  property: Property | null
-  onSave: (property: Property) => void
-  onCancel: () => void
-}) {
-  const [formData, setFormData] = useState<Partial<Property>>(property || {
-    title: '',
-    slug: '',
-    address: '',
-    price: 0,
-    status: 'For Sale',
-    beds: 0,
-    baths: 0,
-    sqft: 0,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-    lastUpdated: new Date().toISOString().split('T')[0],
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData as Property)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-brand-navy mb-2">Property Title *</label>
-          <input
-            type="text"
-            required
-            className="input-field"
-            value={formData.title || ''}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-            placeholder="e.g., Modern Lakefront Estate"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Price *</label>
-          <input
-            type="number"
-            required
-            className="input-field"
-            value={formData.price || ''}
-            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-            placeholder="850000"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Status</label>
-          <select
-            className="input-field"
-            value={formData.status || 'For Sale'}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          >
-            <option>For Sale</option>
-            <option>Pending</option>
-            <option>Sold</option>
-            <option>Off Market</option>
-          </select>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-brand-navy mb-2">Address *</label>
-          <input
-            type="text"
-            required
-            className="input-field"
-            value={formData.address || ''}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="123 Main St, Austin, TX 78701"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Bedrooms</label>
-          <input
-            type="number"
-            className="input-field"
-            value={formData.beds || ''}
-            onChange={(e) => setFormData({ ...formData, beds: Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Bathrooms</label>
-          <input
-            type="number"
-            step="0.5"
-            className="input-field"
-            value={formData.baths || ''}
-            onChange={(e) => setFormData({ ...formData, baths: Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Square Feet</label>
-          <input
-            type="number"
-            className="input-field"
-            value={formData.sqft || ''}
-            onChange={(e) => setFormData({ ...formData, sqft: Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Image URL</label>
-          <input
-            type="url"
-            className="input-field"
-            value={formData.image || ''}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            placeholder="https://..."
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-4 justify-end pt-4 border-t border-neutral-200">
-        <button type="button" onClick={onCancel} className="btn-secondary">
-          Cancel
-        </button>
-        <button type="submit" className="btn-gold">
-          <Save size={18} />
-          Save Property
-        </button>
-      </div>
-    </form>
   )
 }
 
@@ -692,10 +441,16 @@ function PropertyForm({
 
 function NeighborhoodsTab({ 
   neighborhoods, 
-  setNeighborhoods 
+  loading,
+  onSave,
+  onDelete,
+  saving
 }: { 
   neighborhoods: Neighborhood[]
-  setNeighborhoods: (n: Neighborhood[]) => void 
+  loading: boolean
+  onSave: (n: Neighborhood) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+  saving: boolean
 }) {
   const [showForm, setShowForm] = useState(false)
   const [editingNeighborhood, setEditingNeighborhood] = useState<Neighborhood | null>(null)
@@ -705,10 +460,14 @@ function NeighborhoodsTab({
     n.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this neighborhood?')) {
-      setNeighborhoods(neighborhoods.filter(n => n.slug !== slug))
+      await onDelete(id)
     }
+  }
+
+  if (loading) {
+    return <LoadingSpinner message="Loading neighborhoods..." />
   }
 
   return (
@@ -737,14 +496,15 @@ function NeighborhoodsTab({
       {/* Neighborhoods Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredNeighborhoods.map((neighborhood) => (
-          <div key={neighborhood.slug} className="bg-white border border-neutral-200 overflow-hidden">
-            <div className="relative h-40">
-              <Image 
-                src={neighborhood.image} 
-                alt={neighborhood.name} 
-                fill 
-                className="object-cover"
-              />
+          <div key={neighborhood._id || neighborhood.slug} className="bg-white border border-neutral-200 overflow-hidden">
+            <div className="relative h-40 bg-neutral-200">
+              {neighborhood.image ? (
+                <Image src={neighborhood.image} alt={neighborhood.name} fill className="object-cover" />
+              ) : (
+                <div className="h-full flex items-center justify-center text-neutral-400">
+                  <ImageIcon size={40} />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4">
                 <h3 className="font-display text-xl text-white">{neighborhood.name}</h3>
@@ -772,7 +532,7 @@ function NeighborhoodsTab({
                   Edit
                 </button>
                 <button 
-                  onClick={() => handleDelete(neighborhood.slug)}
+                  onClick={() => neighborhood._id && handleDelete(neighborhood._id)}
                   className="p-2 border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
                 >
                   <Trash2 size={14} />
@@ -783,9 +543,9 @@ function NeighborhoodsTab({
         ))}
       </div>
 
-      {filteredNeighborhoods.length === 0 && (
+      {filteredNeighborhoods.length === 0 && !loading && (
         <div className="text-center py-12 text-neutral-500 bg-white border border-neutral-200">
-          No neighborhoods found
+          {searchTerm ? 'No neighborhoods match your search' : 'No neighborhoods yet. Click "Add Neighborhood" to create one.'}
         </div>
       )}
 
@@ -798,12 +558,9 @@ function NeighborhoodsTab({
       >
         <NeighborhoodForm 
           neighborhood={editingNeighborhood}
-          onSave={(neighborhood) => {
-            if (editingNeighborhood) {
-              setNeighborhoods(neighborhoods.map(n => n.slug === neighborhood.slug ? neighborhood : n))
-            } else {
-              setNeighborhoods([...neighborhoods, neighborhood])
-            }
+          saving={saving}
+          onSave={async (neighborhood) => {
+            await onSave(neighborhood)
             setShowForm(false)
           }}
           onCancel={() => setShowForm(false)}
@@ -815,11 +572,13 @@ function NeighborhoodsTab({
 
 function NeighborhoodForm({ 
   neighborhood, 
+  saving,
   onSave, 
   onCancel 
 }: { 
   neighborhood: Neighborhood | null
-  onSave: (neighborhood: Neighborhood) => void
+  saving: boolean
+  onSave: (neighborhood: Neighborhood) => Promise<void>
   onCancel: () => void
 }) {
   const [formData, setFormData] = useState<Neighborhood>(neighborhood || {
@@ -835,14 +594,15 @@ function NeighborhoodForm({
     whyPeopleLove: [],
     highlights: [],
     avgPrice: '',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+    order: 10,
+    isActive: true,
   })
 
   const [activeSection, setActiveSection] = useState('basic')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+    await onSave(formData)
   }
 
   const addSchool = () => {
@@ -1213,7 +973,7 @@ function NeighborhoodForm({
                           newHighlights[index] = { ...highlight, description: e.target.value }
                           setFormData({ ...formData, highlights: newHighlights })
                         }}
-                        placeholder="e.g., Natural spring-fed pool that stays 68°F year-round"
+                        placeholder="e.g., Natural spring-fed pool"
                       />
                     </div>
                   </div>
@@ -1227,25 +987,13 @@ function NeighborhoodForm({
       {/* Media Section */}
       {activeSection === 'media' && (
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-brand-navy mb-2">Main Image URL *</label>
-            <input
-              type="url"
-              required
-              className="input-field"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              placeholder="https://images.unsplash.com/..."
-            />
-            {formData.image && (
-              <div className="mt-2 relative h-48 rounded overflow-hidden">
-                <Image src={formData.image} alt="Preview" fill className="object-cover" />
-              </div>
-            )}
-          </div>
+          <ImageUpload
+            currentImage={formData.image}
+            label="Neighborhood Image *"
+            onUpload={(assetId, url) => setFormData({ ...formData, imageAssetId: assetId, image: url })}
+          />
           <p className="text-sm text-neutral-500">
-            💡 Tip: For best results, use high-quality images with dimensions of at least 1200x800 pixels.
-            You can use images from Unsplash by pasting their URL.
+            Upload a high-quality image (at least 1200x800 pixels) that represents this neighborhood.
           </p>
         </div>
       )}
@@ -1255,9 +1003,9 @@ function NeighborhoodForm({
         <button type="button" onClick={onCancel} className="btn-secondary">
           Cancel
         </button>
-        <button type="submit" className="btn-gold">
-          <Save size={18} />
-          Save Neighborhood
+        <button type="submit" className="btn-gold" disabled={saving}>
+          {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          {saving ? 'Saving...' : 'Save Neighborhood'}
         </button>
       </div>
     </form>
@@ -1265,21 +1013,81 @@ function NeighborhoodForm({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DEALS TAB
+// PROPERTIES TAB (Simplified)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DealsTab({ deals, setDeals }: { deals: Deal[], setDeals: (d: Deal[]) => void }) {
-  const [showForm, setShowForm] = useState(false)
-  const [editingDeal, setEditingDeal] = useState<Deal | null>(null)
-
-  const activeDeals = deals.filter(d => d.isActive)
-  const closedDeals = deals.filter(d => !d.isActive)
+function PropertiesTab({ properties, loading }: { properties: Property[], loading: boolean }) {
+  if (loading) return <LoadingSpinner message="Loading properties..." />
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl text-brand-navy">Active Transactions ({activeDeals.length})</h2>
-        <button onClick={() => { setEditingDeal(null); setShowForm(true) }} className="btn-gold">
+        <h2 className="font-display text-xl text-brand-navy">Properties ({properties.length})</h2>
+        <button className="btn-gold">
+          <Plus size={18} />
+          Add Property
+        </button>
+      </div>
+
+      {properties.length === 0 ? (
+        <div className="text-center py-12 text-neutral-500 bg-white border border-neutral-200">
+          No properties yet.
+        </div>
+      ) : (
+        <div className="bg-white border border-neutral-200">
+          <table className="w-full">
+            <thead className="bg-neutral-50 border-b">
+              <tr>
+                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase">Property</th>
+                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase">Price</th>
+                <th className="text-left px-6 py-4 text-xs font-medium text-neutral-500 uppercase">Status</th>
+                <th className="text-right px-6 py-4 text-xs font-medium text-neutral-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {properties.map((p) => (
+                <tr key={p._id}>
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-brand-navy">{p.title}</p>
+                    <p className="text-sm text-neutral-500">{p.beds} bed • {p.baths} bath • {p.sqft?.toLocaleString()} sqft</p>
+                  </td>
+                  <td className="px-6 py-4 font-display text-lg">{formatPrice(p.price)}</td>
+                  <td className="px-6 py-4">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      p.status === 'for-sale' ? 'bg-green-100 text-green-700' :
+                      p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      'bg-neutral-100 text-neutral-700'
+                    }`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEALS TAB (Simplified)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function DealsTab({ deals, loading }: { deals: Deal[], loading: boolean }) {
+  if (loading) return <LoadingSpinner message="Loading deals..." />
+
+  const activeDeals = deals.filter(d => d.isActive)
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-xl text-brand-navy">Active Deals ({activeDeals.length})</h2>
+        <button className="btn-gold">
           <Plus size={18} />
           New Deal
         </button>
@@ -1287,52 +1095,32 @@ function DealsTab({ deals, setDeals }: { deals: Deal[], setDeals: (d: Deal[]) =>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {activeDeals.map((deal) => (
-          <div key={deal.id} className="bg-white p-6 border border-neutral-200">
+          <div key={deal._id} className="bg-white p-6 border border-neutral-200">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="font-display text-lg text-brand-navy">{deal.clientName}</p>
-                <p className="text-sm text-neutral-500">{deal.property}</p>
+                <p className="text-sm text-neutral-500">{deal.propertyAddress}</p>
               </div>
               <span className={`text-xs px-2 py-1 rounded ${
-                deal.type === 'buying' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                deal.dealType === 'buying' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
               }`}>
-                {deal.type === 'buying' ? 'Buying' : 'Selling'}
+                {deal.dealType}
               </span>
             </div>
             
             <p className="font-display text-2xl text-brand-gold mb-4">{formatPrice(deal.price)}</p>
             
-            {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex justify-between text-xs text-neutral-500 mb-2">
-                <span>{stageNames[deal.stage]}</span>
-                <span>Stage {deal.stage}/8</span>
+                <span>{stageNames[deal.transactionStage]}</span>
+                <span>Stage {deal.transactionStage}/8</span>
               </div>
               <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-brand-gold rounded-full transition-all"
-                  style={{ width: `${(deal.stage / 8) * 100}%` }}
+                  className="h-full bg-brand-gold rounded-full"
+                  style={{ width: `${(deal.transactionStage / 8) * 100}%` }}
                 />
               </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button 
-                onClick={() => { setEditingDeal(deal); setShowForm(true) }}
-                className="btn-secondary flex-1 py-2 text-sm"
-              >
-                Edit
-              </button>
-              <button 
-                onClick={() => {
-                  const newStage = Math.min(deal.stage + 1, 8)
-                  setDeals(deals.map(d => d.id === deal.id ? { ...d, stage: newStage } : d))
-                }}
-                className="btn-gold flex-1 py-2 text-sm"
-                disabled={deal.stage >= 8}
-              >
-                Next Stage
-              </button>
             </div>
           </div>
         ))}
@@ -1340,149 +1128,10 @@ function DealsTab({ deals, setDeals }: { deals: Deal[], setDeals: (d: Deal[]) =>
 
       {activeDeals.length === 0 && (
         <div className="text-center py-12 text-neutral-500 bg-white border border-neutral-200">
-          No active deals. Click "New Deal" to add one.
+          No active deals.
         </div>
       )}
-
-      {/* Deal Form Modal */}
-      <Modal 
-        isOpen={showForm} 
-        onClose={() => setShowForm(false)} 
-        title={editingDeal ? 'Edit Deal' : 'New Deal'}
-        size="md"
-      >
-        <DealForm 
-          deal={editingDeal}
-          onSave={(deal) => {
-            if (editingDeal) {
-              setDeals(deals.map(d => d.id === deal.id ? deal : d))
-            } else {
-              setDeals([...deals, { ...deal, id: Date.now().toString() }])
-            }
-            setShowForm(false)
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      </Modal>
     </div>
-  )
-}
-
-function DealForm({ deal, onSave, onCancel }: { deal: Deal | null, onSave: (d: Deal) => void, onCancel: () => void }) {
-  const [formData, setFormData] = useState<Deal>(deal || {
-    id: '',
-    clientName: '',
-    clientEmail: '',
-    clientPhone: '',
-    property: '',
-    propertyAddress: '',
-    price: 0,
-    stage: 1,
-    type: 'buying',
-    keyDates: {},
-    isActive: true,
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <label className="block text-sm font-medium text-brand-navy mb-2">Client Name *</label>
-          <input
-            type="text"
-            required
-            className="input-field"
-            value={formData.clientName}
-            onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Email *</label>
-          <input
-            type="email"
-            required
-            className="input-field"
-            value={formData.clientEmail}
-            onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Phone</label>
-          <input
-            type="tel"
-            className="input-field"
-            value={formData.clientPhone || ''}
-            onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Deal Type</label>
-          <select
-            className="input-field"
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'buying' | 'selling' })}
-          >
-            <option value="buying">Buying</option>
-            <option value="selling">Selling</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Stage</label>
-          <select
-            className="input-field"
-            value={formData.stage}
-            onChange={(e) => setFormData({ ...formData, stage: Number(e.target.value) })}
-          >
-            {stageNames.slice(1).map((name, index) => (
-              <option key={index + 1} value={index + 1}>{index + 1}. {name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="col-span-2">
-          <label className="block text-sm font-medium text-brand-navy mb-2">Property Address</label>
-          <input
-            type="text"
-            className="input-field"
-            value={formData.propertyAddress || formData.property}
-            onChange={(e) => setFormData({ ...formData, property: e.target.value, propertyAddress: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Price</label>
-          <input
-            type="number"
-            className="input-field"
-            value={formData.price || ''}
-            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-brand-navy mb-2">Closing Date</label>
-          <input
-            type="date"
-            className="input-field"
-            value={formData.keyDates.closingDate || ''}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              keyDates: { ...formData.keyDates, closingDate: e.target.value }
-            })}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-4 justify-end pt-4 border-t border-neutral-200">
-        <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
-        <button type="submit" className="btn-gold">
-          <Save size={18} />
-          Save Deal
-        </button>
-      </div>
-    </form>
   )
 }
 
@@ -1490,14 +1139,34 @@ function DealForm({ deal, onSave, onCancel }: { deal: Deal | null, onSave: (d: D
 // SITE SETTINGS TAB
 // ═══════════════════════════════════════════════════════════════════════════
 
-function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, setSettings: (s: SiteSettings) => void }) {
+function SiteSettingsTab({ 
+  settings, 
+  loading, 
+  onSave, 
+  saving 
+}: { 
+  settings: SiteSettings | null
+  loading: boolean
+  onSave: (s: SiteSettings) => Promise<void>
+  saving: boolean
+}) {
+  const [formData, setFormData] = useState<SiteSettings>(settings || {
+    heroHeadline: '',
+    heroSubheadline: '',
+    heroMediaType: 'images',
+    agentName: '',
+    agentTitle: '',
+    phone: '',
+    email: '',
+    address: '',
+  })
   const [activeSection, setActiveSection] = useState('hero')
-  const [saved, setSaved] = useState(false)
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
+  useEffect(() => {
+    if (settings) setFormData(settings)
+  }, [settings])
+
+  if (loading) return <LoadingSpinner message="Loading settings..." />
 
   const sections = [
     { id: 'hero', label: 'Hero Section', icon: ImageIcon },
@@ -1508,7 +1177,6 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
 
   return (
     <div className="max-w-4xl space-y-6">
-      {/* Section Tabs */}
       <div className="flex gap-2 border-b border-neutral-200 overflow-x-auto pb-2">
         {sections.map(section => (
           <button
@@ -1526,7 +1194,6 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
         ))}
       </div>
 
-      {/* Hero Section */}
       {activeSection === 'hero' && (
         <div className="bg-white p-6 border border-neutral-200 space-y-4">
           <h3 className="font-display text-lg text-brand-navy mb-4">Hero Section</h3>
@@ -1535,8 +1202,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <input
               type="text"
               className="input-field"
-              value={settings.heroHeadline}
-              onChange={(e) => setSettings({ ...settings, heroHeadline: e.target.value })}
+              value={formData.heroHeadline}
+              onChange={(e) => setFormData({ ...formData, heroHeadline: e.target.value })}
             />
           </div>
           <div>
@@ -1544,36 +1211,13 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <textarea
               rows={2}
               className="input-field resize-none"
-              value={settings.heroSubheadline}
-              onChange={(e) => setSettings({ ...settings, heroSubheadline: e.target.value })}
+              value={formData.heroSubheadline}
+              onChange={(e) => setFormData({ ...formData, heroSubheadline: e.target.value })}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-navy mb-2">Media Type</label>
-            <select
-              className="input-field"
-              value={settings.heroMediaType}
-              onChange={(e) => setSettings({ ...settings, heroMediaType: e.target.value as 'images' | 'video' })}
-            >
-              <option value="images">Image Slider</option>
-              <option value="video">Video Background</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-navy mb-2">Hero Images</label>
-            <p className="text-sm text-neutral-500 mb-2">Currently: {settings.heroImages.length} images</p>
-            <div className="grid grid-cols-4 gap-2">
-              {settings.heroImages.map((img, index) => (
-                <div key={index} className="relative aspect-video rounded overflow-hidden">
-                  <Image src={img.url} alt={img.alt} fill className="object-cover" />
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
 
-      {/* About Section */}
       {activeSection === 'about' && (
         <div className="bg-white p-6 border border-neutral-200 space-y-4">
           <h3 className="font-display text-lg text-brand-navy mb-4">About Section</h3>
@@ -1583,8 +1227,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
               <input
                 type="text"
                 className="input-field"
-                value={settings.agentName}
-                onChange={(e) => setSettings({ ...settings, agentName: e.target.value })}
+                value={formData.agentName}
+                onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
               />
             </div>
             <div>
@@ -1592,33 +1236,19 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
               <input
                 type="text"
                 className="input-field"
-                value={settings.agentTitle}
-                onChange={(e) => setSettings({ ...settings, agentTitle: e.target.value })}
+                value={formData.agentTitle}
+                onChange={(e) => setFormData({ ...formData, agentTitle: e.target.value })}
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-navy mb-2">Photo URL</label>
-            <input
-              type="url"
-              className="input-field"
-              value={settings.agentPhoto}
-              onChange={(e) => setSettings({ ...settings, agentPhoto: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-brand-navy mb-2">About Text</label>
-            <textarea
-              rows={6}
-              className="input-field resize-none"
-              value={settings.aboutText}
-              onChange={(e) => setSettings({ ...settings, aboutText: e.target.value })}
-            />
-          </div>
+          <ImageUpload
+            currentImage={formData.agentPhoto}
+            label="Agent Photo"
+            onUpload={(assetId, url) => setFormData({ ...formData, agentPhoto: url })}
+          />
         </div>
       )}
 
-      {/* Contact Section */}
       {activeSection === 'contact' && (
         <div className="bg-white p-6 border border-neutral-200 space-y-4">
           <h3 className="font-display text-lg text-brand-navy mb-4">Contact Information</h3>
@@ -1628,8 +1258,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
               <input
                 type="tel"
                 className="input-field"
-                value={settings.phone}
-                onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
             <div>
@@ -1637,8 +1267,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
               <input
                 type="email"
                 className="input-field"
-                value={settings.email}
-                onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
           </div>
@@ -1647,14 +1277,13 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <input
               type="text"
               className="input-field"
-              value={settings.address}
-              onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
           </div>
         </div>
       )}
 
-      {/* Social Section */}
       {activeSection === 'social' && (
         <div className="bg-white p-6 border border-neutral-200 space-y-4">
           <h3 className="font-display text-lg text-brand-navy mb-4">Social Media Links</h3>
@@ -1663,8 +1292,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <input
               type="url"
               className="input-field"
-              value={settings.instagram}
-              onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
+              value={formData.instagram || ''}
+              onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
               placeholder="https://instagram.com/..."
             />
           </div>
@@ -1673,9 +1302,8 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <input
               type="url"
               className="input-field"
-              value={settings.facebook}
-              onChange={(e) => setSettings({ ...settings, facebook: e.target.value })}
-              placeholder="https://facebook.com/..."
+              value={formData.facebook || ''}
+              onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
             />
           </div>
           <div>
@@ -1683,28 +1311,18 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
             <input
               type="url"
               className="input-field"
-              value={settings.linkedin}
-              onChange={(e) => setSettings({ ...settings, linkedin: e.target.value })}
-              placeholder="https://linkedin.com/in/..."
+              value={formData.linkedin || ''}
+              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
             />
           </div>
         </div>
       )}
 
-      {/* Save Button */}
       <div className="flex justify-end">
-        <button onClick={handleSave} className="btn-gold">
-          <Save size={18} />
-          {saved ? 'Saved!' : 'Save Changes'}
+        <button onClick={() => onSave(formData)} className="btn-gold" disabled={saving}>
+          {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
-      </div>
-
-      {/* Note */}
-      <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-        <p className="text-amber-800 text-sm">
-          <strong>Note:</strong> Changes are saved locally in this demo. To make them permanent and sync across devices, 
-          connect your Sanity CMS.
-        </p>
       </div>
     </div>
   )
@@ -1716,10 +1334,154 @@ function SiteSettingsTab({ settings, setSettings }: { settings: SiteSettings, se
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [properties, setProperties] = useState<Property[]>(demoProperties)
-  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>(staticNeighborhoods)
-  const [deals, setDeals] = useState<Deal[]>(demoDeals)
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(demoSiteSettings)
+  
+  // Data states
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
+  
+  // Loading states
+  const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(true)
+  const [loadingProperties, setLoadingProperties] = useState(true)
+  const [loadingDeals, setLoadingDeals] = useState(true)
+  const [loadingSettings, setLoadingSettings] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchNeighborhoods()
+    fetchProperties()
+    fetchDeals()
+    fetchSettings()
+  }, [])
+
+  const fetchNeighborhoods = async () => {
+    try {
+      const res = await fetch('/api/neighborhoods')
+      if (res.ok) {
+        const data = await res.json()
+        setNeighborhoods(data)
+      }
+    } catch (error) {
+      console.error('Error fetching neighborhoods:', error)
+    } finally {
+      setLoadingNeighborhoods(false)
+    }
+  }
+
+  const fetchProperties = async () => {
+    try {
+      const res = await fetch('/api/properties')
+      if (res.ok) {
+        const data = await res.json()
+        setProperties(data)
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error)
+    } finally {
+      setLoadingProperties(false)
+    }
+  }
+
+  const fetchDeals = async () => {
+    try {
+      const res = await fetch('/api/deals')
+      if (res.ok) {
+        const data = await res.json()
+        setDeals(data)
+      }
+    } catch (error) {
+      console.error('Error fetching deals:', error)
+    } finally {
+      setLoadingDeals(false)
+    }
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error)
+    } finally {
+      setLoadingSettings(false)
+    }
+  }
+
+  const saveNeighborhood = async (neighborhood: Neighborhood) => {
+    setSaving(true)
+    try {
+      const method = neighborhood._id ? 'PUT' : 'POST'
+      const res = await fetch('/api/neighborhoods', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(neighborhood),
+      })
+      if (res.ok) {
+        await fetchNeighborhoods()
+      } else {
+        throw new Error('Failed to save')
+      }
+    } catch (error) {
+      console.error('Error saving neighborhood:', error)
+      alert('Failed to save neighborhood')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteNeighborhood = async (id: string) => {
+    try {
+      const res = await fetch(`/api/neighborhoods?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        await fetchNeighborhoods()
+      }
+    } catch (error) {
+      console.error('Error deleting neighborhood:', error)
+      alert('Failed to delete neighborhood')
+    }
+  }
+
+  const saveSettings = async (newSettings: SiteSettings) => {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettings),
+      })
+      if (res.ok) {
+        await fetchSettings()
+        alert('Settings saved!')
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      alert('Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const seedData = async (type: string) => {
+    setSeeding(true)
+    try {
+      const res = await fetch(`/api/seed?type=${type}`, { method: 'POST' })
+      const data = await res.json()
+      alert(data.message)
+      if (type === 'neighborhoods') await fetchNeighborhoods()
+      if (type === 'settings') await fetchSettings()
+    } catch (error) {
+      console.error('Error seeding data:', error)
+      alert('Failed to seed data')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
@@ -1745,11 +1507,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <Link href="/" className="text-white/70 hover:text-white text-sm hidden sm:block">
               View Website →
             </Link>
-            <button 
-              onClick={onLogout}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
-              title="Logout"
-            >
+            <button onClick={onLogout} className="p-2 hover:bg-white/10 rounded-full transition-colors" title="Logout">
               <LogOut size={20} />
             </button>
           </div>
@@ -1777,19 +1535,36 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
         {/* Tab Content */}
         {activeTab === 'dashboard' && (
-          <DashboardTab properties={properties} deals={deals} neighborhoods={neighborhoods} />
+          <DashboardTab 
+            properties={properties} 
+            deals={deals} 
+            neighborhoods={neighborhoods}
+            onSeedData={seedData}
+            seeding={seeding}
+          />
         )}
         {activeTab === 'properties' && (
-          <PropertiesTab properties={properties} setProperties={setProperties} />
+          <PropertiesTab properties={properties} loading={loadingProperties} />
         )}
         {activeTab === 'neighborhoods' && (
-          <NeighborhoodsTab neighborhoods={neighborhoods} setNeighborhoods={setNeighborhoods} />
+          <NeighborhoodsTab 
+            neighborhoods={neighborhoods} 
+            loading={loadingNeighborhoods}
+            onSave={saveNeighborhood}
+            onDelete={deleteNeighborhood}
+            saving={saving}
+          />
         )}
         {activeTab === 'deals' && (
-          <DealsTab deals={deals} setDeals={setDeals} />
+          <DealsTab deals={deals} loading={loadingDeals} />
         )}
         {activeTab === 'settings' && (
-          <SiteSettingsTab settings={siteSettings} setSettings={setSiteSettings} />
+          <SiteSettingsTab 
+            settings={settings} 
+            loading={loadingSettings}
+            onSave={saveSettings}
+            saving={saving}
+          />
         )}
       </div>
     </div>
@@ -1804,11 +1579,8 @@ export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    // Check if already logged in
     const loggedIn = localStorage.getItem('admin_logged_in')
-    if (loggedIn === 'true') {
-      setIsLoggedIn(true)
-    }
+    if (loggedIn === 'true') setIsLoggedIn(true)
   }, [])
 
   const handleLogout = () => {
