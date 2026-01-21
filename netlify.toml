@@ -1,20 +1,94 @@
+# ════════════════════════════════════════════════════════════════════════════════
+# NETLIFY CONFIGURATION - Merrav Berko Real Estate
+# ════════════════════════════════════════════════════════════════════════════════
+
 [build]
-  command = "npm run build"
+  command = "npm ci && npm run build"
   publish = ".next"
+
+# Next.js plugin for server-side rendering
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ════════════════════════════════════════════════════════════════════════════════
+# ENVIRONMENT VARIABLES (set in Netlify UI - DO NOT put secrets here)
+# ════════════════════════════════════════════════════════════════════════════════
+# Required:
+#   NEXT_PUBLIC_SANITY_PROJECT_ID - Sanity project ID
+#   NEXT_PUBLIC_SANITY_DATASET - Usually "production"
+#   SANITY_API_TOKEN - Sanity API token with write access
+
+# ════════════════════════════════════════════════════════════════════════════════
+# HEADERS - Security & Caching
+# ════════════════════════════════════════════════════════════════════════════════
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Static assets - controlled caching
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+# Fonts and truly static files - longer cache
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# API routes - no caching
 [[headers]]
-  for = "/images/*"
+  for = "/api/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+# ════════════════════════════════════════════════════════════════════════════════
+# REDIRECTS
+# ════════════════════════════════════════════════════════════════════════════════
+
+# Force HTTPS
+[[redirects]]
+  from = "http://merrav.com/*"
+  to = "https://merrav.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.merrav.com/*"
+  to = "https://merrav.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.merrav.com/*"
+  to = "https://merrav.com/:splat"
+  status = 301
+  force = true
+
+# ════════════════════════════════════════════════════════════════════════════════
+# IDENTITY (Netlify Identity for Admin Authentication)
+# ════════════════════════════════════════════════════════════════════════════════
+# Enable Netlify Identity in the Netlify dashboard:
+# Site settings > Identity > Enable Identity
+# Then set registration to "Invite only" for security
+
+# Identity settings (optional overrides)
+[identity]
+  # Require email confirmation
+  autoconfirm = false
+
+[identity.providers]
+  # Enable Google OAuth if desired
+  google = false

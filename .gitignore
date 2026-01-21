@@ -16,10 +16,15 @@ dist/
 .env.test.local
 .env.production.local
 
-# Debug
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
 
 # IDE
 .idea/
@@ -27,11 +32,12 @@ yarn-error.log*
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Debug
+npm-debug.log*
 
-# Misc
-*.log
+# Vercel
 .vercel
-.netlify
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
