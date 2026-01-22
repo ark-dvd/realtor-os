@@ -63,8 +63,13 @@ export const sanityClient = {
   },
 }
 
-// Check if Sanity is properly configured
+// Check if Sanity is configured for reading (public pages)
 export function isSanityConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
+}
+
+// Check if Sanity is configured for writing (admin operations)
+export function isSanityWriteConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SANITY_PROJECT_ID &&
     process.env.SANITY_API_TOKEN
