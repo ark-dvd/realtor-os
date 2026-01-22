@@ -64,6 +64,12 @@ export default {
               title: 'Alt Text',
               type: 'string',
             },
+            {
+              name: 'externalUrl',
+              title: 'External URL (alternative to upload)',
+              type: 'url',
+              description: 'Use this for Unsplash or other external image URLs',
+            },
           ],
         },
       ],

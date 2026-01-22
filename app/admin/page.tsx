@@ -148,8 +148,8 @@ function ImageUpload({ currentImage, onUpload, label, getToken }: { currentImage
       const formData = new FormData()
       formData.append('file', file)
       const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-      if (!res.ok) throw new Error((await res.json()).error || 'Upload failed')
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
       onUpload(data.assetId, data.url)
     } catch (err) { 
       alert(err instanceof Error ? err.message : 'Failed')

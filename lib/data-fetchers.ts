@@ -254,7 +254,7 @@ export async function getSettings(): Promise<SiteSettings> {
         heroHeadline,
         heroSubheadline,
         heroMediaType,
-        heroImages[] { _key, "url": asset->url, alt },
+        heroImages[] { _key, "url": coalesce(asset->url, externalUrl), alt, externalUrl },
         "heroVideoUrl": heroVideo.asset->url,
         agentName,
         agentTitle,
