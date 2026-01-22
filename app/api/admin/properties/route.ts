@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const v = validate(PropertyInputSchema, body); if (!v.success) return NextResponse.json({ error: 'Validation failed', details: v.errors }, { status: 400 })
     const d = v.data, client = getSanityWriteClient()
-    const doc: Record<string, unknown> = { _type: 'property', title: d.title, slug: { _type: 'slug', current: d.slug }, status: d.status, price: d.price, address: d.address || {}, beds: d.beds, baths: d.baths, sqft: d.sqft, lotSize: d.lotSize, yearBuilt: d.yearBuilt, garage: d.garage, mlsNumber: d.mlsNumber, shortDescription: d.shortDescription, features: d.features || [] }
+    const doc: any = { _type: 'property', title: d.title, slug: { _type: 'slug', current: d.slug }, status: d.status, price: d.price, address: d.address || {}, beds: d.beds, baths: d.baths, sqft: d.sqft, lotSize: d.lotSize, yearBuilt: d.yearBuilt, garage: d.garage, mlsNumber: d.mlsNumber, shortDescription: d.shortDescription, features: d.features || [] }
     if (d.heroImageAssetId) doc.heroImage = { _type: 'image', asset: { _type: 'reference', _ref: d.heroImageAssetId } }
     if (d.neighborhoodId) doc.neighborhood = { _type: 'reference', _ref: d.neighborhoodId }
     return NextResponse.json(await client.create(doc), { status: 201 })
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const v = validate(PropertyInputSchema, body); if (!v.success) return NextResponse.json({ error: 'Validation failed', details: v.errors }, { status: 400 })
     const d = v.data; if (!d._id) return NextResponse.json({ error: 'Missing _id' }, { status: 400 })
-    const updates: Record<string, unknown> = { title: d.title, slug: { _type: 'slug', current: d.slug }, status: d.status, price: d.price, address: d.address, beds: d.beds, baths: d.baths, sqft: d.sqft, lotSize: d.lotSize, yearBuilt: d.yearBuilt, garage: d.garage, mlsNumber: d.mlsNumber, shortDescription: d.shortDescription, features: d.features }
+    const updates: any = { title: d.title, slug: { _type: 'slug', current: d.slug }, status: d.status, price: d.price, address: d.address, beds: d.beds, baths: d.baths, sqft: d.sqft, lotSize: d.lotSize, yearBuilt: d.yearBuilt, garage: d.garage, mlsNumber: d.mlsNumber, shortDescription: d.shortDescription, features: d.features }
     if (d.heroImageAssetId) updates.heroImage = { _type: 'image', asset: { _type: 'reference', _ref: d.heroImageAssetId } }
     if (d.neighborhoodId) updates.neighborhood = { _type: 'reference', _ref: d.neighborhoodId }
     return NextResponse.json(await getSanityWriteClient().patch(d._id).set(updates).commit())

@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest) {
     const v = validate(NeighborhoodInputSchema, body); if (!v.success) return NextResponse.json({ error: 'Validation failed', details: v.errors }, { status: 400 })
     const d = v.data; if (!d._id) return NextResponse.json({ error: 'Missing _id' }, { status: 400 })
     const client = getSanityWriteClient()
-    const updates: Record<string, unknown> = { name: d.name, slug: { _type: 'slug', current: d.slug }, tagline: d.tagline, vibe: d.vibe, description: d.description, population: d.population, commute: d.commute, schoolDistrict: d.schoolDistrict, schools: d.schools?.map((s, i) => ({ _key: s._key || `s-${i}-${Date.now()}`, ...s })), whyPeopleLove: d.whyPeopleLove, highlights: d.highlights?.map((h, i) => ({ _key: h._key || `h-${i}-${Date.now()}`, ...h })), avgPrice: d.avgPrice, order: d.order, isActive: d.isActive }
+    const updates: any = { name: d.name, slug: { _type: 'slug', current: d.slug }, tagline: d.tagline, vibe: d.vibe, description: d.description, population: d.population, commute: d.commute, schoolDistrict: d.schoolDistrict, schools: d.schools?.map((s, i) => ({ _key: s._key || `s-${i}-${Date.now()}`, ...s })), whyPeopleLove: d.whyPeopleLove, highlights: d.highlights?.map((h, i) => ({ _key: h._key || `h-${i}-${Date.now()}`, ...h })), avgPrice: d.avgPrice, order: d.order, isActive: d.isActive }
     if (d.imageAssetId) updates.image = { _type: 'image', asset: { _type: 'reference', _ref: d.imageAssetId } }
     const result = await client.patch(d._id).set(updates).commit()
     return NextResponse.json(result)

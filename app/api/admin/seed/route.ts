@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   if (!ALLOW_SEED) return NextResponse.json({ error: 'Seeding disabled. Set ALLOW_SEED=true' }, { status: 403 })
   try {
     const client = getSanityWriteClient()
-    const results: Record<string, unknown> = {}
+    const results: any = {}
     
     const nCount = await client.fetch(`count(*[_type == "neighborhood"])`)
     if (nCount === 0) {
