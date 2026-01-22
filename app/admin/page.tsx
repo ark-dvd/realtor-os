@@ -5,6 +5,66 @@ import { Lock, Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, Map
 
 const ADMIN_PASSWORD = 'Peace&Love202^'
 
+// Image compression function - resizes and compresses large images before upload
+async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.85): Promise<File> {
+  return new Promise((resolve, reject) => {
+    // If file is already small (< 2MB), skip compression
+    if (file.size < 2 * 1024 * 1024) {
+      resolve(file)
+      return
+    }
+
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    img.onload = () => {
+      let { width, height } = img
+
+      // Calculate new dimensions maintaining aspect ratio
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'))
+        return
+      }
+
+      // Draw and compress
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillRect(0, 0, width, height)
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Compression failed'))
+            return
+          }
+          // Create new file with compressed data
+          const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          })
+          console.log(`Compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`)
+          resolve(compressedFile)
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+
+    img.onerror = () => reject(new Error('Failed to load image'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 function useSimpleAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -62,9 +122,14 @@ function ImageUpload({ currentImage, onUpload, label, getToken }: { currentImage
     setUploading(true)
     try {
       const token = await getToken(); if (!token) throw new Error('Not authenticated')
-      const formData = new FormData(); formData.append('file', file)
+      // Compress image before upload
+      const compressedFile = await compressImage(file)
+      const formData = new FormData(); formData.append('file', compressedFile)
       const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-      const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Upload failed')
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch { throw new Error(text || 'Upload failed - invalid response') }
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
       onUpload(data.assetId, data.url)
     } catch (err) { alert(err instanceof Error ? err.message : 'Failed'); setPreview(currentImage) }
     finally { setUploading(false) }
@@ -82,9 +147,15 @@ function GalleryUpload({ images, onChange, label, getToken }: { images: GalleryI
       const token = await getToken(); if (!token) throw new Error('Not authenticated')
       const newImages: GalleryImage[] = []
       for (const file of Array.from(files)) {
-        const formData = new FormData(); formData.append('file', file)
+        // Compress each image before upload
+        const compressedFile = await compressImage(file)
+        const formData = new FormData(); formData.append('file', compressedFile)
         const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-        const data = await res.json(); if (res.ok) newImages.push({ _key: genKey(), url: data.url, assetId: data.assetId, alt: '' })
+        const text = await res.text()
+        try {
+          const data = JSON.parse(text)
+          if (res.ok) newImages.push({ _key: genKey(), url: data.url, assetId: data.assetId, alt: '' })
+        } catch { console.error('Upload response:', text) }
       }
       onChange([...images, ...newImages])
     } catch (err) { alert(err instanceof Error ? err.message : 'Failed') }
@@ -208,9 +279,14 @@ function SettingsTab({ settings, loading, onSave, saving, getToken }: { settings
     setUploadingIndex(index)
     try {
       const token = await getToken(); if (!token) throw new Error('Not authenticated')
-      const formData = new FormData(); formData.append('file', file)
+      // Compress image before upload
+      const compressedFile = await compressImage(file)
+      const formData = new FormData(); formData.append('file', compressedFile)
       const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-      const data = await res.json(); if (!res.ok) throw new Error(data.error || 'Upload failed')
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch { throw new Error(text || 'Upload failed - invalid response') }
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
       const updated = [...heroImages]; updated[index] = { ...updated[index], url: data.url, assetId: data.assetId }; setHeroImages(updated)
     } catch (err) { alert(err instanceof Error ? err.message : 'Failed') }
     finally { setUploadingIndex(null) }

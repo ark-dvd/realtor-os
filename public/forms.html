@@ -1,0 +1,72 @@
+<!-- 
+  Netlify Forms Detection
+  These hidden forms are required for Netlify to detect form submissions.
+  They are never displayed to users.
+-->
+
+<!-- Contact Form -->
+<form name="contact" netlify netlify-honeypot="bot-field" hidden>
+  <input type="text" name="name" />
+  <input type="email" name="email" />
+  <input type="tel" name="phone" />
+  <select name="interest">
+    <option value="buying">Buying a Home</option>
+    <option value="selling">Selling a Home</option>
+    <option value="valuation">Home Valuation</option>
+    <option value="investing">Real Estate Investment</option>
+    <option value="other">Other</option>
+  </select>
+  <textarea name="message"></textarea>
+</form>
+
+<!-- Home Valuation Form -->
+<form name="valuation" netlify netlify-honeypot="bot-field" hidden>
+  <input type="text" name="name" />
+  <input type="email" name="email" />
+  <input type="tel" name="phone" />
+  <input type="text" name="address" />
+  <input type="text" name="city" />
+  <input type="text" name="zip" />
+  <select name="propertyType">
+    <option value="single-family">Single Family</option>
+    <option value="condo">Condo/Townhouse</option>
+    <option value="multi-family">Multi-Family</option>
+    <option value="land">Land</option>
+  </select>
+  <input type="number" name="beds" />
+  <input type="number" name="baths" />
+  <input type="number" name="sqft" />
+  <select name="condition">
+    <option value="excellent">Excellent</option>
+    <option value="good">Good</option>
+    <option value="fair">Fair</option>
+    <option value="needs-work">Needs Work</option>
+  </select>
+  <select name="timeline">
+    <option value="asap">ASAP</option>
+    <option value="1-3">1-3 months</option>
+    <option value="3-6">3-6 months</option>
+    <option value="6+">6+ months</option>
+    <option value="just-curious">Just Curious</option>
+  </select>
+  <textarea name="comments"></textarea>
+</form>
+
+<!-- Buyer Search Form -->
+<form name="buyer-search" netlify netlify-honeypot="bot-field" hidden>
+  <input type="text" name="name" />
+  <input type="email" name="email" />
+  <input type="tel" name="phone" />
+  <input type="number" name="minPrice" />
+  <input type="number" name="maxPrice" />
+  <input type="number" name="beds" />
+  <input type="number" name="baths" />
+  <input type="text" name="neighborhoods" />
+  <select name="timeline">
+    <option value="asap">ASAP</option>
+    <option value="1-3">1-3 months</option>
+    <option value="3-6">3-6 months</option>
+    <option value="6+">6+ months</option>
+  </select>
+  <textarea name="comments"></textarea>
+</form>

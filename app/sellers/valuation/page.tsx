@@ -49,19 +49,31 @@ export default function SellersValuationPage() {
                 </p>
               </div>
 
-              <form className="space-y-6">
+              <form 
+                name="valuation" 
+                method="POST" 
+                data-netlify="true" 
+                netlify-honeypot="bot-field"
+                action="/contact?success=valuation"
+                className="space-y-6"
+              >
+                <input type="hidden" name="form-name" value="valuation" />
+                <p className="hidden">
+                  <label>Don&apos;t fill this out: <input name="bot-field" /></label>
+                </p>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-brand-navy mb-2">
                       Name *
                     </label>
-                    <input type="text" required className="input-field" />
+                    <input type="text" name="name" required className="input-field" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-brand-navy mb-2">
                       Email *
                     </label>
-                    <input type="email" required className="input-field" />
+                    <input type="email" name="email" required className="input-field" />
                   </div>
                 </div>
 
@@ -69,7 +81,7 @@ export default function SellersValuationPage() {
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Phone
                   </label>
-                  <input type="tel" className="input-field" />
+                  <input type="tel" name="phone" className="input-field" />
                 </div>
 
                 <div>
@@ -78,6 +90,7 @@ export default function SellersValuationPage() {
                   </label>
                   <input 
                     type="text" 
+                    name="address"
                     required 
                     className="input-field"
                     placeholder="123 Main St, Austin, TX 78701"
@@ -89,31 +102,31 @@ export default function SellersValuationPage() {
                     <label className="block text-sm font-medium text-brand-navy mb-2">
                       Bedrooms
                     </label>
-                    <select className="input-field">
-                      <option>1</option>
-                      <option>2</option>
-                      <option>3</option>
-                      <option selected>4</option>
-                      <option>5+</option>
+                    <select name="beds" className="input-field" defaultValue="4">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5+">5+</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-brand-navy mb-2">
                       Bathrooms
                     </label>
-                    <select className="input-field">
-                      <option>1</option>
-                      <option>1.5</option>
-                      <option>2</option>
-                      <option selected>2.5</option>
-                      <option>3+</option>
+                    <select name="baths" className="input-field" defaultValue="2.5">
+                      <option value="1">1</option>
+                      <option value="1.5">1.5</option>
+                      <option value="2">2</option>
+                      <option value="2.5">2.5</option>
+                      <option value="3+">3+</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-brand-navy mb-2">
                       Approx. Sq Ft
                     </label>
-                    <input type="number" className="input-field" placeholder="2000" />
+                    <input type="number" name="sqft" className="input-field" placeholder="2000" />
                   </div>
                 </div>
 
@@ -121,12 +134,12 @@ export default function SellersValuationPage() {
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Timeline to Sell
                   </label>
-                  <select className="input-field">
-                    <option>ASAP</option>
-                    <option>1-3 months</option>
-                    <option>3-6 months</option>
-                    <option>6+ months</option>
-                    <option>Just curious</option>
+                  <select name="timeline" className="input-field">
+                    <option value="asap">ASAP</option>
+                    <option value="1-3">1-3 months</option>
+                    <option value="3-6">3-6 months</option>
+                    <option value="6+">6+ months</option>
+                    <option value="just-curious">Just curious</option>
                   </select>
                 </div>
 
@@ -135,6 +148,7 @@ export default function SellersValuationPage() {
                     Additional Information
                   </label>
                   <textarea 
+                    name="comments"
                     rows={4} 
                     className="input-field resize-none"
                     placeholder="Recent upgrades, special features, etc."

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Simple password - must match the one in admin/page.tsx
-const ADMIN_PASSWORD = 'Peace&Love202^'
+// Password from environment variable OR default
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Peace&Love202^'
 const ADMIN_TOKEN = Buffer.from(ADMIN_PASSWORD).toString('base64')
 
 export interface AuthUser {

@@ -47,19 +47,31 @@ export default function BuyersSearchPage() {
               </p>
             </div>
 
-            <form className="space-y-6">
+            <form 
+              name="buyer-search" 
+              method="POST" 
+              data-netlify="true" 
+              netlify-honeypot="bot-field"
+              action="/contact?success=search"
+              className="space-y-6"
+            >
+              <input type="hidden" name="form-name" value="buyer-search" />
+              <p className="hidden">
+                <label>Don&apos;t fill this out: <input name="bot-field" /></label>
+              </p>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Name *
                   </label>
-                  <input type="text" required className="input-field" />
+                  <input type="text" name="name" required className="input-field" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Email *
                   </label>
-                  <input type="email" required className="input-field" />
+                  <input type="email" name="email" required className="input-field" />
                 </div>
               </div>
 
@@ -68,18 +80,18 @@ export default function BuyersSearchPage() {
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Phone
                   </label>
-                  <input type="tel" className="input-field" />
+                  <input type="tel" name="phone" className="input-field" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Timeline
                   </label>
-                  <select className="input-field">
-                    <option>ASAP</option>
-                    <option>1-3 months</option>
-                    <option>3-6 months</option>
-                    <option>6+ months</option>
-                    <option>Just exploring</option>
+                  <select name="timeline" className="input-field">
+                    <option value="asap">ASAP</option>
+                    <option value="1-3">1-3 months</option>
+                    <option value="3-6">3-6 months</option>
+                    <option value="6+">6+ months</option>
+                    <option value="exploring">Just exploring</option>
                   </select>
                 </div>
               </div>
@@ -89,41 +101,41 @@ export default function BuyersSearchPage() {
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Min Price
                   </label>
-                  <select className="input-field">
-                    <option>No Min</option>
-                    <option>$300,000</option>
-                    <option>$500,000</option>
-                    <option>$750,000</option>
-                    <option>$1,000,000</option>
-                    <option>$1,500,000</option>
-                    <option>$2,000,000</option>
+                  <select name="minPrice" className="input-field">
+                    <option value="">No Min</option>
+                    <option value="300000">$300,000</option>
+                    <option value="500000">$500,000</option>
+                    <option value="750000">$750,000</option>
+                    <option value="1000000">$1,000,000</option>
+                    <option value="1500000">$1,500,000</option>
+                    <option value="2000000">$2,000,000</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Max Price
                   </label>
-                  <select className="input-field">
-                    <option>No Max</option>
-                    <option>$500,000</option>
-                    <option>$750,000</option>
-                    <option>$1,000,000</option>
-                    <option>$1,500,000</option>
-                    <option>$2,000,000</option>
-                    <option>$3,000,000+</option>
+                  <select name="maxPrice" className="input-field">
+                    <option value="">No Max</option>
+                    <option value="500000">$500,000</option>
+                    <option value="750000">$750,000</option>
+                    <option value="1000000">$1,000,000</option>
+                    <option value="1500000">$1,500,000</option>
+                    <option value="2000000">$2,000,000</option>
+                    <option value="3000000">$3,000,000+</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-brand-navy mb-2">
                     Bedrooms
                   </label>
-                  <select className="input-field">
-                    <option>Any</option>
-                    <option>1+</option>
-                    <option>2+</option>
-                    <option>3+</option>
-                    <option>4+</option>
-                    <option>5+</option>
+                  <select name="beds" className="input-field">
+                    <option value="">Any</option>
+                    <option value="1">1+</option>
+                    <option value="2">2+</option>
+                    <option value="3">3+</option>
+                    <option value="4">4+</option>
+                    <option value="5">5+</option>
                   </select>
                 </div>
               </div>
@@ -134,6 +146,7 @@ export default function BuyersSearchPage() {
                 </label>
                 <input 
                   type="text" 
+                  name="neighborhoods"
                   className="input-field" 
                   placeholder="e.g., Westlake, Downtown, Tarrytown"
                 />
@@ -144,6 +157,7 @@ export default function BuyersSearchPage() {
                   Additional Details
                 </label>
                 <textarea 
+                  name="comments"
                   rows={4} 
                   className="input-field resize-none"
                   placeholder="Tell me more about what you're looking for..."

@@ -22,7 +22,6 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
   const [error, setError] = useState('')
 
   const agentName = settings.agentName || 'Merrav Berko'
-  const firstName = agentName.split(' ')[0]
   const phone = settings.phone || '(512) 599-9995'
   const email = settings.email || 'merrav@merrav.com'
   const address = settings.address || 'Austin, Texas'
@@ -34,15 +33,33 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
     setError('')
     
     try {
-      const response = await fetch('/api/contact', {
+      // Submit to Netlify Forms
+      const formBody = new URLSearchParams({
+        'form-name': 'contact',
+        ...formData
+      }).toString()
+
+      const netlifyResponse = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formBody,
+      })
+
+      if (netlifyResponse.ok) {
+        setIsSubmitted(true)
+        return
+      }
+
+      // Fallback to API if Netlify Forms fails
+      const apiResponse = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
       
-      const data = await response.json()
+      const data = await apiResponse.json()
       
-      if (!response.ok) {
+      if (!apiResponse.ok) {
         throw new Error(data.error || 'Failed to send message')
       }
       
@@ -103,7 +120,22 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                     Fill out the form below and I&apos;ll get back to you within 24 hours.
                   </p>
 
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form 
+                    name="contact" 
+                    method="POST" 
+                    data-netlify="true"
+                    netlify-honeypot="bot-field"
+                    onSubmit={handleSubmit} 
+                    className="space-y-6"
+                  >
+                    {/* Honeypot field for spam protection */}
+                    <input type="hidden" name="form-name" value="contact" />
+                    <p className="hidden">
+                      <label>
+                        Don&apos;t fill this out: <input name="bot-field" />
+                      </label>
+                    </p>
+
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-brand-navy mb-2">
                         Your Name *
@@ -111,6 +143,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       <input
                         type="text"
                         id="name"
+                        name="name"
                         required
                         className="input-field"
                         value={formData.name}
@@ -125,6 +158,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       <input
                         type="email"
                         id="email"
+                        name="email"
                         required
                         className="input-field"
                         value={formData.email}
@@ -139,6 +173,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       <input
                         type="tel"
                         id="phone"
+                        name="phone"
                         className="input-field"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -151,6 +186,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       </label>
                       <select
                         id="interest"
+                        name="interest"
                         className="input-field"
                         value={formData.interest}
                         onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
@@ -169,6 +205,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       </label>
                       <textarea
                         id="message"
+                        name="message"
                         rows={5}
                         required
                         className="input-field resize-none"

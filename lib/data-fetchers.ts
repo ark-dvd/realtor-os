@@ -339,7 +339,7 @@ export async function getProperties(status?: string): Promise<Property[]> {
         seoTitle,
         seoDescription
       }
-    `, { status })
+    `, status ? { status } : {})
 
     // No properties in Sanity - show demo
     if (!properties || properties.length === 0) {
