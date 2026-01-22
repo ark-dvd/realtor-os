@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       transactionStage: d.transactionStage ?? 1,
       keyDates: d.keyDates || {},
       notes: d.notes,
-      isActive: d.isActive,
+      isActive: d.isActive ?? true,
     }
 
     if (d.propertyId) {
@@ -105,7 +105,7 @@ export async function PUT(request: NextRequest) {
       transactionStage: d.transactionStage ?? 1,
       keyDates: d.keyDates,
       notes: d.notes,
-      isActive: d.isActive,
+      isActive: d.isActive ?? true,
     }
 
     if (d.propertyId) {
