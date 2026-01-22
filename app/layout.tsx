@@ -4,6 +4,9 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { getSettings } from '@/lib/data-fetchers'
 
+// Revalidate layout data every 60 seconds
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: {
     template: '%s | Merrav Berko Real Estate',

@@ -1,52 +1,49 @@
 import { createClient, SanityClient } from '@sanity/client'
 
-// Get environment variables with fallbacks for build time
-function getEnv(name: string, fallback: string = ''): string {
-  return process.env[name] || fallback
-}
-
-// Configuration values - use fallbacks during build
-const projectId = getEnv('NEXT_PUBLIC_SANITY_PROJECT_ID', 'placeholder')
-const dataset = getEnv('NEXT_PUBLIC_SANITY_DATASET', 'production')
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 const apiVersion = '2024-01-01'
 
-// Lazy-initialized clients to avoid build-time errors
+// Lazy-initialized clients
 let _readClient: SanityClient | null = null
 let _writeClient: SanityClient | null = null
 
-// Read-only client for public pages (uses CDN for performance)
+/**
+ * Read-only client for public pages.
+ * useCdn: false ensures fresh data on every request (no Sanity edge caching).
+ * No token required - reads from public dataset.
+ */
 export function getSanityClient(): SanityClient {
   if (!_readClient) {
-    const actualProjectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-    if (!actualProjectId) {
-      throw new Error('Missing required environment variable: NEXT_PUBLIC_SANITY_PROJECT_ID')
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    if (!projectId) {
+      throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
     }
     _readClient = createClient({
-      projectId: actualProjectId,
+      projectId,
       dataset,
       apiVersion,
-      useCdn: true,
+      useCdn: false, // CRITICAL: false = fresh data, true = cached up to 60s
     })
   }
   return _readClient
 }
 
-// Write client for admin operations (no CDN, requires token)
-// Only use this in server-side code (API routes)
+/**
+ * Write client for admin operations.
+ * Requires SANITY_API_TOKEN (server-side only).
+ */
 export function getSanityWriteClient(): SanityClient {
   if (!_writeClient) {
-    const actualProjectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const token = process.env.SANITY_API_TOKEN
-    
-    if (!actualProjectId) {
-      throw new Error('Missing required environment variable: NEXT_PUBLIC_SANITY_PROJECT_ID')
+    if (!projectId) {
+      throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
     }
     if (!token) {
-      throw new Error('Missing required environment variable: SANITY_API_TOKEN')
+      throw new Error('Missing SANITY_API_TOKEN')
     }
-    
     _writeClient = createClient({
-      projectId: actualProjectId,
+      projectId,
       dataset,
       apiVersion,
       useCdn: false,
@@ -56,19 +53,18 @@ export function getSanityWriteClient(): SanityClient {
   return _writeClient
 }
 
-// Legacy export for backwards compatibility - lazily initialized
-export const sanityClient = {
-  fetch: async (...args: Parameters<SanityClient['fetch']>) => {
-    return getSanityClient().fetch(...args)
-  },
-}
-
-// Check if Sanity is configured for reading (public pages)
+/**
+ * Check if Sanity is configured for reading (public pages).
+ * Only requires project ID - no token needed for public reads.
+ */
 export function isSanityConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID)
 }
 
-// Check if Sanity is configured for writing (admin operations)
+/**
+ * Check if Sanity is configured for writing (admin).
+ * Requires both project ID and write token.
+ */
 export function isSanityWriteConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SANITY_PROJECT_ID &&
