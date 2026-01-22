@@ -1,4 +1,5 @@
 import { HeroSlider } from '@/components/HeroSlider'
+import { HeroVideo } from '@/components/HeroVideo'
 import { ServicesSection } from '@/components/ServicesSection'
 import { AboutPreview } from '@/components/AboutPreview'
 import { NeighborhoodsGrid } from '@/components/NeighborhoodsGrid'
@@ -13,9 +14,16 @@ export default async function HomePage() {
     getNeighborhoods()
   ])
 
+  // Determine which hero to show
+  const showVideo = settings.heroMediaType === 'video' && settings.heroVideoUrl
+
   return (
     <>
-      <HeroSlider settings={settings} />
+      {showVideo ? (
+        <HeroVideo settings={settings} />
+      ) : (
+        <HeroSlider settings={settings} />
+      )}
       <ServicesSection />
       <AboutPreview settings={settings} />
       <NeighborhoodsGrid neighborhoods={neighborhoods.slice(0, 6)} />

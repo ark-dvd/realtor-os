@@ -1,11 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 import { 
   MapPin, Clock, GraduationCap, Users, Heart, Star,
   ArrowLeft, Car, Building2, TreePine
 } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
+import { JsonLd } from '@/components/JsonLd'
 import { getNeighborhoodBySlug, getNeighborhoods, getSettings } from '@/lib/data-fetchers'
 
 export const revalidate = 60
@@ -17,19 +19,29 @@ export async function generateStaticParams() {
   }))
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const neighborhood = await getNeighborhoodBySlug(params.slug)
-  if (!neighborhood) return { title: 'Neighborhood Not Found' }
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const neighborhood = await getNeighborhoodBySlug(slug)
+  
+  if (!neighborhood) {
+    return { title: 'Neighborhood Not Found' }
+  }
   
   return {
     title: `${neighborhood.name} - Austin Neighborhoods`,
-    description: neighborhood.tagline,
+    description: `${neighborhood.tagline}. ${neighborhood.vibe?.slice(0, 100)}`,
+    openGraph: {
+      title: `${neighborhood.name} - Austin Neighborhoods`,
+      description: neighborhood.tagline,
+      images: neighborhood.image ? [{ url: neighborhood.image, width: 1200, height: 630, alt: neighborhood.name }] : [],
+    },
   }
 }
 
-export default async function NeighborhoodPage({ params }: { params: { slug: string } }) {
+export default async function NeighborhoodPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   const [neighborhood, settings] = await Promise.all([
-    getNeighborhoodBySlug(params.slug),
+    getNeighborhoodBySlug(slug),
     getSettings()
   ])
   
@@ -39,6 +51,8 @@ export default async function NeighborhoodPage({ params }: { params: { slug: str
 
   return (
     <>
+      <JsonLd type="Place" neighborhood={neighborhood} />
+      
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px]">
         <Image
@@ -129,6 +143,25 @@ export default async function NeighborhoodPage({ params }: { params: { slug: str
                 </div>
               </div>
 
+              {/* Gallery */}
+              {neighborhood.gallery && neighborhood.gallery.length > 0 && (
+                <div>
+                  <h2 className="font-display text-2xl text-brand-navy mb-4">Gallery</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    {neighborhood.gallery.map((img, index) => (
+                      <div key={index} className="relative aspect-[4/3] overflow-hidden rounded-lg">
+                        <Image
+                          src={img.url}
+                          alt={img.alt || `${neighborhood.name} - Image ${index + 1}`}
+                          fill
+                          className="object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Why People Love It */}
               {neighborhood.whyPeopleLove && neighborhood.whyPeopleLove.length > 0 && (
                 <div>
@@ -158,7 +191,7 @@ export default async function NeighborhoodPage({ params }: { params: { slug: str
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {neighborhood.highlights.map((highlight, index) => (
-                      <div key={index} className="bg-white p-6 border border-neutral-200">
+                      <div key={highlight._key || index} className="bg-white p-6 border border-neutral-200">
                         <h3 className="font-display text-lg text-brand-navy mb-2">{highlight.name}</h3>
                         <p className="text-neutral-600 text-sm">{highlight.description}</p>
                       </div>
@@ -183,7 +216,7 @@ export default async function NeighborhoodPage({ params }: { params: { slug: str
                     )}
                     <div className="space-y-4">
                       {neighborhood.schools.map((school, index) => (
-                        <div key={index} className="border-b border-neutral-100 pb-4 last:border-0 last:pb-0">
+                        <div key={school._key || index} className="border-b border-neutral-100 pb-4 last:border-0 last:pb-0">
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="font-medium text-brand-navy">{school.name}</p>

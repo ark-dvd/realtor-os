@@ -1,0 +1,11 @@
+# Merrav Berko Real Estate - robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://www.merravberko.com/sitemap.xml

@@ -14,14 +14,16 @@ export async function GET(request: NextRequest) {
         heroHeadline,
         heroSubheadline,
         heroMediaType,
-        heroImages[] { _key, "url": asset->url, alt },
+        heroImages[]{ _key, "url": coalesce(asset->url, externalUrl), "assetId": asset._ref, alt },
         "heroVideoUrl": heroVideo.asset->url,
+        "heroVideoAssetId": heroVideo.asset._ref,
         agentName,
         agentTitle,
         "agentPhoto": agentPhoto.asset->url,
+        "agentPhotoAssetId": agentPhoto.asset._ref,
         aboutHeadline,
         aboutText,
-        aboutStats[] { _key, value, label },
+        aboutStats[]{ _key, value, label },
         phone,
         email,
         address,
@@ -32,8 +34,7 @@ export async function GET(request: NextRequest) {
         youtube,
         trecLink,
         "logo": logo.asset->url,
-        primaryColor,
-        accentColor
+        "logoAssetId": logo.asset._ref
       }
     `)
     return NextResponse.json(data || {})
@@ -52,34 +53,37 @@ export async function PUT(request: NextRequest) {
     const client = getSanityWriteClient()
     const existing = await client.fetch(`*[_type == "siteSettings"][0]._id`)
     
-    // Build the complete updates object with ALL fields
-    const updates: Record<string, unknown> = {}
+    // Build updates
+    const updates: any = {}
     
-    // Basic fields
+    // Basic text fields
     if (body.siteTitle !== undefined) updates.siteTitle = body.siteTitle
     if (body.heroHeadline !== undefined) updates.heroHeadline = body.heroHeadline
     if (body.heroSubheadline !== undefined) updates.heroSubheadline = body.heroSubheadline
     if (body.heroMediaType !== undefined) updates.heroMediaType = body.heroMediaType
-    if (body.heroVideoUrl !== undefined) updates.heroVideoUrl = body.heroVideoUrl
     
-    // Hero Images - supports both Sanity uploads and external URLs
+    // Hero Images
     if (body.heroImages && Array.isArray(body.heroImages)) {
       updates.heroImages = body.heroImages.map((img: { _key?: string; url?: string; alt?: string; assetId?: string }, i: number) => {
         const imageObj: Record<string, unknown> = {
           _key: img._key || `hero-${i}-${Date.now()}`,
           _type: 'image',
         }
-        // If we have an assetId (uploaded to Sanity), use reference
         if (img.assetId) {
           imageObj.asset = { _type: 'reference', _ref: img.assetId }
-        }
-        // If it's an external URL (like Unsplash), store in externalUrl field
-        if (img.url && !img.assetId) {
+        } else if (img.url && !img.assetId) {
           imageObj.externalUrl = img.url
         }
         if (img.alt) imageObj.alt = img.alt
         return imageObj
       })
+    }
+    
+    // Hero Video (file upload)
+    if (body.heroVideoAssetId) {
+      updates.heroVideo = { _type: 'file', asset: { _type: 'reference', _ref: body.heroVideoAssetId } }
+    } else if (body.heroVideoAssetId === '') {
+      updates.heroVideo = null
     }
     
     // Agent info
@@ -100,22 +104,20 @@ export async function PUT(request: NextRequest) {
       }))
     }
     
-    // Contact info - ALL fields
+    // Contact info
     if (body.phone !== undefined) updates.phone = body.phone
     if (body.email !== undefined) updates.email = body.email
     if (body.address !== undefined) updates.address = body.address
     if (body.officeHours !== undefined) updates.officeHours = body.officeHours
     
-    // Social media - ALL fields
+    // Social media
     if (body.instagram !== undefined) updates.instagram = body.instagram
     if (body.facebook !== undefined) updates.facebook = body.facebook
     if (body.linkedin !== undefined) updates.linkedin = body.linkedin
     if (body.youtube !== undefined) updates.youtube = body.youtube
     
-    // Branding
+    // Legal / Branding
     if (body.trecLink !== undefined) updates.trecLink = body.trecLink
-    if (body.primaryColor !== undefined) updates.primaryColor = body.primaryColor
-    if (body.accentColor !== undefined) updates.accentColor = body.accentColor
     if (body.logoAssetId) {
       updates.logo = { _type: 'image', asset: { _type: 'reference', _ref: body.logoAssetId } }
     }

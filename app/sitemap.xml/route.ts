@@ -1,0 +1,42 @@
+import { getProperties, getNeighborhoods } from '@/lib/data-fetchers'
+
+const BASE_URL = 'https://www.merravberko.com'
+
+export async function GET() {
+  const [properties, neighborhoods] = await Promise.all([
+    getProperties(),
+    getNeighborhoods()
+  ])
+
+  const staticPages = [
+    '',
+    '/properties',
+    '/neighborhoods',
+    '/about',
+    '/contact',
+    '/buyers/search',
+    '/sellers/valuation',
+  ]
+
+  const propertyPages = properties.map(p => `/properties/${p.slug}`)
+  const neighborhoodPages = neighborhoods.map(n => `/neighborhoods/${n.slug}`)
+
+  const allPages = [...staticPages, ...propertyPages, ...neighborhoodPages]
+
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allPages.map(path => `  <url>
+    <loc>${BASE_URL}${path}</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>${path === '' ? 'daily' : 'weekly'}</changefreq>
+    <priority>${path === '' ? '1.0' : path.startsWith('/properties/') ? '0.8' : '0.7'}</priority>
+  </url>`).join('\n')}
+</urlset>`
+
+  return new Response(sitemap, {
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  })
+}

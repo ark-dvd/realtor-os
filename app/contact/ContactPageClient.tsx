@@ -19,6 +19,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
   const agentName = settings.agentName || 'Merrav Berko'
   const firstName = agentName.split(' ')[0]
@@ -30,12 +31,27 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
     
-    // TODO: Integrate with email service (SendGrid, etc.)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message')
+      }
+      
+      setIsSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -175,6 +191,10 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                         </>
                       )}
                     </button>
+                    
+                    {error && (
+                      <p className="text-red-600 text-sm text-center mt-4">{error}</p>
+                    )}
                   </form>
                 </>
               )}

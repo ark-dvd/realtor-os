@@ -209,7 +209,19 @@ export default {
       title: 'Gallery Images',
       type: 'array',
       group: 'media',
-      of: [{ type: 'image', options: { hotspot: true } }],
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+            },
+          ],
+        },
+      ],
     },
 
     // Settings

@@ -129,9 +129,10 @@ export default {
     {
       name: 'description',
       title: 'Full Description',
-      type: 'array',
-      of: [{ type: 'block' }],
+      type: 'text',
+      rows: 10,
       group: 'description',
+      description: 'Detailed property description. Use double line breaks for paragraphs.',
     },
     {
       name: 'features',
@@ -162,7 +163,19 @@ export default {
       name: 'gallery',
       title: 'Photo Gallery',
       type: 'array',
-      of: [{ type: 'image', options: { hotspot: true } }],
+      of: [
+        {
+          type: 'image',
+          options: { hotspot: true },
+          fields: [
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+            },
+          ],
+        },
+      ],
       group: 'media',
     },
     {
@@ -178,8 +191,16 @@ export default {
       group: 'media',
       of: [
         {
-          type: 'file',
-          fields: [{ name: 'title', title: 'Title', type: 'string' }],
+          type: 'object',
+          name: 'propertyDocument',
+          title: 'Document',
+          fields: [
+            { name: 'title', title: 'Title', type: 'string' },
+            { name: 'file', title: 'File', type: 'file' },
+          ],
+          preview: {
+            select: { title: 'title' },
+          },
         },
       ],
     },
@@ -190,6 +211,7 @@ export default {
       title: 'SEO Title',
       type: 'string',
       group: 'seo',
+      description: 'Custom title for search engines (optional)',
     },
     {
       name: 'seoDescription',
@@ -197,6 +219,7 @@ export default {
       type: 'text',
       rows: 2,
       group: 'seo',
+      description: 'Meta description for search results (optional)',
     },
   ],
   preview: {

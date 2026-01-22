@@ -10,7 +10,6 @@ export default {
     { name: 'social', title: 'Social Media' },
   ],
   fields: [
-    // This ensures only one document
     {
       name: 'siteTitle',
       title: 'Site Title',
@@ -85,13 +84,6 @@ export default {
       },
       description: 'Upload an MP4 video for background (used if Video Background is selected)',
     },
-    {
-      name: 'heroVideoUrl',
-      title: 'Hero Video URL (Alternative)',
-      type: 'url',
-      group: 'hero',
-      description: 'Or paste a video URL instead of uploading',
-    },
 
     // About Section
     {
@@ -125,10 +117,10 @@ export default {
     {
       name: 'aboutText',
       title: 'About Text',
-      type: 'array',
-      of: [{ type: 'block' }],
+      type: 'text',
+      rows: 10,
       group: 'about',
-      description: 'Your bio and story',
+      description: 'Your bio and story. Use double line breaks for paragraphs.',
     },
     {
       name: 'aboutStats',
@@ -183,20 +175,7 @@ export default {
       title: 'Logo',
       type: 'image',
       group: 'branding',
-    },
-    {
-      name: 'primaryColor',
-      title: 'Primary Color (Navy)',
-      type: 'string',
-      group: 'branding',
-      initialValue: '#1B2B4B',
-    },
-    {
-      name: 'accentColor',
-      title: 'Accent Color (Gold)',
-      type: 'string',
-      group: 'branding',
-      initialValue: '#C9A961',
+      description: 'Upload your logo. If not set, the agent name will be displayed.',
     },
 
     // Social Media

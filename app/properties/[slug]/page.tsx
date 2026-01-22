@@ -1,8 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Bed, Bath, Square, MapPin, Calendar, Phone, Mail, ArrowLeft, Share2, Heart, Car, Ruler } from 'lucide-react'
+import { Bed, Bath, Square, MapPin, Calendar, Phone, Mail, ArrowLeft, Share2, Heart, Car, Ruler, FileText, Play, Maximize } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
+import { JsonLd } from '@/components/JsonLd'
 import { getPropertyBySlug, getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
 
 export const revalidate = 60
@@ -17,10 +18,34 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const property = await getPropertyBySlug(params.slug)
   if (!property) return { title: 'Property Not Found' }
+  
+  const title = property.seoTitle || property.title
+  const description = property.seoDescription || property.shortDescription || `${property.beds} bed, ${property.baths} bath property in Austin, TX`
+  
   return {
-    title: property.title,
-    description: property.shortDescription || `${property.beds} bed, ${property.baths} bath property in Austin, TX`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: property.heroImage ? [{ url: property.heroImage }] : [],
+    },
   }
+}
+
+// Helper to extract YouTube/Vimeo video ID
+function getVideoEmbedUrl(url: string): string | null {
+  if (!url) return null
+  
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/)
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
+  
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+  
+  return null
 }
 
 export default async function PropertyPage({ params }: { params: { slug: string } }) {
@@ -44,9 +69,13 @@ export default async function PropertyPage({ params }: { params: { slug: string 
   const agentName = settings.agentName || 'Merrav Berko'
   const phone = settings.phone || '(512) 599-9995'
   const email = settings.email || 'merrav@merrav.com'
+  
+  const videoEmbedUrl = property.heroVideo ? getVideoEmbedUrl(property.heroVideo) : null
 
   return (
     <>
+      <JsonLd type="SingleFamilyResidence" property={property} />
+      
       {/* Hero Image */}
       <section className="relative h-[70vh] min-h-[500px]">
         <Image
@@ -167,6 +196,25 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                 )}
               </div>
 
+              {/* Video Tour */}
+              {videoEmbedUrl && (
+                <div className="mb-12">
+                  <h2 className="font-display text-2xl text-brand-navy mb-4 flex items-center gap-2">
+                    <Play size={24} className="text-brand-gold" />
+                    Video Tour
+                  </h2>
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-neutral-100">
+                    <iframe
+                      src={videoEmbedUrl}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title="Property Video Tour"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Description */}
               <div className="mb-12">
                 <h2 className="font-display text-2xl text-brand-navy mb-4">About This Property</h2>
@@ -194,6 +242,57 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Floor Plan */}
+              {property.floorPlan && (
+                <div className="mb-12">
+                  <h2 className="font-display text-2xl text-brand-navy mb-4 flex items-center gap-2">
+                    <Maximize size={24} className="text-brand-gold" />
+                    Floor Plan
+                  </h2>
+                  <div className="relative bg-neutral-50 rounded-lg overflow-hidden p-4">
+                    <a href={property.floorPlan} target="_blank" rel="noopener noreferrer" className="block">
+                      <Image
+                        src={property.floorPlan}
+                        alt={`${property.title} - Floor Plan`}
+                        width={800}
+                        height={600}
+                        className="w-full h-auto object-contain"
+                      />
+                      <p className="text-center text-sm text-brand-gold mt-4 hover:underline">
+                        Click to view full size
+                      </p>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Documents */}
+              {property.documents && property.documents.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="font-display text-2xl text-brand-navy mb-4 flex items-center gap-2">
+                    <FileText size={24} className="text-brand-gold" />
+                    Documents
+                  </h2>
+                  <div className="space-y-3">
+                    {property.documents.map((doc: { title: string; url: string }, index: number) => (
+                      <a
+                        key={index}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors group"
+                      >
+                        <FileText size={20} className="text-brand-gold" />
+                        <span className="flex-1 text-neutral-700 group-hover:text-brand-navy">
+                          {doc.title}
+                        </span>
+                        <span className="text-sm text-brand-gold">Download →</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 

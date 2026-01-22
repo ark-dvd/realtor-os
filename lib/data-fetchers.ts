@@ -1,9 +1,45 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// DATA FETCHERS - Sanity with Fallbacks
+// DATA FETCHERS - Sanity with EXPLICIT Demo Mode
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { getSanityClient, isSanityConfigured } from './sanity'
+import { getSanityClient, isSanityConfigured, getSanityStatus } from './sanity'
 import { neighborhoods as fallbackNeighborhoods } from './neighborhoods-data'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEMO MODE TRACKING
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Track if we're serving demo data (for UI indicators)
+let _isDemoMode = false
+let _demoReason: string | null = null
+
+/**
+ * Check if the site is currently serving demo data.
+ * Use this to show a banner to the agent.
+ */
+export function isDemoMode(): boolean {
+  return _isDemoMode
+}
+
+/**
+ * Get the reason for demo mode (for debugging).
+ */
+export function getDemoReason(): string | null {
+  return _demoReason
+}
+
+/**
+ * Set demo mode with reason (internal use).
+ */
+function setDemoMode(reason: string) {
+  _isDemoMode = true
+  _demoReason = reason
+  
+  // Always log to server console - this is important!
+  console.warn(`⚠️ DEMO MODE ACTIVE: ${reason}`)
+  console.warn('   Site is showing demo data, NOT real Sanity content!')
+  console.warn('   Status:', getSanityStatus())
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -33,8 +69,6 @@ export interface SiteSettings {
   youtube?: string
   trecLink?: string
   logo?: string
-  primaryColor?: string
-  accentColor?: string
 }
 
 export interface Property {
@@ -61,9 +95,13 @@ export interface Property {
   heroImage?: string
   heroVideo?: string
   gallery?: Array<{ url: string; alt?: string }>
+  floorPlan?: string
+  documents?: Array<{ title: string; url: string }>
   shortDescription?: string
   description?: string
   features?: string[]
+  seoTitle?: string
+  seoDescription?: string
 }
 
 export interface School {
@@ -116,7 +154,7 @@ export interface Deal {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DEFAULT DATA (Fallbacks)
+// DEFAULT DATA (Demo Mode)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const defaultSettings: SiteSettings = {
@@ -192,48 +230,6 @@ export const defaultProperties: Property[] = [
     status: 'for-sale',
     shortDescription: 'Classic charm meets modern comfort in coveted Tarrytown',
   },
-  {
-    _id: 'demo-4',
-    title: 'Zilker Modern Retreat',
-    slug: 'zilker-modern-retreat',
-    price: 1425000,
-    address: { street: '789 Zilker Park Way', city: 'Austin', state: 'TX', zip: '78704' },
-    neighborhood: 'Zilker',
-    beds: 3,
-    baths: 2.5,
-    sqft: 2400,
-    heroImage: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
-    status: 'pending',
-    shortDescription: 'Contemporary design steps from Zilker Park',
-  },
-  {
-    _id: 'demo-5',
-    title: 'East Austin Bungalow',
-    slug: 'east-austin-bungalow',
-    price: 695000,
-    address: { street: '456 E 6th Street', city: 'Austin', state: 'TX', zip: '78702' },
-    neighborhood: 'East Austin',
-    beds: 3,
-    baths: 2,
-    sqft: 1800,
-    heroImage: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-    status: 'for-sale',
-    shortDescription: 'Charming bungalow in vibrant East Austin',
-  },
-  {
-    _id: 'demo-6',
-    title: 'Travis Heights Gem',
-    slug: 'travis-heights-gem',
-    price: 1125000,
-    address: { street: '321 Travis Heights Blvd', city: 'Austin', state: 'TX', zip: '78704' },
-    neighborhood: 'Travis Heights',
-    beds: 4,
-    baths: 3,
-    sqft: 2800,
-    heroImage: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=800&q=80',
-    status: 'for-sale',
-    shortDescription: 'Beautiful home in iconic Travis Heights',
-  },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -241,7 +237,9 @@ export const defaultProperties: Property[] = [
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function getSettings(): Promise<SiteSettings> {
+  // Not configured at all - demo mode
   if (!isSanityConfigured()) {
+    setDemoMode('Sanity not configured (NEXT_PUBLIC_SANITY_PROJECT_ID missing)')
     return defaultSettings
   }
 
@@ -254,14 +252,14 @@ export async function getSettings(): Promise<SiteSettings> {
         heroHeadline,
         heroSubheadline,
         heroMediaType,
-        heroImages[] { _key, "url": coalesce(asset->url, externalUrl), alt, externalUrl },
+        heroImages[]{ _key, "url": coalesce(asset->url, externalUrl), alt },
         "heroVideoUrl": heroVideo.asset->url,
         agentName,
         agentTitle,
         "agentPhoto": agentPhoto.asset->url,
         aboutHeadline,
         aboutText,
-        aboutStats[] { _key, value, label },
+        aboutStats[]{ _key, value, label },
         phone,
         email,
         address,
@@ -271,32 +269,39 @@ export async function getSettings(): Promise<SiteSettings> {
         linkedin,
         youtube,
         trecLink,
-        "logo": logo.asset->url,
-        primaryColor,
-        accentColor
+        "logo": logo.asset->url
       }
     `)
 
+    // No settings document exists in Sanity
     if (!settings) {
+      setDemoMode('No siteSettings document found in Sanity')
       return defaultSettings
     }
 
-    // Merge with defaults - Sanity values override defaults
+    // Success! Not in demo mode
+    _isDemoMode = false
+    _demoReason = null
+
+    // Merge with defaults for any missing fields
     return {
       ...defaultSettings,
       ...settings,
-      // Ensure arrays have fallbacks
       heroImages: settings.heroImages?.length > 0 ? settings.heroImages : defaultSettings.heroImages,
       aboutStats: settings.aboutStats?.length > 0 ? settings.aboutStats : defaultSettings.aboutStats,
     }
   } catch (error) {
-    console.error('Error fetching settings:', error)
+    // Sanity query failed - likely permissions issue with private dataset
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    setDemoMode(`Sanity query failed: ${errorMessage}`)
+    console.error('getSettings() Sanity error:', error)
     return defaultSettings
   }
 }
 
 export async function getProperties(status?: string): Promise<Property[]> {
   if (!isSanityConfigured()) {
+    setDemoMode('Sanity not configured')
     return status ? defaultProperties.filter(p => p.status === status) : defaultProperties
   }
 
@@ -325,16 +330,28 @@ export async function getProperties(status?: string): Promise<Property[]> {
         mlsNumber,
         "heroImage": heroImage.asset->url,
         heroVideo,
-        gallery[] { "url": asset->url, alt },
+        gallery[]{ "url": asset->url, alt },
+        "floorPlan": floorPlan.asset->url,
+        documents[]{ title, "url": file.asset->url },
         shortDescription,
         description,
-        features
+        features,
+        seoTitle,
+        seoDescription
       }
     `, { status })
 
-    return properties?.length > 0 ? properties : defaultProperties
+    // No properties in Sanity - show demo
+    if (!properties || properties.length === 0) {
+      setDemoMode('No properties found in Sanity')
+      return defaultProperties
+    }
+
+    return properties
   } catch (error) {
-    console.error('Error fetching properties:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    setDemoMode(`Sanity properties query failed: ${errorMessage}`)
+    console.error('getProperties() Sanity error:', error)
     return defaultProperties
   }
 }
@@ -365,22 +382,32 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
         mlsNumber,
         "heroImage": heroImage.asset->url,
         heroVideo,
-        gallery[] { "url": asset->url, alt },
+        gallery[]{ "url": asset->url, alt },
+        "floorPlan": floorPlan.asset->url,
+        documents[]{ title, "url": file.asset->url },
         shortDescription,
         description,
-        features
+        features,
+        seoTitle,
+        seoDescription
       }
     `, { slug })
 
-    return property || defaultProperties.find(p => p.slug === slug) || null
+    // Not found in Sanity - check demo data
+    if (!property) {
+      return defaultProperties.find(p => p.slug === slug) || null
+    }
+
+    return property
   } catch (error) {
-    console.error('Error fetching property:', error)
+    console.error('getPropertyBySlug() Sanity error:', error)
     return defaultProperties.find(p => p.slug === slug) || null
   }
 }
 
 export async function getNeighborhoods(): Promise<Neighborhood[]> {
   if (!isSanityConfigured()) {
+    setDemoMode('Sanity not configured')
     return fallbackNeighborhoods
   }
 
@@ -397,20 +424,28 @@ export async function getNeighborhoods(): Promise<Neighborhood[]> {
         population,
         commute,
         schoolDistrict,
-        schools[] { _key, name, type, rating, note },
+        schools[]{ _key, name, type, rating, note },
         whyPeopleLove,
-        highlights[] { _key, name, description },
+        highlights[]{ _key, name, description },
         avgPrice,
         "image": image.asset->url,
-        gallery[] { "url": asset->url, alt },
+        gallery[]{ "url": asset->url, alt },
         order,
         isActive
       }
     `)
 
-    return neighborhoods?.length > 0 ? neighborhoods : fallbackNeighborhoods
+    // No neighborhoods in Sanity
+    if (!neighborhoods || neighborhoods.length === 0) {
+      setDemoMode('No neighborhoods found in Sanity')
+      return fallbackNeighborhoods
+    }
+
+    return neighborhoods
   } catch (error) {
-    console.error('Error fetching neighborhoods:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    setDemoMode(`Sanity neighborhoods query failed: ${errorMessage}`)
+    console.error('getNeighborhoods() Sanity error:', error)
     return fallbackNeighborhoods
   }
 }
@@ -433,18 +468,22 @@ export async function getNeighborhoodBySlug(slug: string): Promise<Neighborhood 
         population,
         commute,
         schoolDistrict,
-        schools[] { _key, name, type, rating, note },
+        schools[]{ _key, name, type, rating, note },
         whyPeopleLove,
-        highlights[] { _key, name, description },
+        highlights[]{ _key, name, description },
         avgPrice,
         "image": image.asset->url,
-        gallery[] { "url": asset->url, alt }
+        gallery[]{ "url": asset->url, alt }
       }
     `, { slug })
 
-    return neighborhood || fallbackNeighborhoods.find(n => n.slug === slug) || null
+    if (!neighborhood) {
+      return fallbackNeighborhoods.find(n => n.slug === slug) || null
+    }
+
+    return neighborhood
   } catch (error) {
-    console.error('Error fetching neighborhood:', error)
+    console.error('getNeighborhoodBySlug() Sanity error:', error)
     return fallbackNeighborhoods.find(n => n.slug === slug) || null
   }
 }
