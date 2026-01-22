@@ -1,7 +1,19 @@
 import Link from 'next/link'
-import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin } from 'lucide-react'
+import Image from 'next/image'
+import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, Youtube } from 'lucide-react'
+import { SiteSettings } from '@/lib/data-fetchers'
 
-export function Footer() {
+interface FooterProps {
+  settings?: SiteSettings
+}
+
+export function Footer({ settings }: FooterProps) {
+  const agentName = settings?.agentName || 'Merrav Berko'
+  const phone = settings?.phone || '(512) 599-9995'
+  const email = settings?.email || 'merrav@merrav.com'
+  const address = settings?.address || 'Austin, Texas'
+  const trecLink = settings?.trecLink || 'https://www.trec.texas.gov/forms/consumer-protection-notice'
+
   return (
     <footer className="bg-brand-navy text-white">
       {/* Main Footer */}
@@ -10,7 +22,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="font-display text-3xl font-medium">
-              Merrav Berko
+              {agentName}
             </Link>
             <p className="mt-4 text-white/70 leading-relaxed">
               Your trusted partner for luxury real estate in Austin. 
@@ -18,30 +30,82 @@ export function Footer() {
             </p>
             {/* Social Links */}
             <div className="flex gap-4 mt-6">
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
-              >
-                <Instagram size={18} />
-              </a>
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
-              >
-                <Facebook size={18} />
-              </a>
-              <a 
-                href="https://linkedin.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
-              >
-                <Linkedin size={18} />
-              </a>
+              {settings?.instagram && (
+                <a 
+                  href={settings.instagram}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={18} />
+                </a>
+              )}
+              {settings?.facebook && (
+                <a 
+                  href={settings.facebook}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={18} />
+                </a>
+              )}
+              {settings?.linkedin && (
+                <a 
+                  href={settings.linkedin}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin size={18} />
+                </a>
+              )}
+              {settings?.youtube && (
+                <a 
+                  href={settings.youtube}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                  aria-label="YouTube"
+                >
+                  <Youtube size={18} />
+                </a>
+              )}
+              {/* Show default icons if no social links set */}
+              {!settings?.instagram && !settings?.facebook && !settings?.linkedin && (
+                <>
+                  <a 
+                    href="https://instagram.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram size={18} />
+                  </a>
+                  <a 
+                    href="https://facebook.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <Facebook size={18} />
+                  </a>
+                  <a 
+                    href="https://linkedin.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-brand-gold transition-colors"
+                    aria-label="LinkedIn"
+                  >
+                    <Linkedin size={18} />
+                  </a>
+                </>
+              )}
             </div>
           </div>
 
@@ -71,7 +135,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/about" className="text-white/70 hover:text-brand-gold transition-colors">
-                  About Merrav
+                  About {agentName.split(' ')[0]}
                 </Link>
               </li>
             </ul>
@@ -115,28 +179,26 @@ export function Footer() {
             <ul className="space-y-4">
               <li>
                 <a 
-                  href="tel:+15125999995" 
+                  href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
                   className="flex items-center gap-3 text-white/70 hover:text-brand-gold transition-colors"
                 >
                   <Phone size={18} className="text-brand-gold" />
-                  (512) 599-9995
+                  {phone}
                 </a>
               </li>
               <li>
                 <a 
-                  href="mailto:merrav@merravberko.com" 
+                  href={`mailto:${email}`}
                   className="flex items-center gap-3 text-white/70 hover:text-brand-gold transition-colors"
                 >
                   <Mail size={18} className="text-brand-gold" />
-                  merrav@merravberko.com
+                  {email}
                 </a>
               </li>
               <li>
                 <div className="flex items-start gap-3 text-white/70">
                   <MapPin size={18} className="text-brand-gold flex-shrink-0 mt-1" />
-                  <span>
-                    Austin, Texas
-                  </span>
+                  <span>{address}</span>
                 </div>
               </li>
             </ul>
@@ -148,9 +210,9 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="container-wide py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/50 text-sm">
-            © {new Date().getFullYear()} Merrav Berko Real Estate. All rights reserved.
+            © {new Date().getFullYear()} {agentName} Real Estate. All rights reserved.
           </p>
-          <div className="flex gap-6 text-sm">
+          <div className="flex flex-wrap items-center gap-6 text-sm">
             <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
               Privacy Policy
             </Link>
@@ -158,16 +220,29 @@ export function Footer() {
               Terms of Service
             </Link>
             <a 
-              href="https://www.trec.texas.gov/forms/consumer-protection-notice" 
+              href={trecLink}
               target="_blank" 
               rel="noopener noreferrer"
               className="text-white/50 hover:text-white transition-colors"
             >
               TREC Consumer Protection
             </a>
-            <Link href="/admin" className="text-white/30 hover:text-white/50 transition-colors">
-              Admin
-            </Link>
+            <span className="text-white/30">|</span>
+            <a 
+              href="https://daflash.co.il" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+            >
+              Website by
+              <Image 
+                src="/images/daflash-logo.png" 
+                alt="daflash" 
+                width={60} 
+                height={20}
+                className="opacity-70 hover:opacity-100 transition-opacity"
+              />
+            </a>
           </div>
         </div>
       </div>

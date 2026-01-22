@@ -2,14 +2,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { GraduationCap, Clock } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
-import { neighborhoods } from '@/lib/neighborhoods-data'
+import { getNeighborhoods, getSettings } from '@/lib/data-fetchers'
 
 export const metadata = {
   title: 'Neighborhoods',
   description: 'Explore Austin\'s most desirable neighborhoods and find your perfect community.',
 }
 
-export default function NeighborhoodsPage() {
+export const revalidate = 60
+
+export default async function NeighborhoodsPage() {
+  const [neighborhoods, settings] = await Promise.all([
+    getNeighborhoods(),
+    getSettings()
+  ])
+
   return (
     <>
       {/* Hero */}
@@ -38,7 +45,7 @@ export default function NeighborhoodsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {neighborhoods.map((neighborhood, index) => (
               <Link
-                key={neighborhood.slug}
+                key={neighborhood._id || neighborhood.slug}
                 href={`/neighborhoods/${neighborhood.slug}`}
                 className="group bg-white overflow-hidden card-hover"
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -46,7 +53,7 @@ export default function NeighborhoodsPage() {
                 {/* Image */}
                 <div className="relative h-56 overflow-hidden">
                   <Image
-                    src={neighborhood.image}
+                    src={neighborhood.image || 'https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=800&q=80'}
                     alt={neighborhood.name}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -71,14 +78,18 @@ export default function NeighborhoodsPage() {
                   
                   {/* Quick Stats */}
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-neutral-500">
-                      <Clock size={14} className="text-brand-gold" />
-                      <span>{neighborhood.commute.toDowntown} to Downtown</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-neutral-500">
-                      <GraduationCap size={14} className="text-brand-gold" />
-                      <span>{neighborhood.schoolDistrict}</span>
-                    </div>
+                    {neighborhood.commute?.toDowntown && (
+                      <div className="flex items-center gap-2 text-sm text-neutral-500">
+                        <Clock size={14} className="text-brand-gold" />
+                        <span>{neighborhood.commute.toDowntown} to Downtown</span>
+                      </div>
+                    )}
+                    {neighborhood.schoolDistrict && (
+                      <div className="flex items-center gap-2 text-sm text-neutral-500">
+                        <GraduationCap size={14} className="text-brand-gold" />
+                        <span>{neighborhood.schoolDistrict}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
@@ -94,7 +105,7 @@ export default function NeighborhoodsPage() {
         </div>
       </section>
 
-      <CTASection />
+      <CTASection settings={settings} />
     </>
   )
 }

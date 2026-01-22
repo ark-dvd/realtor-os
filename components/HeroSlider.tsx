@@ -4,39 +4,24 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown, ArrowRight } from 'lucide-react'
+import { SiteSettings } from '@/lib/data-fetchers'
 
-const slides = [
-  {
-    id: 1,
-    image: '/images/hero-1.jpg',
-    alt: 'Luxury homes in Austin with Pennybacker Bridge',
-  },
-  {
-    id: 2,
-    image: '/images/hero-2.jpg',
-    alt: 'Austin community center aerial view',
-  },
-  {
-    id: 3,
-    image: '/images/hero-3.jpg',
-    alt: 'Austin skyline at night',
-  },
-  {
-    id: 4,
-    image: '/images/hero-4.jpg',
-    alt: 'Pennybacker Bridge sunset',
-  },
-]
+interface HeroSliderProps {
+  settings: SiteSettings
+}
 
-export function HeroSlider() {
+export function HeroSlider({ settings }: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const slides = settings.heroImages || []
 
   useEffect(() => {
+    if (slides.length <= 1) return
+    
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 6000)
     return () => clearInterval(timer)
-  }, [])
+  }, [slides.length])
 
   const scrollToContent = () => {
     window.scrollTo({
@@ -50,12 +35,12 @@ export function HeroSlider() {
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
-          key={slide.id}
+          key={slide._key || index}
           className={`hero-slide ${index === currentSlide ? 'active' : ''}`}
         >
           <Image
-            src={slide.image}
-            alt={slide.alt}
+            src={slide.url}
+            alt={slide.alt || `Hero slide ${index + 1}`}
             fill
             priority={index === 0}
             className="object-cover"
@@ -73,12 +58,11 @@ export function HeroSlider() {
           <div className="gold-line mx-auto mb-8 animate-scale-in" />
           
           <h1 className="font-display text-hero font-medium mb-6 animate-slide-up">
-            Find Your Home in Austin
+            {settings.heroHeadline || 'Find Your Home in Austin'}
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-10 animate-slide-up animate-delay-200">
-            Luxury real estate with personalized service. 
-            Your journey to the perfect home starts here.
+            {settings.heroSubheadline || 'Luxury real estate with personalized service.'}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up animate-delay-300">
@@ -97,20 +81,22 @@ export function HeroSlider() {
       </div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentSlide 
-                ? 'bg-brand-gold w-8' 
-                : 'bg-white/50 hover:bg-white/80'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-brand-gold w-8' 
+                  : 'bg-white/50 hover:bg-white/80'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Scroll Indicator */}
       <button 

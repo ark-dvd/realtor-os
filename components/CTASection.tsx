@@ -1,60 +1,41 @@
 import Link from 'next/link'
+import { Phone, ArrowRight } from 'lucide-react'
+import { SiteSettings } from '@/lib/data-fetchers'
 
-export function CTASection() {
+interface CTASectionProps {
+  settings?: SiteSettings
+}
+
+export function CTASection({ settings }: CTASectionProps) {
+  const phone = settings?.phone || '(512) 599-9995'
+  const agentName = settings?.agentName || 'Merrav Berko'
+
   return (
-    <section className="relative py-24 md:py-32 bg-brand-navy overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      <div className="container-wide relative z-10">
-        <div className="max-w-3xl mx-auto text-center text-white">
+    <section className="bg-brand-navy text-white">
+      <div className="container-wide section-padding">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="gold-line mx-auto mb-8" />
           
           <h2 className="font-display text-display mb-6">
-            Ready to Make Your Move?
+            Ready to Find Your Perfect Home?
           </h2>
           
-          <p className="text-xl text-white/70 mb-10 leading-relaxed">
-            Whether you&apos;re buying your first home, upgrading to your dream property, 
-            or looking to sell, I&apos;m here to guide you every step of the way.
+          <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+            Whether you&apos;re buying, selling, or just exploring your options, 
+            {agentName} is here to guide you every step of the way.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/contact" className="btn-gold">
               Schedule a Consultation
+              <ArrowRight size={18} />
             </Link>
-            <Link 
-              href="/properties" 
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-navy font-medium tracking-wide transition-all duration-300 ease-out hover:bg-brand-cream"
-            >
-              Browse Properties
-            </Link>
-          </div>
-
-          {/* Contact Info */}
-          <div className="mt-12 pt-12 border-t border-white/10 flex flex-col sm:flex-row items-center justify-center gap-8">
             <a 
-              href="tel:+15125999995" 
-              className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
+              href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-white/20"
             >
-              <span className="text-brand-gold">📞</span>
-              (512) 599-9995
-            </a>
-            <a 
-              href="mailto:merrav@merravberko.com" 
-              className="flex items-center gap-2 text-white/70 hover:text-brand-gold transition-colors"
-            >
-              <span className="text-brand-gold">✉️</span>
-              merrav@merravberko.com
+              <Phone size={18} />
+              Call {phone}
             </a>
           </div>
         </div>

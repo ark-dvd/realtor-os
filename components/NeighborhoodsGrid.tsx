@@ -1,11 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { neighborhoods } from '@/lib/neighborhoods-data'
+import { Neighborhood } from '@/lib/data-fetchers'
 
-export function NeighborhoodsGrid() {
-  // Show only 6 neighborhoods on homepage
-  const featuredNeighborhoods = neighborhoods.slice(0, 6)
+interface NeighborhoodsGridProps {
+  neighborhoods: Neighborhood[]
+  showViewAll?: boolean
+}
 
+export function NeighborhoodsGrid({ neighborhoods, showViewAll = true }: NeighborhoodsGridProps) {
   return (
     <section className="section-padding bg-white">
       <div className="container-wide">
@@ -23,15 +25,15 @@ export function NeighborhoodsGrid() {
 
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {featuredNeighborhoods.map((neighborhood, index) => (
+          {neighborhoods.map((neighborhood, index) => (
             <Link
-              key={neighborhood.slug}
+              key={neighborhood._id || neighborhood.slug}
               href={`/neighborhoods/${neighborhood.slug}`}
               className="group relative aspect-[4/3] overflow-hidden"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <Image
-                src={neighborhood.image}
+                src={neighborhood.image || 'https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=800&q=80'}
                 alt={neighborhood.name}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -59,11 +61,13 @@ export function NeighborhoodsGrid() {
         </div>
 
         {/* View All Link */}
-        <div className="text-center mt-12">
-          <Link href="/neighborhoods" className="btn-secondary">
-            View All Neighborhoods
-          </Link>
-        </div>
+        {showViewAll && (
+          <div className="text-center mt-12">
+            <Link href="/neighborhoods" className="btn-secondary">
+              View All Neighborhoods
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   )

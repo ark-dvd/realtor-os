@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import { getSettings } from '@/lib/data-fetchers'
 
 export const metadata: Metadata = {
   title: {
@@ -18,11 +19,13 @@ export const viewport: Viewport = {
   themeColor: '#1B2B4B',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const settings = await getSettings()
+
   return (
     <html lang="en">
       <head>
@@ -34,9 +37,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-brand-cream">
-        <Header />
+        <Header settings={settings} />
         <main>{children}</main>
-        <Footer />
+        <Footer settings={settings} />
       </body>
     </html>
   )

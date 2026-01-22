@@ -2,266 +2,192 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, Phone } from 'lucide-react'
+import Image from 'next/image'
+import { Menu, X, Phone, ChevronDown } from 'lucide-react'
+import { SiteSettings } from '@/lib/data-fetchers'
 
-const navigation = {
-  buyers: [
-    { name: 'Find Your Dream Home', href: '/buyers/search' },
-    { name: 'Mortgage Calculator', href: '/buyers/calculator' },
-    { name: 'Buyers Guide', href: '/buyers/guide' },
-  ],
-  sellers: [
-    { name: "Your Home's Value", href: '/sellers/valuation' },
-    { name: 'List Your Home', href: '/sellers/list' },
-    { name: 'Sellers Guide', href: '/sellers/guide' },
-  ],
-  community: [
-    { name: 'Neighborhoods', href: '/neighborhoods' },
-    { name: 'Local Market Trends', href: '/community/market-trends' },
-    { name: 'School Finder', href: '/community/schools' },
-  ],
-  about: [
-    { name: 'About Merrav', href: '/about' },
-    { name: 'Testimonials', href: '/about/testimonials' },
-    { name: 'Contact', href: '/contact' },
-  ],
+interface HeaderProps {
+  settings?: SiteSettings
 }
 
-export function Header() {
+const navigation = [
+  { name: 'Properties', href: '/properties' },
+  { 
+    name: 'Buyers', 
+    href: '/buyers/search',
+    submenu: [
+      { name: 'Property Search', href: '/buyers/search' },
+      { name: 'Neighborhoods', href: '/neighborhoods' },
+    ]
+  },
+  { 
+    name: 'Sellers', 
+    href: '/sellers/valuation',
+    submenu: [
+      { name: 'Home Valuation', href: '/sellers/valuation' },
+    ]
+  },
+  { name: 'Neighborhoods', href: '/neighborhoods' },
+  { name: 'About', href: '/about' },
+  { name: 'Contact', href: '/contact' },
+]
+
+export function Header({ settings }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
+  const agentName = settings?.agentName || 'Merrav Berko'
+  const phone = settings?.phone || '(512) 599-9995'
+  const logo = settings?.logo
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
-    window.addEventListener('scroll', handleScroll)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-sm' 
-          : 'bg-transparent'
+          ? 'bg-brand-navy/95 backdrop-blur-md shadow-lg py-3' 
+          : 'bg-transparent py-6'
       }`}
     >
-      <nav className="container-wide">
-        <div className="flex items-center justify-between h-20 lg:h-24">
+      <div className="container-wide">
+        <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="relative z-10">
-            <span className={`font-display text-2xl lg:text-3xl font-medium tracking-tight transition-colors duration-300 ${
-              isScrolled ? 'text-brand-navy' : 'text-white'
-            }`}>
-              Merrav Berko
-            </span>
+          <Link 
+            href="/" 
+            className="font-display text-2xl md:text-3xl text-white hover:text-brand-gold transition-colors"
+          >
+            {logo ? (
+              <Image 
+                src={logo} 
+                alt={agentName} 
+                width={180} 
+                height={50} 
+                className="h-10 w-auto"
+              />
+            ) : (
+              agentName
+            )}
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            {/* Buyers Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setOpenDropdown('buyers')}
-              onMouseLeave={() => setOpenDropdown(null)}
-            >
-              <button className={`nav-link flex items-center gap-1 ${
-                isScrolled ? 'text-brand-navy' : 'text-white'
-              }`}>
-                Buyers <ChevronDown size={14} />
-              </button>
-              {openDropdown === 'buyers' && (
-                <div className="absolute top-full left-0 pt-2 animate-fade-in">
-                  <div className="bg-white shadow-xl border border-neutral-100 py-2 min-w-[200px]">
-                    {navigation.buyers.map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-2 text-sm text-brand-navy hover:bg-brand-cream hover:text-brand-gold transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+          <nav className="hidden lg:flex items-center gap-8">
+            {navigation.map((item) => (
+              <div key={item.name} className="relative group">
+                <Link 
+                  href={item.href}
+                  className="flex items-center gap-1 text-white/90 hover:text-brand-gold transition-colors text-sm uppercase tracking-wider font-medium"
+                >
+                  {item.name}
+                  {item.submenu && <ChevronDown size={14} className="group-hover:rotate-180 transition-transform" />}
+                </Link>
+                
+                {/* Dropdown */}
+                {item.submenu && (
+                  <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="bg-white rounded-lg shadow-xl py-2 min-w-[200px]">
+                      {item.submenu.map((subItem) => (
+                        <Link
+                          key={subItem.name}
+                          href={subItem.href}
+                          className="block px-4 py-2 text-brand-navy hover:bg-brand-cream hover:text-brand-gold transition-colors"
+                        >
+                          {subItem.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ))}
+          </nav>
 
-            {/* Sellers Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setOpenDropdown('sellers')}
-              onMouseLeave={() => setOpenDropdown(null)}
-            >
-              <button className={`nav-link flex items-center gap-1 ${
-                isScrolled ? 'text-brand-navy' : 'text-white'
-              }`}>
-                Sellers <ChevronDown size={14} />
-              </button>
-              {openDropdown === 'sellers' && (
-                <div className="absolute top-full left-0 pt-2 animate-fade-in">
-                  <div className="bg-white shadow-xl border border-neutral-100 py-2 min-w-[200px]">
-                    {navigation.sellers.map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-2 text-sm text-brand-navy hover:bg-brand-cream hover:text-brand-gold transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Properties */}
-            <Link 
-              href="/properties" 
-              className={`nav-link ${isScrolled ? 'text-brand-navy' : 'text-white'}`}
-            >
-              Properties
-            </Link>
-
-            {/* Community Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setOpenDropdown('community')}
-              onMouseLeave={() => setOpenDropdown(null)}
-            >
-              <button className={`nav-link flex items-center gap-1 ${
-                isScrolled ? 'text-brand-navy' : 'text-white'
-              }`}>
-                Community <ChevronDown size={14} />
-              </button>
-              {openDropdown === 'community' && (
-                <div className="absolute top-full left-0 pt-2 animate-fade-in">
-                  <div className="bg-white shadow-xl border border-neutral-100 py-2 min-w-[200px]">
-                    {navigation.community.map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-2 text-sm text-brand-navy hover:bg-brand-cream hover:text-brand-gold transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* About Dropdown */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setOpenDropdown('about')}
-              onMouseLeave={() => setOpenDropdown(null)}
-            >
-              <button className={`nav-link flex items-center gap-1 ${
-                isScrolled ? 'text-brand-navy' : 'text-white'
-              }`}>
-                About <ChevronDown size={14} />
-              </button>
-              {openDropdown === 'about' && (
-                <div className="absolute top-full left-0 pt-2 animate-fade-in">
-                  <div className="bg-white shadow-xl border border-neutral-100 py-2 min-w-[200px]">
-                    {navigation.about.map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href}
-                        className="block px-4 py-2 text-sm text-brand-navy hover:bg-brand-cream hover:text-brand-gold transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* CTA */}
-            <Link 
-              href="/contact" 
-              className="btn-gold text-sm py-3 px-6"
+          {/* CTA & Mobile Menu */}
+          <div className="flex items-center gap-4">
+            {/* Phone - Desktop */}
+            <a 
+              href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
+              className="hidden md:flex items-center gap-2 text-white/80 hover:text-brand-gold transition-colors"
             >
               <Phone size={16} />
-              Contact
-            </Link>
-          </div>
+              <span className="text-sm">{phone}</span>
+            </a>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`lg:hidden p-2 ${isScrolled ? 'text-brand-navy' : 'text-white'}`}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            {/* CTA Button - Desktop */}
+            <Link 
+              href="/contact" 
+              className="hidden lg:inline-flex btn-gold-sm"
+            >
+              Get In Touch
+            </Link>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 text-white"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-xl border-t border-neutral-100 animate-slide-down">
-            <div className="py-4 px-6 space-y-4">
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Buyers</p>
-                {navigation.buyers.map((item) => (
-                  <Link 
-                    key={item.name}
+          <div className="lg:hidden mt-6 pb-6 border-t border-white/10">
+            <nav className="pt-6 space-y-4">
+              {navigation.map((item) => (
+                <div key={item.name}>
+                  <Link
                     href={item.href}
-                    className="block py-2 text-brand-navy hover:text-brand-gold"
                     onClick={() => setIsMobileMenuOpen(false)}
+                    className="block text-white/90 hover:text-brand-gold transition-colors py-2 text-lg"
                   >
                     {item.name}
                   </Link>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Sellers</p>
-                {navigation.sellers.map((item) => (
-                  <Link 
-                    key={item.name}
-                    href={item.href}
-                    className="block py-2 text-brand-navy hover:text-brand-gold"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-              <Link 
-                href="/properties"
-                className="block py-2 text-brand-navy hover:text-brand-gold font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
+                  {item.submenu && (
+                    <div className="ml-4 space-y-2 mt-2">
+                      {item.submenu.map((subItem) => (
+                        <Link
+                          key={subItem.name}
+                          href={subItem.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block text-white/60 hover:text-brand-gold transition-colors py-1"
+                        >
+                          {subItem.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <a 
+                href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
+                className="flex items-center gap-2 text-white/80 mb-4"
               >
-                Properties
-              </Link>
+                <Phone size={16} />
+                <span>{phone}</span>
+              </a>
               <Link 
-                href="/neighborhoods"
-                className="block py-2 text-brand-navy hover:text-brand-gold font-medium"
+                href="/contact" 
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="btn-gold w-full justify-center"
               >
-                Neighborhoods
-              </Link>
-              <Link 
-                href="/about"
-                className="block py-2 text-brand-navy hover:text-brand-gold font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link 
-                href="/contact"
-                className="btn-gold w-full justify-center mt-4"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Contact Merrav
+                Get In Touch
               </Link>
             </div>
           </div>
         )}
-      </nav>
+      </div>
     </header>
   )
 }

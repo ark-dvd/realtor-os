@@ -2,103 +2,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Bed, Bath, Square, MapPin } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
+import { getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
 
 export const metadata = {
   title: 'Properties',
   description: 'Browse luxury homes and properties for sale in Austin, Texas.',
 }
 
-// Demo properties - will be replaced with Sanity data
-const demoProperties = [
-  {
-    id: '1',
-    title: 'Modern Lakefront Estate',
-    slug: 'modern-lakefront-estate',
-    price: 2850000,
-    address: '1234 Lake Austin Blvd',
-    neighborhood: 'Westlake',
-    beds: 5,
-    baths: 4.5,
-    sqft: 4800,
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
-    status: 'For Sale',
-  },
-  {
-    id: '2',
-    title: 'Downtown Luxury Condo',
-    slug: 'downtown-luxury-condo',
-    price: 975000,
-    address: '200 Congress Ave #2001',
-    neighborhood: 'Downtown Austin',
-    beds: 2,
-    baths: 2,
-    sqft: 1650,
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
-    status: 'For Sale',
-  },
-  {
-    id: '3',
-    title: 'Tarrytown Family Home',
-    slug: 'tarrytown-family-home',
-    price: 1650000,
-    address: '3456 Windsor Rd',
-    neighborhood: 'Tarrytown',
-    beds: 4,
-    baths: 3,
-    sqft: 3200,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-    status: 'For Sale',
-  },
-  {
-    id: '4',
-    title: 'Zilker Modern Retreat',
-    slug: 'zilker-modern-retreat',
-    price: 1425000,
-    address: '789 Zilker Park Way',
-    neighborhood: 'Zilker',
-    beds: 3,
-    baths: 2.5,
-    sqft: 2400,
-    image: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800&q=80',
-    status: 'Pending',
-  },
-  {
-    id: '5',
-    title: 'East Austin Bungalow',
-    slug: 'east-austin-bungalow',
-    price: 695000,
-    address: '456 E 6th Street',
-    neighborhood: 'East Austin',
-    beds: 3,
-    baths: 2,
-    sqft: 1800,
-    image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80',
-    status: 'For Sale',
-  },
-  {
-    id: '6',
-    title: 'Travis Heights Gem',
-    slug: 'travis-heights-gem',
-    price: 1125000,
-    address: '321 Travis Heights Blvd',
-    neighborhood: 'Travis Heights',
-    beds: 4,
-    baths: 3,
-    sqft: 2800,
-    image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=800&q=80',
-    status: 'For Sale',
-  },
-]
+export const revalidate = 60
 
-function formatPrice(price: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(price)
-}
+export default async function PropertiesPage() {
+  const [properties, settings] = await Promise.all([
+    getProperties(),
+    getSettings()
+  ])
 
-export default function PropertiesPage() {
   return (
     <>
       {/* Hero */}
@@ -126,7 +44,7 @@ export default function PropertiesPage() {
           {/* Filter placeholder */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-12 pb-8 border-b border-neutral-200">
             <p className="text-neutral-600">
-              Showing <span className="font-medium text-brand-navy">{demoProperties.length}</span> properties
+              Showing <span className="font-medium text-brand-navy">{properties.length}</span> properties
             </p>
             <select className="input-field w-auto">
               <option>Sort by: Newest</option>
@@ -138,16 +56,16 @@ export default function PropertiesPage() {
 
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {demoProperties.map((property) => (
+            {properties.map((property) => (
               <Link
-                key={property.id}
+                key={property._id}
                 href={`/properties/${property.slug}`}
                 className="group bg-white overflow-hidden card-hover"
               >
                 {/* Image */}
                 <div className="relative h-64 overflow-hidden">
                   <Image
-                    src={property.image}
+                    src={property.heroImage || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80'}
                     alt={property.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -155,11 +73,13 @@ export default function PropertiesPage() {
                   />
                   {/* Status Badge */}
                   <div className={`absolute top-4 left-4 px-3 py-1 text-xs font-medium uppercase tracking-wider ${
-                    property.status === 'Pending' 
+                    property.status === 'pending' 
                       ? 'bg-amber-500 text-white' 
+                      : property.status === 'sold'
+                      ? 'bg-neutral-500 text-white'
                       : 'bg-brand-gold text-brand-navy'
                   }`}>
-                    {property.status}
+                    {getStatusLabel(property.status)}
                   </div>
                 </div>
 
@@ -173,32 +93,47 @@ export default function PropertiesPage() {
                   </h3>
                   <p className="flex items-center gap-1 text-neutral-500 text-sm mb-4">
                     <MapPin size={14} />
-                    {property.address}
+                    {property.address?.street || property.neighborhood || 'Austin, TX'}
                   </p>
 
                   {/* Details */}
                   <div className="flex items-center gap-4 pt-4 border-t border-neutral-100 text-sm text-neutral-600">
-                    <span className="flex items-center gap-1">
-                      <Bed size={16} className="text-brand-gold" />
-                      {property.beds} Beds
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Bath size={16} className="text-brand-gold" />
-                      {property.baths} Baths
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Square size={16} className="text-brand-gold" />
-                      {property.sqft.toLocaleString()} sqft
-                    </span>
+                    {property.beds && (
+                      <span className="flex items-center gap-1">
+                        <Bed size={16} className="text-brand-gold" />
+                        {property.beds} Beds
+                      </span>
+                    )}
+                    {property.baths && (
+                      <span className="flex items-center gap-1">
+                        <Bath size={16} className="text-brand-gold" />
+                        {property.baths} Baths
+                      </span>
+                    )}
+                    {property.sqft && (
+                      <span className="flex items-center gap-1">
+                        <Square size={16} className="text-brand-gold" />
+                        {property.sqft.toLocaleString()} sqft
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>
             ))}
           </div>
+
+          {properties.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-neutral-500 text-lg">No properties available at this time.</p>
+              <Link href="/contact" className="btn-gold mt-6">
+                Contact Us About Upcoming Listings
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
-      <CTASection />
+      <CTASection settings={settings} />
     </>
   )
 }
