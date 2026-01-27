@@ -16,14 +16,30 @@ export default function HousingRealEstatePage() {
       <header className="pt-32 pb-16 md:pb-20 bg-brand-navy text-white">
         <div className="container-narrow">
           <div className="gold-line mb-6" />
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl mb-6">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl mb-4">
             Housing &amp; Real Estate
           </h1>
-          <p className="text-xl text-white/70 max-w-2xl">
-            A practical guide for families relocating to Austin
+          <p className="text-lg md:text-xl text-white/80 font-medium mb-2">
+            For families relocating from abroad
+          </p>
+          <p className="text-base text-white/50 max-w-2xl">
+            A practical, no-hype explanation of how the Austin market actually works
           </p>
         </div>
       </header>
+
+      {/* Orientation layer — not part of the article content */}
+      <div className="bg-white border-b border-neutral-200">
+        <div className="container-narrow py-8 md:py-10">
+          <div className="max-w-2xl">
+            <p className="text-neutral-500 text-sm md:text-base leading-relaxed">
+              This page is written for families making a real move—with children, timelines, and practical constraints.
+              It covers what public listing sites can and cannot show you, how off-market properties work,
+              and why timing decisions matter more for families than for other buyers.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="section-padding">
@@ -42,10 +58,10 @@ export default function HousingRealEstatePage() {
               This section is not about finding the cheapest deal or the best investment. It is about understanding how the housing search actually works in Central Texas, what publicly visible platforms can and cannot do for you, and why the process often unfolds differently than newcomers expect.
             </p>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
 
             <section>
-              <h2 className="font-display text-3xl md:text-4xl text-brand-navy mt-16 mb-8">
+              <h2 className="font-display text-3xl md:text-4xl text-brand-navy mt-8 mb-8">
                 How the Housing Market Actually Works (Beyond Zillow)
               </h2>
 
@@ -66,10 +82,10 @@ export default function HousingRealEstatePage() {
               </p>
             </section>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
 
             <section>
-              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-12 mb-6">
+              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-8 mb-6">
                 5.1 Public Platforms vs. Reality
               </h3>
 
@@ -106,10 +122,10 @@ export default function HousingRealEstatePage() {
               </p>
             </section>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
 
             <section>
-              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-12 mb-6">
+              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-8 mb-6">
                 5.2 Off-Market Isn't a Myth
               </h3>
 
@@ -158,10 +174,10 @@ export default function HousingRealEstatePage() {
               </p>
             </section>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
 
             <section>
-              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-12 mb-6">
+              <h3 className="font-display text-2xl md:text-3xl text-brand-navy mt-8 mb-6">
                 5.3 Timing and Family-Driven Mistakes
               </h3>
 
@@ -246,10 +262,18 @@ export default function HousingRealEstatePage() {
               </p>
             </section>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
+
+            {/* Key idea callout — not part of the article content */}
+            <aside className="my-8 p-6 bg-white border-l-4 border-brand-gold">
+              <p className="text-sm text-neutral-600 leading-relaxed">
+                <span className="font-medium text-brand-navy">Key idea for families:</span>{' '}
+                Housing decisions work best when they follow from—not precede—decisions about schools, community, and daily logistics.
+              </p>
+            </aside>
 
             <section>
-              <h2 className="font-display text-3xl md:text-4xl text-brand-navy mt-16 mb-8">
+              <h2 className="font-display text-3xl md:text-4xl text-brand-navy mt-8 mb-8">
                 Grounding Principles
               </h2>
 
@@ -278,7 +302,7 @@ export default function HousingRealEstatePage() {
               </p>
             </section>
 
-            <hr className="my-12 border-neutral-200" />
+            <hr className="my-16 border-neutral-300" />
 
             <footer className="mt-16 pt-8 border-t border-neutral-200">
               <p className="text-neutral-500 italic">
