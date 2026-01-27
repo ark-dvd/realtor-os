@@ -1,13 +1,21 @@
 import { SiteSettings, Property, Neighborhood } from '@/lib/data-fetchers'
 
+interface ArticleData {
+  headline: string
+  description: string
+  url: string
+  authorName?: string
+}
+
 interface JsonLdProps {
-  type: 'RealEstateAgent' | 'SingleFamilyResidence' | 'Place' | 'WebSite'
+  type: 'RealEstateAgent' | 'SingleFamilyResidence' | 'Place' | 'WebSite' | 'Article'
   settings?: SiteSettings
   property?: Property
   neighborhood?: Neighborhood
+  article?: ArticleData
 }
 
-export function JsonLd({ type, settings, property, neighborhood }: JsonLdProps) {
+export function JsonLd({ type, settings, property, neighborhood, article }: JsonLdProps) {
   let structuredData: Record<string, unknown> = {}
 
   if (type === 'RealEstateAgent' && settings) {
@@ -108,6 +116,20 @@ export function JsonLd({ type, settings, property, neighborhood }: JsonLdProps) 
         '@type': 'SearchAction',
         target: 'https://www.merravberko.com/properties?q={search_term_string}',
         'query-input': 'required name=search_term_string',
+      },
+    }
+  }
+
+  if (type === 'Article' && article) {
+    structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article.headline,
+      description: article.description,
+      url: article.url,
+      author: {
+        '@type': 'Person',
+        name: article.authorName || 'Merrav Berko',
       },
     }
   }

@@ -1,17 +1,30 @@
 import type { Metadata } from 'next'
+import { JsonLd } from '@/components/JsonLd'
+
+const BASE_URL = 'https://www.merravberko.com'
+const PAGE_TITLE = 'Housing & Real Estate in Austin – A Practical Guide for Relocation Families'
+const PAGE_DESCRIPTION = 'How housing actually works in Austin for families relocating from abroad. A practical, no-hype explanation of listings, off-market homes, school districts, and timing considerations.'
+const PAGE_PATH = '/relocation-to-austin/housing-real-estate'
 
 export const metadata: Metadata = {
-  title: 'Housing & Real Estate in Austin – A Practical Guide for Relocation Families',
-  description:
-    'How housing actually works in Austin for families relocating from abroad. A practical, no-hype explanation of listings, off-market homes, school districts, and timing considerations.',
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
   alternates: {
-    canonical: '/relocation-to-austin/housing-real-estate',
+    canonical: PAGE_PATH,
   },
 }
 
 export default function HousingRealEstatePage() {
   return (
     <article className="bg-brand-cream">
+      <JsonLd
+        type="Article"
+        article={{
+          headline: PAGE_TITLE,
+          description: PAGE_DESCRIPTION,
+          url: `${BASE_URL}${PAGE_PATH}`,
+        }}
+      />
       {/* Header */}
       <header className="pt-32 pb-16 md:pb-20 bg-brand-navy text-white">
         <div className="container-narrow">
