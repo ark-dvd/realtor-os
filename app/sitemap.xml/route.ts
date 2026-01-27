@@ -16,6 +16,7 @@ export async function GET() {
     '/contact',
     '/buyers/search',
     '/sellers/valuation',
+    '/relocation-to-austin/housing-real-estate',
   ]
 
   const propertyPages = properties.map(p => `/properties/${p.slug}`)
