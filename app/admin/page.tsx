@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Lock, Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction } from 'lucide-react'
-
-const ADMIN_PASSWORD = 'Peace&Love202^'
+import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn } from 'lucide-react'
 
 // Image compression function - resizes and compresses large images before upload
 async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.85): Promise<File> {
@@ -65,22 +64,6 @@ async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, qual
   })
 }
 
-function useSimpleAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
-  useEffect(() => {
-    if (sessionStorage.getItem('admin_session') === 'authenticated') setIsAuthenticated(true)
-    setLoading(false)
-  }, [])
-  const login = (password: string): boolean => {
-    if (password === ADMIN_PASSWORD) { sessionStorage.setItem('admin_session', 'authenticated'); setIsAuthenticated(true); return true }
-    return false
-  }
-  const logout = () => { sessionStorage.removeItem('admin_session'); setIsAuthenticated(false) }
-  const getToken = async (): Promise<string | null> => isAuthenticated ? btoa(ADMIN_PASSWORD) : null
-  return { isAuthenticated, loading, login, logout, getToken }
-}
-
 interface School { _key?: string; name: string; type: string; rating: number; note?: string }
 interface Highlight { _key?: string; name: string; description: string }
 interface HeroImage { _key?: string; url: string; alt?: string; assetId?: string }
@@ -111,7 +94,7 @@ function Accordion({ title, children, defaultOpen = false }: { title: string; ch
   return <div className="border rounded-lg"><button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 text-left font-medium text-brand-navy hover:bg-neutral-50">{title}{isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>{isOpen && <div className="p-4 pt-0 border-t">{children}</div>}</div>
 }
 
-function ImageUpload({ currentImage, onUpload, label, getToken }: { currentImage?: string; onUpload: (assetId: string, url: string) => void; label?: string; getToken: () => Promise<string | null> }) {
+function ImageUpload({ currentImage, onUpload, label }: { currentImage?: string; onUpload: (assetId: string, url: string) => void; label?: string }) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState(currentImage)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -121,11 +104,10 @@ function ImageUpload({ currentImage, onUpload, label, getToken }: { currentImage
     const reader = new FileReader(); reader.onload = (ev) => setPreview(ev.target?.result as string); reader.readAsDataURL(file)
     setUploading(true)
     try {
-      const token = await getToken(); if (!token) throw new Error('Not authenticated')
       // Compress image before upload
       const compressedFile = await compressImage(file)
       const formData = new FormData(); formData.append('file', compressedFile)
-      const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
       const text = await res.text()
       let data
       try { data = JSON.parse(text) } catch { throw new Error(text || 'Upload failed - invalid response') }
@@ -137,20 +119,19 @@ function ImageUpload({ currentImage, onUpload, label, getToken }: { currentImage
   return <div><label className="block text-sm font-medium mb-2">{label || 'Image'}</label><div className="flex items-center gap-4"><div className="w-32 h-32 bg-neutral-100 rounded-lg overflow-hidden flex items-center justify-center border">{preview ? <img src={preview} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-400" size={32} />}</div><div><input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Upload size={16} /> Choose</>}</button>{preview && <button type="button" onClick={() => { setPreview(''); onUpload('', '') }} className="block mt-2 text-sm text-red-500">Remove</button>}</div></div></div>
 }
 
-function GalleryUpload({ images, onChange, label, getToken }: { images: GalleryImage[]; onChange: (images: GalleryImage[]) => void; label?: string; getToken: () => Promise<string | null> }) {
+function GalleryUpload({ images, onChange, label }: { images: GalleryImage[]; onChange: (images: GalleryImage[]) => void; label?: string }) {
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files; if (!files || files.length === 0) return
     setUploading(true)
     try {
-      const token = await getToken(); if (!token) throw new Error('Not authenticated')
       const newImages: GalleryImage[] = []
       for (const file of Array.from(files)) {
         // Compress each image before upload
         const compressedFile = await compressImage(file)
         const formData = new FormData(); formData.append('file', compressedFile)
-        const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
         const text = await res.text()
         try {
           const data = JSON.parse(text)
@@ -164,12 +145,55 @@ function GalleryUpload({ images, onChange, label, getToken }: { images: GalleryI
   return <div><label className="block text-sm font-medium mb-2">{label || 'Gallery'}</label><div className="grid grid-cols-4 gap-3 mb-3">{images.map((img, i) => <div key={img._key || i} className="relative group"><div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden"><img src={img.url} alt={img.alt || ''} className="w-full h-full object-cover" /></div><button type="button" onClick={() => onChange(images.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100"><X size={14} /></button></div>)}</div><input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary w-full">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Plus size={16} /> Add Images</>}</button></div>
 }
 
-function LoginScreen({ onLogin }: { onLogin: (password: string) => boolean }) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+function LoginScreen() {
   const [loading, setLoading] = useState(false)
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); setLoading(true); setError(''); setTimeout(() => { if (!onLogin(password)) { setError('Invalid password'); setPassword('') } setLoading(false) }, 500) }
-  return <div className="min-h-screen bg-brand-cream flex items-center justify-center p-6"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center"><div className="w-16 h-16 bg-brand-navy rounded-full flex items-center justify-center mx-auto mb-6"><Lock className="text-brand-gold" size={28} /></div><h1 className="font-display text-2xl text-brand-navy mb-2">Back Office</h1><p className="text-neutral-500 mb-8">Merrav Berko Real Estate</p><form onSubmit={handleSubmit} className="space-y-4"><input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-field w-full text-center" autoFocus />{error && <p className="text-red-500 text-sm">{error}</p>}<button type="submit" disabled={loading || !password} className="btn-gold w-full justify-center">{loading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}</button></form><div className="mt-8 pt-6 border-t"><Link href="/" className="text-brand-gold hover:text-brand-gold/80 text-sm">← Back to Website</Link></div></div></div>
+
+  const handleGoogleSignIn = () => {
+    setLoading(true)
+    signIn('google', { callbackUrl: '/admin' })
+  }
+
+  return (
+    <div className="min-h-screen bg-brand-cream flex items-center justify-center p-6">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+        <div className="w-16 h-16 bg-brand-navy rounded-full flex items-center justify-center mx-auto mb-6">
+          <LogIn className="text-brand-gold" size={28} />
+        </div>
+        <h1 className="font-display text-2xl text-brand-navy mb-2">Back Office</h1>
+        <p className="text-neutral-500 mb-8">Merrav Berko Real Estate</p>
+
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="btn-gold w-full justify-center flex items-center gap-3"
+        >
+          {loading ? (
+            <Loader2 className="animate-spin" size={20} />
+          ) : (
+            <>
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Sign in with Google
+            </>
+          )}
+        </button>
+
+        <p className="text-xs text-neutral-400 mt-6">
+          Access restricted to authorized administrators only.
+        </p>
+
+        <div className="mt-8 pt-6 border-t">
+          <Link href="/" className="text-brand-gold hover:text-brand-gold/80 text-sm">
+            ← Back to Website
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function DashboardTab({ properties, deals, neighborhoods, onSeed, seeding }: { properties: Property[]; deals: Deal[]; neighborhoods: Neighborhood[]; onSeed: () => void; seeding: boolean }) {
@@ -183,7 +207,7 @@ function DashboardTab({ properties, deals, neighborhoods, onSeed, seeding }: { p
   return <div className="space-y-6"><div className="grid grid-cols-1 md:grid-cols-4 gap-4">{stats.map(s => <div key={s.label} className="bg-white p-6 rounded-xl border"><div className={`w-3 h-3 rounded-full ${s.color} mb-3`} /><div className="text-2xl font-semibold text-brand-navy">{s.value}</div><div className="text-neutral-500 text-sm">{s.label}</div></div>)}</div><div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="bg-white p-6 rounded-xl border"><h3 className="font-display text-lg text-brand-navy mb-4">Quick Stats</h3><div className="space-y-3"><div className="flex justify-between"><span className="text-neutral-600">Neighborhoods</span><span className="font-medium">{neighborhoods.length}</span></div><div className="flex justify-between"><span className="text-neutral-600">Total Properties</span><span className="font-medium">{properties.length}</span></div></div></div><div className="bg-white p-6 rounded-xl border"><h3 className="font-display text-lg text-brand-navy mb-4">Quick Actions</h3><button onClick={onSeed} disabled={seeding} className="btn-secondary w-full justify-center">{seeding ? <><Loader2 className="animate-spin" size={16} /> Loading...</> : <><RefreshCw size={16} /> Load Demo Data</>}</button><p className="text-sm text-neutral-500 mt-2">Populates neighborhoods with Austin data.</p></div></div></div>
 }
 
-function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, saving, getToken }: { properties: Property[]; neighborhoods: Neighborhood[]; loading: boolean; onSave: (p: Property) => Promise<void>; onDelete: (id: string) => void; saving: boolean; getToken: () => Promise<string | null> }) {
+function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, saving }: { properties: Property[]; neighborhoods: Neighborhood[]; loading: boolean; onSave: (p: Property) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
   const [modal, setModal] = useState<{ open: boolean; property?: Property }>({ open: false })
   const [form, setForm] = useState<Property>({ title: '', slug: '', status: 'for-sale', price: 0 })
   const [search, setSearch] = useState('')
@@ -211,7 +235,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
         <Accordion title="Address"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><label className="block text-sm font-medium mb-2">Street</label><input type="text" className="input-field" value={form.address?.street || ''} onChange={(e) => setForm({ ...form, address: { ...form.address, street: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">City</label><input type="text" className="input-field" value={form.address?.city || 'Austin'} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Neighborhood</label><select className="input-field" value={form.neighborhoodId || ''} onChange={(e) => setForm({ ...form, neighborhoodId: e.target.value })}><option value="">Select...</option>{neighborhoods.map(n => <option key={n._id} value={n._id}>{n.name}</option>)}</select></div></div></Accordion>
         <Accordion title="Description"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">Short Description</label><textarea className="input-field" rows={2} value={form.shortDescription || ''} onChange={(e) => setForm({ ...form, shortDescription: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Full Description</label><textarea className="input-field" rows={6} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div></div></Accordion>
         <Accordion title="Features"><div className="space-y-3"><div className="flex gap-2"><input type="text" className="input-field flex-1" placeholder="Add feature..." value={newFeature} onChange={(e) => setNewFeature(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())} /><button type="button" onClick={addFeature} className="btn-secondary"><Plus size={16} /></button></div><div className="flex flex-wrap gap-2">{features.map((f, i) => <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-neutral-100 rounded-full text-sm">{f}<button type="button" onClick={() => setFeatures(features.filter((_, idx) => idx !== i))} className="hover:text-red-500"><X size={14} /></button></span>)}</div></div></Accordion>
-        <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.heroImage} label="Main Image *" onUpload={(assetId, url) => setForm({ ...form, heroImageAssetId: assetId, heroImage: url })} getToken={getToken} /><div><label className="block text-sm font-medium mb-2">Video URL</label><input type="url" className="input-field" value={form.heroVideo || ''} onChange={(e) => setForm({ ...form, heroVideo: e.target.value })} /></div><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" getToken={getToken} /><ImageUpload currentImage={form.floorPlan} label="Floor Plan" onUpload={(assetId, url) => setForm({ ...form, floorPlanAssetId: assetId, floorPlan: url })} getToken={getToken} /></div></Accordion>
+        <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.heroImage} label="Main Image *" onUpload={(assetId, url) => setForm({ ...form, heroImageAssetId: assetId, heroImage: url })} /><div><label className="block text-sm font-medium mb-2">Video URL</label><input type="url" className="input-field" value={form.heroVideo || ''} onChange={(e) => setForm({ ...form, heroVideo: e.target.value })} /></div><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" /><ImageUpload currentImage={form.floorPlan} label="Floor Plan" onUpload={(assetId, url) => setForm({ ...form, floorPlanAssetId: assetId, floorPlan: url })} /></div></Accordion>
         <Accordion title="SEO"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">SEO Title</label><input type="text" className="input-field" value={form.seoTitle || ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">SEO Description</label><textarea className="input-field" rows={2} value={form.seoDescription || ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div></div></Accordion>
         <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
       </form>
@@ -219,7 +243,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
   </div>
 }
 
-function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving, getToken }: { neighborhoods: Neighborhood[]; loading: boolean; onSave: (n: Neighborhood) => Promise<void>; onDelete: (id: string) => void; saving: boolean; getToken: () => Promise<string | null> }) {
+function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving }: { neighborhoods: Neighborhood[]; loading: boolean; onSave: (n: Neighborhood) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
   const [modal, setModal] = useState<{ open: boolean; neighborhood?: Neighborhood }>({ open: false })
   const [form, setForm] = useState<Neighborhood>({ name: '', slug: '', tagline: '', vibe: '', description: '', avgPrice: '' })
   const [schools, setSchools] = useState<School[]>([])
@@ -255,7 +279,7 @@ function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving, ge
         <Accordion title={`Schools (${schools.length})`}><div className="space-y-3">{schools.map((s, i) => <div key={s._key || i} className="flex gap-2 items-center p-2 bg-neutral-50 rounded"><input type="text" className="input-field flex-1" placeholder="Name" value={s.name} onChange={(e) => updateSchool(i, 'name', e.target.value)} /><select className="input-field w-28" value={s.type} onChange={(e) => updateSchool(i, 'type', e.target.value)}><option>Elementary</option><option>Middle</option><option>High School</option></select><div className="flex items-center gap-1"><Star size={14} className="text-brand-gold" /><input type="number" min="1" max="10" className="input-field w-14" value={s.rating} onChange={(e) => updateSchool(i, 'rating', Number(e.target.value))} /></div><button type="button" onClick={() => setSchools(schools.filter((_, idx) => idx !== i))} className="p-1 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addSchool} className="btn-secondary w-full"><Plus size={16} /> Add School</button></div></Accordion>
         <Accordion title={`Why People Love It (${whyLove.length})`}><div className="space-y-3">{whyLove.map((r, i) => <div key={i} className="flex gap-2"><textarea className="input-field flex-1" rows={2} value={r} onChange={(e) => updateWhyLove(i, e.target.value)} /><button type="button" onClick={() => setWhyLove(whyLove.filter((_, idx) => idx !== i))} className="p-1 text-red-500 self-start"><X size={16} /></button></div>)}<button type="button" onClick={addWhyLove} className="btn-secondary w-full"><Plus size={16} /> Add</button></div></Accordion>
         <Accordion title={`Highlights (${highlights.length})`}><div className="space-y-3">{highlights.map((h, i) => <div key={h._key || i} className="flex gap-2"><input type="text" className="input-field w-1/3" placeholder="Name" value={h.name} onChange={(e) => updateHighlight(i, 'name', e.target.value)} /><input type="text" className="input-field flex-1" placeholder="Description" value={h.description} onChange={(e) => updateHighlight(i, 'description', e.target.value)} /><button type="button" onClick={() => setHighlights(highlights.filter((_, idx) => idx !== i))} className="p-1 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addHighlight} className="btn-secondary w-full"><Plus size={16} /> Add</button></div></Accordion>
-        <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.image} label="Cover Image *" onUpload={(assetId, url) => setForm({ ...form, imageAssetId: assetId, image: url })} getToken={getToken} /><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" getToken={getToken} /></div></Accordion>
+        <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.image} label="Cover Image *" onUpload={(assetId, url) => setForm({ ...form, imageAssetId: assetId, image: url })} /><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" /></div></Accordion>
         <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" className="input-field" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div><div className="flex items-end pb-2"><label className="flex items-center gap-2"><input type="checkbox" checked={form.isActive !== false} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="rounded" /><span className="text-sm">Show on website</span></label></div></div>
         <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
       </form>
@@ -267,7 +291,7 @@ function DealsTab() {
   return <div className="space-y-6"><div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-8 text-center"><Construction className="mx-auto text-amber-500 mb-4" size={48} /><h2 className="font-display text-2xl text-brand-navy mb-3">מודול זה בבנייה</h2><p className="text-neutral-600 max-w-lg mx-auto">מודול ניהול העסקאות (Deals) נמצא בפיתוח ועדיין לא מוכן לשימוש.</p><p className="text-amber-600 font-medium mt-4">Coming Soon!</p></div></div>
 }
 
-function SettingsTab({ settings, loading, onSave, saving, getToken }: { settings: SiteSettings | null; loading: boolean; onSave: (s: SiteSettings) => Promise<void>; saving: boolean; getToken: () => Promise<string | null> }) {
+function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSettings | null; loading: boolean; onSave: (s: SiteSettings) => Promise<void>; saving: boolean }) {
   const [form, setForm] = useState<SiteSettings>(settings || {})
   const [heroImages, setHeroImages] = useState<HeroImage[]>([])
   const [stats, setStats] = useState<Stat[]>([])
@@ -278,11 +302,10 @@ function SettingsTab({ settings, loading, onSave, saving, getToken }: { settings
   const handleHeroImageUpload = async (file: File, index: number) => {
     setUploadingIndex(index)
     try {
-      const token = await getToken(); if (!token) throw new Error('Not authenticated')
       // Compress image before upload
       const compressedFile = await compressImage(file)
       const formData = new FormData(); formData.append('file', compressedFile)
-      const res = await fetch('/api/admin/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
       const text = await res.text()
       let data
       try { data = JSON.parse(text) } catch { throw new Error(text || 'Upload failed - invalid response') }
@@ -303,8 +326,8 @@ function SettingsTab({ settings, loading, onSave, saving, getToken }: { settings
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Hero Section</h3><div><label className="block text-sm font-medium mb-2">Headline</label><input type="text" className="input-field" value={form.heroHeadline || ''} onChange={(e) => setForm({ ...form, heroHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Subheadline</label><textarea className="input-field" rows={2} value={form.heroSubheadline || ''} onChange={(e) => setForm({ ...form, heroSubheadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Hero Type</label><div className="flex gap-4"><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType !== 'video'} onChange={() => setForm({ ...form, heroMediaType: 'images' })} /><span>Image Slider</span></label><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType === 'video'} onChange={() => setForm({ ...form, heroMediaType: 'video' })} /><span>Video</span></label></div></div>
       {form.heroMediaType !== 'video' ? <Accordion title={`Hero Images (${heroImages.length})`} defaultOpen><div className="space-y-3">{heroImages.map((img, i) => <div key={img._key || i} className="flex gap-3 items-center p-3 bg-neutral-50 rounded-lg"><div className="w-24 h-16 bg-neutral-200 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">{img.url ? <img src={img.url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-400" size={20} />}</div><div className="flex-1 space-y-2"><input type="file" accept="image/*" className="text-sm" onChange={(e) => e.target.files?.[0] && handleHeroImageUpload(e.target.files[0], i)} disabled={uploadingIndex === i} />{uploadingIndex === i && <span className="text-xs text-brand-gold">Uploading...</span>}<input type="text" className="input-field text-sm" placeholder="Alt text" value={img.alt || ''} onChange={(e) => updateHeroImageAlt(i, e.target.value)} /></div><button type="button" onClick={() => setHeroImages(heroImages.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addHeroImage} className="btn-secondary w-full"><Plus size={16} /> Add Hero Image</button></div></Accordion> : <div><label className="block text-sm font-medium mb-2">Hero Video URL</label><input type="url" className="input-field" value={form.heroVideoUrl || ''} onChange={(e) => setForm({ ...form, heroVideoUrl: e.target.value })} placeholder="Direct MP4 URL" /></div>}
     </div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Branding</h3><ImageUpload currentImage={form.logo} label="Logo" onUpload={(assetId, url) => setForm({ ...form, logoAssetId: assetId, logo: url })} getToken={getToken} /></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Agent Information</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name</label><input type="text" className="input-field" value={form.agentName || ''} onChange={(e) => setForm({ ...form, agentName: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Title</label><input type="text" className="input-field" value={form.agentTitle || ''} onChange={(e) => setForm({ ...form, agentTitle: e.target.value })} /></div></div><ImageUpload currentImage={form.agentPhoto} label="Agent Photo" onUpload={(assetId, url) => setForm({ ...form, agentPhotoAssetId: assetId, agentPhoto: url })} getToken={getToken} /></div>
+    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Branding</h3><ImageUpload currentImage={form.logo} label="Logo" onUpload={(assetId, url) => setForm({ ...form, logoAssetId: assetId, logo: url })} /></div>
+    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Agent Information</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name</label><input type="text" className="input-field" value={form.agentName || ''} onChange={(e) => setForm({ ...form, agentName: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Title</label><input type="text" className="input-field" value={form.agentTitle || ''} onChange={(e) => setForm({ ...form, agentTitle: e.target.value })} /></div></div><ImageUpload currentImage={form.agentPhoto} label="Agent Photo" onUpload={(assetId, url) => setForm({ ...form, agentPhotoAssetId: assetId, agentPhoto: url })} /></div>
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">About Section</h3><div><label className="block text-sm font-medium mb-2">About Headline</label><input type="text" className="input-field" value={form.aboutHeadline || ''} onChange={(e) => setForm({ ...form, aboutHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">About Text</label><textarea className="input-field" rows={6} value={form.aboutText || ''} onChange={(e) => setForm({ ...form, aboutText: e.target.value })} /></div><Accordion title={`Stats (${stats.length})`}><div className="space-y-3">{stats.map((s, i) => <div key={s._key || i} className="grid grid-cols-12 gap-2"><input type="text" className="input-field col-span-4" placeholder="Value" value={s.value} onChange={(e) => updateStat(i, 'value', e.target.value)} /><input type="text" className="input-field col-span-7" placeholder="Label" value={s.label} onChange={(e) => updateStat(i, 'label', e.target.value)} /><button type="button" onClick={() => setStats(stats.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addStat} className="btn-secondary w-full"><Plus size={16} /> Add Stat</button></div></Accordion></div>
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Contact Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" className="input-field" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Email</label><input type="email" className="input-field" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div></div><div><label className="block text-sm font-medium mb-2">Address</label><input type="text" className="input-field" value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Office Hours</label><textarea className="input-field" rows={3} value={form.officeHours || ''} onChange={(e) => setForm({ ...form, officeHours: e.target.value })} /></div></div>
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Social Media</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Instagram</label><input type="url" className="input-field" value={form.instagram || ''} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Facebook</label><input type="url" className="input-field" value={form.facebook || ''} onChange={(e) => setForm({ ...form, facebook: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">LinkedIn</label><input type="url" className="input-field" value={form.linkedin || ''} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">YouTube</label><input type="url" className="input-field" value={form.youtube || ''} onChange={(e) => setForm({ ...form, youtube: e.target.value })} /></div></div></div>
@@ -313,7 +336,7 @@ function SettingsTab({ settings, loading, onSave, saving, getToken }: { settings
   </div>
 }
 
-function AdminDashboard({ onLogout, getToken }: { onLogout: () => void; getToken: () => Promise<string | null> }) {
+function AdminDashboard({ user, onLogout }: { user: { name?: string | null; email?: string | null }; onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
   const [properties, setProperties] = useState<Property[]>([])
@@ -324,49 +347,126 @@ function AdminDashboard({ onLogout, getToken }: { onLogout: () => void; getToken
   const [seeding, setSeeding] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const fetchWithAuth = useCallback(async (url: string) => {
-    const token = await getToken(); if (!token) throw new Error('Not authenticated')
-    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
-    if (res.status === 401 || res.status === 403) throw new Error('Auth failed')
-    return res
-  }, [getToken])
-
   const fetchAll = useCallback(async () => {
     try {
-      const [nRes, pRes, dRes, sRes] = await Promise.all([fetchWithAuth('/api/admin/neighborhoods'), fetchWithAuth('/api/admin/properties'), fetchWithAuth('/api/admin/deals'), fetchWithAuth('/api/admin/settings')])
+      const [nRes, pRes, dRes, sRes] = await Promise.all([
+        fetch('/api/admin/neighborhoods', { credentials: 'include' }),
+        fetch('/api/admin/properties', { credentials: 'include' }),
+        fetch('/api/admin/deals', { credentials: 'include' }),
+        fetch('/api/admin/settings', { credentials: 'include' })
+      ])
       if (nRes.ok) setNeighborhoods(await nRes.json())
       if (pRes.ok) setProperties(await pRes.json())
       if (dRes.ok) setDeals(await dRes.json())
       if (sRes.ok) setSettings(await sRes.json())
     } catch (e) { setToast({ message: e instanceof Error ? e.message : 'Failed', type: 'error' }) }
     finally { setLoading({ n: false, p: false, d: false, s: false }) }
-  }, [fetchWithAuth])
+  }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  const seed = async () => { setSeeding(true); try { const token = await getToken(); const res = await fetch('/api/admin/seed?type=all', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }); if (res.ok) { setToast({ message: 'Demo data loaded!', type: 'success' }); fetchAll() } else { setToast({ message: 'Failed', type: 'error' }) } } catch { setToast({ message: 'Failed', type: 'error' }) } finally { setSeeding(false) } }
-  const saveEntity = async (endpoint: string, data: unknown, method: 'POST' | 'PUT') => { setSaving(true); try { const token = await getToken(); const res = await fetch(`/api/admin/${endpoint}`, { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); if (res.ok) { setToast({ message: 'Saved!', type: 'success' }); fetchAll() } else { const d = await res.json(); setToast({ message: d.error || 'Failed', type: 'error' }) } } catch { setToast({ message: 'Failed', type: 'error' }) } finally { setSaving(false) } }
-  const deleteEntity = async (endpoint: string, id: string) => { try { const token = await getToken(); await fetch(`/api/admin/${endpoint}?id=${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); setToast({ message: 'Deleted', type: 'success' }); fetchAll() } catch { setToast({ message: 'Failed', type: 'error' }) } }
+  const seed = async () => {
+    setSeeding(true)
+    try {
+      const res = await fetch('/api/admin/seed?type=all', { method: 'POST', credentials: 'include' })
+      if (res.ok) { setToast({ message: 'Demo data loaded!', type: 'success' }); fetchAll() }
+      else { setToast({ message: 'Failed', type: 'error' }) }
+    } catch { setToast({ message: 'Failed', type: 'error' }) }
+    finally { setSeeding(false) }
+  }
 
-  const tabs = [{ id: 'dashboard', label: 'Dashboard', icon: TrendingUp }, { id: 'properties', label: 'Properties', icon: Home }, { id: 'neighborhoods', label: 'Neighborhoods', icon: MapPin }, { id: 'deals', label: 'Deals', icon: FileText }, { id: 'settings', label: 'Settings', icon: Settings }]
+  const saveEntity = async (endpoint: string, data: unknown, method: 'POST' | 'PUT') => {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/admin/${endpoint}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      })
+      if (res.ok) { setToast({ message: 'Saved!', type: 'success' }); fetchAll() }
+      else { const d = await res.json(); setToast({ message: d.error || 'Failed', type: 'error' }) }
+    } catch { setToast({ message: 'Failed', type: 'error' }) }
+    finally { setSaving(false) }
+  }
 
-  return <div className="min-h-screen bg-neutral-100">
-    <header className="bg-brand-navy text-white sticky top-0 z-40"><div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between"><div className="flex items-center gap-4"><Link href="/" className="font-display text-xl hover:text-brand-gold">Merrav Berko</Link><span className="text-white/40">|</span><span className="text-white/70 text-sm">Back Office</span></div><button onClick={onLogout} className="p-2 hover:bg-white/10 rounded-full" title="Logout"><LogOut size={20} /></button></div></header>
-    <div className="max-w-7xl mx-auto px-6 py-8">
-      <div className="flex gap-2 mb-8 overflow-x-auto pb-2">{tabs.map(t => <button key={t.id} onClick={() => setActiveTab(t.id)} className={`flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors ${activeTab === t.id ? 'bg-brand-navy text-white' : 'bg-white text-neutral-600 hover:bg-neutral-50 border'}`}><t.icon size={18} />{t.label}{t.id === 'deals' && <Construction size={14} className="text-amber-500" />}</button>)}</div>
-      {activeTab === 'dashboard' && <DashboardTab properties={properties} deals={deals} neighborhoods={neighborhoods} onSeed={seed} seeding={seeding} />}
-      {activeTab === 'properties' && <PropertiesTab properties={properties} neighborhoods={neighborhoods} loading={loading.p} onSave={(p) => saveEntity('properties', p, p._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('properties', id)} saving={saving} getToken={getToken} />}
-      {activeTab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} loading={loading.n} onSave={(n) => saveEntity('neighborhoods', n, n._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('neighborhoods', id)} saving={saving} getToken={getToken} />}
-      {activeTab === 'deals' && <DealsTab />}
-      {activeTab === 'settings' && <SettingsTab settings={settings} loading={loading.s} onSave={(s) => saveEntity('settings', s, 'PUT')} saving={saving} getToken={getToken} />}
+  const deleteEntity = async (endpoint: string, id: string) => {
+    try {
+      await fetch(`/api/admin/${endpoint}?id=${id}`, { method: 'DELETE', credentials: 'include' })
+      setToast({ message: 'Deleted', type: 'success' })
+      fetchAll()
+    } catch { setToast({ message: 'Failed', type: 'error' }) }
+  }
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+    { id: 'properties', label: 'Properties', icon: Home },
+    { id: 'neighborhoods', label: 'Neighborhoods', icon: MapPin },
+    { id: 'deals', label: 'Deals', icon: FileText },
+    { id: 'settings', label: 'Settings', icon: Settings }
+  ]
+
+  return (
+    <div className="min-h-screen bg-neutral-100">
+      <header className="bg-brand-navy text-white sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="font-display text-xl hover:text-brand-gold">Merrav Berko</Link>
+            <span className="text-white/40">|</span>
+            <span className="text-white/70 text-sm">Back Office</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-white/70">{user.email}</span>
+            <button onClick={onLogout} className="p-2 hover:bg-white/10 rounded-full" title="Logout">
+              <LogOut size={20} />
+            </button>
+          </div>
+        </div>
+      </header>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors ${activeTab === t.id ? 'bg-brand-navy text-white' : 'bg-white text-neutral-600 hover:bg-neutral-50 border'}`}
+            >
+              <t.icon size={18} />
+              {t.label}
+              {t.id === 'deals' && <Construction size={14} className="text-amber-500" />}
+            </button>
+          ))}
+        </div>
+        {activeTab === 'dashboard' && <DashboardTab properties={properties} deals={deals} neighborhoods={neighborhoods} onSeed={seed} seeding={seeding} />}
+        {activeTab === 'properties' && <PropertiesTab properties={properties} neighborhoods={neighborhoods} loading={loading.p} onSave={(p) => saveEntity('properties', p, p._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('properties', id)} saving={saving} />}
+        {activeTab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} loading={loading.n} onSave={(n) => saveEntity('neighborhoods', n, n._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('neighborhoods', id)} saving={saving} />}
+        {activeTab === 'deals' && <DealsTab />}
+        {activeTab === 'settings' && <SettingsTab settings={settings} loading={loading.s} onSave={(s) => saveEntity('settings', s, 'PUT')} saving={saving} />}
+      </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
-    {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-  </div>
+  )
 }
 
 export default function AdminPage() {
-  const { isAuthenticated, loading, login, logout, getToken } = useSimpleAuth()
-  if (loading) return <div className="min-h-screen bg-brand-cream flex items-center justify-center"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
-  if (!isAuthenticated) return <LoginScreen onLogin={login} />
-  return <AdminDashboard onLogout={logout} getToken={getToken} />
+  const { data: session, status } = useSession()
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+        <Loader2 className="animate-spin text-brand-gold" size={40} />
+      </div>
+    )
+  }
+
+  if (!session) {
+    return <LoginScreen />
+  }
+
+  return (
+    <AdminDashboard
+      user={session.user || {}}
+      onLogout={() => signOut({ callbackUrl: '/' })}
+    />
+  )
 }
