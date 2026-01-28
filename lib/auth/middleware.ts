@@ -15,9 +15,11 @@ export interface AuthUser {
 export async function requireAdmin(request: NextRequest): Promise<{ user: AuthUser } | { error: NextResponse }> {
   try {
     // Get JWT token from NextAuth session cookie
+    // Must specify cookieName to match the custom name set in lib/auth/config.ts
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
+      cookieName: 'next-auth.session-token',
     })
 
     // FAIL CLOSED: No token = no access

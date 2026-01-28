@@ -25,9 +25,11 @@ export async function middleware(request: NextRequest) {
   // Only protect /admin routes (not /api/auth which NextAuth needs)
   if (pathname.startsWith('/admin')) {
     try {
+      // Must specify cookieName to match the custom name set in lib/auth/config.ts
       const token = await getToken({
         req: request,
         secret: process.env.NEXTAUTH_SECRET,
+        cookieName: 'next-auth.session-token',
       })
 
       // FAIL CLOSED: No valid session = redirect to sign in
