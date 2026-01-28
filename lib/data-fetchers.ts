@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { getSanityClient, isSanityConfigured, getSanityStatus } from './sanity'
-import { neighborhoods as fallbackNeighborhoods } from './neighborhoods-data'
+import { communities as fallbackCommunities, cities as fallbackCities } from './communities-data'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DEMO MODE TRACKING
@@ -112,10 +112,21 @@ export interface School {
   note?: string
 }
 
-export interface Neighborhood {
+export interface City {
   _id?: string
   name: string
   slug: string
+  description?: string
+  image?: string
+  order?: number
+}
+
+export interface Community {
+  _id?: string
+  name: string
+  slug: string
+  city?: City
+  citySlug?: string // For fallback data
   tagline: string
   vibe: string
   description: string
@@ -134,6 +145,9 @@ export interface Neighborhood {
   order?: number
   isActive?: boolean
 }
+
+// Backward compatibility alias
+export type Neighborhood = Community
 
 export interface Deal {
   _id?: string
@@ -405,19 +419,53 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
   }
 }
 
-export async function getNeighborhoods(): Promise<Neighborhood[]> {
+export async function getCities(): Promise<City[]> {
   if (!isSanityConfigured()) {
     setDemoMode('Sanity not configured')
-    return fallbackNeighborhoods
+    return fallbackCities
   }
 
   try {
     const client = getSanityClient()
-    const neighborhoods = await client.fetch(`
-      *[_type == "neighborhood" && isActive != false] | order(order asc) {
+    const cities = await client.fetch(`
+      *[_type == "city"] | order(order asc) {
         _id,
         name,
         "slug": slug.current,
+        description,
+        "image": image.asset->url,
+        order
+      }
+    `)
+
+    if (!cities || cities.length === 0) {
+      setDemoMode('No cities found in Sanity')
+      return fallbackCities
+    }
+
+    return cities
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    setDemoMode(`Sanity cities query failed: ${errorMessage}`)
+    console.error('getCities() Sanity error:', error)
+    return fallbackCities
+  }
+}
+
+export async function getCommunities(): Promise<Community[]> {
+  if (!isSanityConfigured()) {
+    setDemoMode('Sanity not configured')
+    return fallbackCommunities
+  }
+
+  try {
+    const client = getSanityClient()
+    const communities = await client.fetch(`
+      *[_type == "neighborhood" && isActive != false] | order(city->order asc, order asc) {
+        _id,
+        name,
+        "slug": slug.current,
+        city->{ _id, name, "slug": slug.current, description, order },
         tagline,
         vibe,
         description,
@@ -435,33 +483,39 @@ export async function getNeighborhoods(): Promise<Neighborhood[]> {
       }
     `)
 
-    // No neighborhoods in Sanity
-    if (!neighborhoods || neighborhoods.length === 0) {
-      setDemoMode('No neighborhoods found in Sanity')
-      return fallbackNeighborhoods
+    // No communities in Sanity
+    if (!communities || communities.length === 0) {
+      setDemoMode('No communities found in Sanity')
+      return fallbackCommunities
     }
 
-    return neighborhoods
+    return communities
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    setDemoMode(`Sanity neighborhoods query failed: ${errorMessage}`)
-    console.error('getNeighborhoods() Sanity error:', error)
-    return fallbackNeighborhoods
+    setDemoMode(`Sanity communities query failed: ${errorMessage}`)
+    console.error('getCommunities() Sanity error:', error)
+    return fallbackCommunities
   }
 }
 
-export async function getNeighborhoodBySlug(slug: string): Promise<Neighborhood | null> {
+// Backward compatibility alias
+export async function getNeighborhoods(): Promise<Community[]> {
+  return getCommunities()
+}
+
+export async function getCommunityBySlug(slug: string): Promise<Community | null> {
   if (!isSanityConfigured()) {
-    return fallbackNeighborhoods.find(n => n.slug === slug) || null
+    return fallbackCommunities.find(c => c.slug === slug) || null
   }
 
   try {
     const client = getSanityClient()
-    const neighborhood = await client.fetch(`
+    const community = await client.fetch(`
       *[_type == "neighborhood" && slug.current == $slug][0] {
         _id,
         name,
         "slug": slug.current,
+        city->{ _id, name, "slug": slug.current, description, order },
         tagline,
         vibe,
         description,
@@ -477,15 +531,20 @@ export async function getNeighborhoodBySlug(slug: string): Promise<Neighborhood 
       }
     `, { slug })
 
-    if (!neighborhood) {
-      return fallbackNeighborhoods.find(n => n.slug === slug) || null
+    if (!community) {
+      return fallbackCommunities.find(c => c.slug === slug) || null
     }
 
-    return neighborhood
+    return community
   } catch (error) {
-    console.error('getNeighborhoodBySlug() Sanity error:', error)
-    return fallbackNeighborhoods.find(n => n.slug === slug) || null
+    console.error('getCommunityBySlug() Sanity error:', error)
+    return fallbackCommunities.find(c => c.slug === slug) || null
   }
+}
+
+// Backward compatibility alias
+export async function getNeighborhoodBySlug(slug: string): Promise<Community | null> {
+  return getCommunityBySlug(slug)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

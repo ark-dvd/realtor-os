@@ -9,24 +9,26 @@ export async function GET(request: NextRequest) {
   try {
     const client = getSanityWriteClient()
     const data = await client.fetch(`
-      *[_type == "neighborhood"] | order(order asc) {
-        _id, 
-        name, 
-        "slug": slug.current, 
-        tagline, 
-        vibe, 
+      *[_type == "neighborhood"] | order(city->order asc, order asc) {
+        _id,
+        name,
+        "slug": slug.current,
+        city->{ _id, name, "slug": slug.current },
+        "cityId": city._ref,
+        tagline,
+        vibe,
         description,
-        population, 
-        commute, 
-        schoolDistrict, 
-        schools[]{ _key, name, type, rating, note }, 
+        population,
+        commute,
+        schoolDistrict,
+        schools[]{ _key, name, type, rating, note },
         whyPeopleLove,
-        highlights[]{ _key, name, description }, 
-        avgPrice, 
+        highlights[]{ _key, name, description },
+        avgPrice,
         "image": image.asset->url,
         "imageAssetId": image.asset._ref,
         gallery[]{ _key, "url": asset->url, "assetId": asset._ref, alt },
-        order, 
+        order,
         isActive
       }
     `)
@@ -72,6 +74,11 @@ export async function POST(request: NextRequest) {
       avgPrice: body.avgPrice,
       order: body.order || 10,
       isActive: body.isActive ?? true,
+    }
+
+    // City Reference (required)
+    if (body.cityId) {
+      doc.city = { _type: 'reference', _ref: body.cityId }
     }
     
     // Cover Image
@@ -139,6 +146,11 @@ export async function PUT(request: NextRequest) {
       avgPrice: body.avgPrice,
       order: body.order,
       isActive: body.isActive,
+    }
+
+    // City Reference
+    if (body.cityId) {
+      updates.city = { _type: 'reference', _ref: body.cityId }
     }
     
     // Cover Image

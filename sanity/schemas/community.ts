@@ -1,6 +1,6 @@
 export default {
-  name: 'neighborhood',
-  title: 'Neighborhoods',
+  name: 'neighborhood', // Keep internal name to preserve existing data
+  title: 'Communities',
   type: 'document',
   groups: [
     { name: 'basic', title: 'Basic Info' },
@@ -14,7 +14,7 @@ export default {
     // Basic Info
     {
       name: 'name',
-      title: 'Neighborhood Name',
+      title: 'Community Name',
       type: 'string',
       group: 'basic',
       validation: (Rule: any) => Rule.required(),
@@ -26,6 +26,15 @@ export default {
       options: { source: 'name', maxLength: 96 },
       group: 'basic',
       validation: (Rule: any) => Rule.required(),
+    },
+    {
+      name: 'city',
+      title: 'City',
+      type: 'reference',
+      to: [{ type: 'city' }],
+      group: 'basic',
+      validation: (Rule: any) => Rule.required(),
+      description: 'Select the city this community belongs to',
     },
     {
       name: 'tagline',
@@ -41,7 +50,7 @@ export default {
       type: 'text',
       rows: 3,
       group: 'basic',
-      description: 'Describe the feel of the neighborhood',
+      description: 'Describe the feel of the community',
       validation: (Rule: any) => Rule.required(),
     },
     {
@@ -77,7 +86,7 @@ export default {
       fields: [
         {
           name: 'toDowntown',
-          title: 'To Downtown',
+          title: 'To Downtown Austin',
           type: 'string',
           description: 'e.g., "5-10 mins"',
         },
@@ -163,7 +172,7 @@ export default {
       type: 'array',
       group: 'highlights',
       of: [{ type: 'text', rows: 3 }],
-      description: 'Add 3-5 reasons why people love this neighborhood',
+      description: 'Add 3-5 reasons why people love this community',
       validation: (Rule: any) => Rule.min(1).max(5),
     },
     {
@@ -238,7 +247,7 @@ export default {
       title: 'Show on Website',
       type: 'boolean',
       group: 'settings',
-      description: 'Uncheck to hide this neighborhood from the website',
+      description: 'Uncheck to hide this community from the website',
       initialValue: true,
     },
   ],
@@ -253,18 +262,27 @@ export default {
       name: 'nameAsc',
       by: [{ field: 'name', direction: 'asc' }],
     },
+    {
+      title: 'By City',
+      name: 'cityAsc',
+      by: [
+        { field: 'city.name', direction: 'asc' },
+        { field: 'order', direction: 'asc' },
+      ],
+    },
   ],
   preview: {
     select: {
       title: 'name',
+      cityName: 'city.name',
       avgPrice: 'avgPrice',
       media: 'image',
       isActive: 'isActive',
     },
-    prepare({ title, avgPrice, media, isActive }: any) {
+    prepare({ title, cityName, avgPrice, media, isActive }: any) {
       return {
         title,
-        subtitle: `${avgPrice || 'No price'} ${isActive ? '✓ Active' : '⨉ Hidden'}`,
+        subtitle: `${cityName || 'No city'} • ${avgPrice || 'No price'} ${isActive ? '✓ Active' : '⨉ Hidden'}`,
         media,
       }
     },

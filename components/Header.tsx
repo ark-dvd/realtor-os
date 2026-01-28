@@ -12,22 +12,36 @@ interface HeaderProps {
 
 const navigation = [
   { name: 'Properties', href: '/properties' },
-  { 
-    name: 'Buyers', 
+  {
+    name: 'Buyers',
     href: '/buyers/search',
     submenu: [
       { name: 'Property Search', href: '/buyers/search' },
-      { name: 'Neighborhoods', href: '/neighborhoods' },
+      { name: 'Communities', href: '/communities' },
     ]
   },
-  { 
-    name: 'Sellers', 
+  {
+    name: 'Sellers',
     href: '/sellers/valuation',
     submenu: [
       { name: 'Home Valuation', href: '/sellers/valuation' },
     ]
   },
-  { name: 'Neighborhoods', href: '/neighborhoods' },
+  {
+    name: 'Communities',
+    href: '/communities',
+    submenu: [
+      { name: 'All Communities', href: '/communities' },
+      { name: 'Austin', href: '/communities#austin' },
+      { name: 'Bee Cave', href: '/communities#bee-cave' },
+      { name: 'Cedar Park', href: '/communities#cedar-park' },
+      { name: 'Georgetown', href: '/communities#georgetown' },
+      { name: 'Lakeway', href: '/communities#lakeway' },
+      { name: 'Leander', href: '/communities#leander' },
+      { name: 'Pflugerville', href: '/communities#pflugerville' },
+      { name: 'Round Rock', href: '/communities#round-rock' },
+    ]
+  },
   { name: 'About', href: '/about' },
   { name: 'Contact', href: '/contact' },
 ]

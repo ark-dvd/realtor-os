@@ -1,17 +1,17 @@
-import { getProperties, getNeighborhoods } from '@/lib/data-fetchers'
+import { getProperties, getCommunities } from '@/lib/data-fetchers'
 
 const BASE_URL = 'https://www.merravberko.com'
 
 export async function GET() {
-  const [properties, neighborhoods] = await Promise.all([
+  const [properties, communities] = await Promise.all([
     getProperties(),
-    getNeighborhoods()
+    getCommunities()
   ])
 
   const staticPages = [
     '',
     '/properties',
-    '/neighborhoods',
+    '/communities',
     '/about',
     '/contact',
     '/buyers/search',
@@ -20,9 +20,9 @@ export async function GET() {
   ]
 
   const propertyPages = properties.map(p => `/properties/${p.slug}`)
-  const neighborhoodPages = neighborhoods.map(n => `/neighborhoods/${n.slug}`)
+  const communityPages = communities.map(c => `/communities/${c.slug}`)
 
-  const allPages = [...staticPages, ...propertyPages, ...neighborhoodPages]
+  const allPages = [...staticPages, ...propertyPages, ...communityPages]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
