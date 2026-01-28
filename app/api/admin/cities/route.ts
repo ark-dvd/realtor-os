@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const client = getSanityWriteClient()
 
-    const doc: Record<string, unknown> = {
+    const doc: any = {
       _type: 'city',
       name: body.name,
       slug: { _type: 'slug', current: body.slug },
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
 
     const client = getSanityWriteClient()
 
-    const updates: Record<string, unknown> = {
+    const updates: any = {
       name: body.name,
       slug: { _type: 'slug', current: body.slug },
       description: body.description,
