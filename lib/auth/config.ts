@@ -37,18 +37,11 @@ export const authOptions: NextAuthOptions = {
       return true
     },
 
-    async session({ session, token }) {
-      // Add user info to session
-      if (session.user && token.sub) {
-        session.user.id = token.sub
-      }
+    async session({ session }) {
       return session
     },
 
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-      }
+    async jwt({ token }) {
       return token
     },
   },
