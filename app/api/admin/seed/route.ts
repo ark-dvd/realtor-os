@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth/middleware'
 import { getSanityWriteClient } from '@/lib/sanity'
-import { neighborhoods } from '@/lib/neighborhoods-data'
+import { cities, communities } from '@/lib/communities-data'
 
 const ALLOW_SEED = process.env.ALLOW_SEED === 'true'
 
@@ -22,15 +22,50 @@ export async function POST(request: NextRequest) {
   try {
     const client = getSanityWriteClient()
     const results: Record<string, unknown> = {}
-    
+
+    // Seed cities first
+    const cityCount = await client.fetch(`count(*[_type == "city"])`)
+    const cityIdMap: Record<string, string> = {}
+    if (cityCount === 0) {
+      for (const c of cities) {
+        const created = await client.create({ _type: 'city', name: c.name, slug: { _type: 'slug', current: c.slug }, description: c.description, order: c.order })
+        cityIdMap[c.slug] = created._id
+      }
+      results.cities = { created: cities.length }
+    } else {
+      // Fetch existing city IDs
+      const existingCities = await client.fetch(`*[_type == "city"]{ _id, "slug": slug.current }`)
+      for (const ec of existingCities) cityIdMap[ec.slug] = ec._id
+      results.cities = { skipped: cityCount }
+    }
+
+    // Seed communities with city references
     const nCount = await client.fetch(`count(*[_type == "neighborhood"])`)
     if (nCount === 0) {
-      for (let i = 0; i < neighborhoods.length; i++) {
-        const n = neighborhoods[i]
-        await client.create({ _type: 'neighborhood', name: n.name, slug: { _type: 'slug', current: n.slug }, tagline: n.tagline, vibe: n.vibe, description: n.description, population: n.population, commute: n.commute, schoolDistrict: n.schoolDistrict, schools: n.schools?.map((s, idx) => ({ _key: `s-${idx}`, ...s })), whyPeopleLove: n.whyPeopleLove, highlights: n.highlights?.map((h, idx) => ({ _key: `h-${idx}`, ...h })), avgPrice: n.avgPrice, order: i + 1, isActive: true })
+      for (let i = 0; i < communities.length; i++) {
+        const n = communities[i]
+        const cityId = cityIdMap[n.citySlug]
+        await client.create({
+          _type: 'neighborhood',
+          name: n.name,
+          slug: { _type: 'slug', current: n.slug },
+          city: cityId ? { _type: 'reference', _ref: cityId } : undefined,
+          tagline: n.tagline,
+          vibe: n.vibe,
+          description: n.description,
+          population: n.population,
+          commute: n.commute,
+          schoolDistrict: n.schoolDistrict,
+          schools: n.schools?.map((s, idx) => ({ _key: `s-${idx}`, ...s })),
+          whyPeopleLove: n.whyPeopleLove,
+          highlights: n.highlights?.map((h, idx) => ({ _key: `h-${idx}`, ...h })),
+          avgPrice: n.avgPrice,
+          order: i + 1,
+          isActive: true
+        })
       }
-      results.neighborhoods = { created: neighborhoods.length }
-    } else results.neighborhoods = { skipped: nCount }
+      results.communities = { created: communities.length }
+    } else results.communities = { skipped: nCount }
 
     const pCount = await client.fetch(`count(*[_type == "property"])`)
     if (pCount === 0) {
