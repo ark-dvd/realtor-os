@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn } from 'lucide-react'
+import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn, Building2 } from 'lucide-react'
 
 // Image compression function - resizes and compresses large images before upload
 async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.85): Promise<File> {
@@ -69,7 +69,8 @@ interface Highlight { _key?: string; name: string; description: string }
 interface HeroImage { _key?: string; url: string; alt?: string; assetId?: string }
 interface Stat { _key?: string; value: string; label: string }
 interface GalleryImage { _key?: string; url: string; alt?: string; assetId?: string }
-interface Neighborhood { _id?: string; name: string; slug: string; tagline: string; vibe: string; description: string; population?: string; commute?: { toDowntown?: string; toDomain?: string }; schoolDistrict?: string; schools?: School[]; whyPeopleLove?: string[]; highlights?: Highlight[]; avgPrice: string; image?: string; imageAssetId?: string; gallery?: GalleryImage[]; order?: number; isActive?: boolean }
+interface City { _id?: string; name: string; slug: string; description?: string; image?: string; imageAssetId?: string; order?: number }
+interface Neighborhood { _id?: string; name: string; slug: string; cityId?: string; city?: City; tagline: string; vibe: string; description: string; population?: string; commute?: { toDowntown?: string; toDomain?: string }; schoolDistrict?: string; schools?: School[]; whyPeopleLove?: string[]; highlights?: Highlight[]; avgPrice: string; image?: string; imageAssetId?: string; gallery?: GalleryImage[]; order?: number; isActive?: boolean }
 interface Property { _id?: string; title: string; slug: string; status: string; price: number; address?: { street?: string; city?: string; state?: string; zip?: string }; neighborhoodId?: string; beds?: number; baths?: number; sqft?: number; heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string; shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string }
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
 interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; trecLink?: string; logo?: string; logoAssetId?: string }
@@ -243,7 +244,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
   </div>
 }
 
-function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving }: { neighborhoods: Neighborhood[]; loading: boolean; onSave: (n: Neighborhood) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
+function NeighborhoodsTab({ neighborhoods, cities, loading, onSave, onDelete, saving }: { neighborhoods: Neighborhood[]; cities: City[]; loading: boolean; onSave: (n: Neighborhood) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
   const [modal, setModal] = useState<{ open: boolean; neighborhood?: Neighborhood }>({ open: false })
   const [form, setForm] = useState<Neighborhood>({ name: '', slug: '', tagline: '', vibe: '', description: '', avgPrice: '' })
   const [schools, setSchools] = useState<School[]>([])
@@ -267,12 +268,12 @@ function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving }: 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
   return <div className="space-y-4">
     <div className="flex items-center justify-between"><h2 className="font-display text-xl text-brand-navy">Communities ({neighborhoods.length})</h2><button onClick={() => setModal({ open: true })} className="btn-gold"><Plus size={18} /> Add</button></div>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{neighborhoods.map(n => <div key={n._id} className="bg-white rounded-xl border overflow-hidden"><div className="h-32 bg-neutral-200 relative">{n.image && <img src={n.image} alt={n.name} className="w-full h-full object-cover" />}</div><div className="p-4"><div className="flex items-center justify-between mb-2"><h3 className="font-display text-lg text-brand-navy">{n.name}</h3><span className="text-brand-gold font-medium text-sm">{n.avgPrice}</span></div><p className="text-sm text-neutral-500 mb-3 line-clamp-2">{n.tagline}</p><div className="flex justify-end gap-2"><button onClick={() => setModal({ open: true, neighborhood: n })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button><button onClick={() => n._id && confirm('Delete?') && onDelete(n._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button></div></div></div>)}</div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{neighborhoods.map(n => <div key={n._id} className="bg-white rounded-xl border overflow-hidden"><div className="h-32 bg-neutral-200 relative">{n.image && <img src={n.image} alt={n.name} className="w-full h-full object-cover" />}</div><div className="p-4"><div className="flex items-center justify-between mb-1"><h3 className="font-display text-lg text-brand-navy">{n.name}</h3><span className="text-brand-gold font-medium text-sm">{n.avgPrice}</span></div>{n.city?.name && <p className="text-xs text-neutral-400 mb-2">{n.city.name}</p>}<p className="text-sm text-neutral-500 mb-3 line-clamp-2">{n.tagline}</p><div className="flex justify-end gap-2"><button onClick={() => setModal({ open: true, neighborhood: n })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button><button onClick={() => n._id && confirm('Delete?') && onDelete(n._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button></div></div></div>)}</div>
     {neighborhoods.length === 0 && <div className="bg-white rounded-xl border p-8 text-center text-neutral-500">No communities yet. Click Load Demo Data in Dashboard.</div>}
     <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.neighborhood ? 'Edit Community' : 'Add Community'} size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name *</label><input type="text" required className="input-field" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div><div><label className="block text-sm font-medium mb-2">Avg Price *</label><input type="text" required className="input-field" placeholder="$500K - $700K" value={form.avgPrice} onChange={(e) => setForm({ ...form, avgPrice: e.target.value })} /></div></div>
-        <div><label className="block text-sm font-medium mb-2">Tagline *</label><input type="text" required className="input-field" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></div>
+        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name *</label><input type="text" required className="input-field" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div><div><label className="block text-sm font-medium mb-2">City *</label><select required className="input-field" value={form.cityId || form.city?._id || ''} onChange={(e) => setForm({ ...form, cityId: e.target.value })}><option value="">Select City...</option>{cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select></div></div>
+        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Tagline *</label><input type="text" required className="input-field" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Avg Price *</label><input type="text" required className="input-field" placeholder="$500K - $700K" value={form.avgPrice} onChange={(e) => setForm({ ...form, avgPrice: e.target.value })} /></div></div>
         <div><label className="block text-sm font-medium mb-2">Vibe *</label><textarea className="input-field" rows={2} value={form.vibe} onChange={(e) => setForm({ ...form, vibe: e.target.value })} /></div>
         <div><label className="block text-sm font-medium mb-2">Description *</label><textarea required className="input-field" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
         <Accordion title="Location Details"><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">School District</label><input type="text" className="input-field" value={form.schoolDistrict || ''} onChange={(e) => setForm({ ...form, schoolDistrict: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Population</label><input type="text" className="input-field" value={form.population || ''} onChange={(e) => setForm({ ...form, population: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Downtown</label><input type="text" className="input-field" value={form.commute?.toDowntown || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDowntown: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Domain</label><input type="text" className="input-field" value={form.commute?.toDomain || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDomain: e.target.value } })} /></div></div></Accordion>
@@ -289,6 +290,34 @@ function NeighborhoodsTab({ neighborhoods, loading, onSave, onDelete, saving }: 
 
 function DealsTab() {
   return <div className="space-y-6"><div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-8 text-center"><Construction className="mx-auto text-amber-500 mb-4" size={48} /><h2 className="font-display text-2xl text-brand-navy mb-3">מודול זה בבנייה</h2><p className="text-neutral-600 max-w-lg mx-auto">מודול ניהול העסקאות (Deals) נמצא בפיתוח ועדיין לא מוכן לשימוש.</p><p className="text-amber-600 font-medium mt-4">Coming Soon!</p></div></div>
+}
+
+function CitiesTab({ cities, loading, onSave, onDelete, saving }: { cities: City[]; loading: boolean; onSave: (c: City) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
+  const [modal, setModal] = useState<{ open: boolean; city?: City }>({ open: false })
+  const [form, setForm] = useState<City>({ name: '', slug: '' })
+
+  useEffect(() => {
+    if (modal.city) { setForm(modal.city) }
+    else { setForm({ name: '', slug: '', order: 10 }) }
+  }, [modal])
+
+  const handleSave = async () => { await onSave(form); setModal({ open: false }) }
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
+  return <div className="space-y-4">
+    <div className="flex items-center justify-between"><h2 className="font-display text-xl text-brand-navy">Cities ({cities.length})</h2><button onClick={() => setModal({ open: true })} className="btn-gold"><Plus size={18} /> Add City</button></div>
+    <div className="bg-white rounded-xl border overflow-hidden"><table className="w-full"><thead className="bg-neutral-50 border-b"><tr><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">City</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Slug</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Order</th><th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th></tr></thead><tbody className="divide-y">{cities.map(c => <tr key={c._id} className="hover:bg-neutral-50"><td className="px-4 py-3"><div className="flex items-center gap-3">{c.image && <img src={c.image} alt="" className="w-12 h-12 object-cover rounded" />}<div className="font-medium text-brand-navy">{c.name}</div></div></td><td className="px-4 py-3 text-neutral-500">{c.slug}</td><td className="px-4 py-3 text-neutral-500">{c.order}</td><td className="px-4 py-3 text-right"><button onClick={() => setModal({ open: true, city: c })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button><button onClick={() => c._id && confirm('Delete city? Communities will lose their city reference.') && onDelete(c._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button></td></tr>)}</tbody></table>{cities.length === 0 && <div className="p-8 text-center text-neutral-500">No cities yet. Click Load Demo Data in Dashboard to seed cities.</div>}</div>
+    <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.city ? 'Edit City' : 'Add City'} size="md">
+      <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-4">
+        <div><label className="block text-sm font-medium mb-2">City Name *</label><input type="text" required className="input-field" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div>
+        <div><label className="block text-sm font-medium mb-2">Slug *</label><input type="text" required className="input-field" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
+        <div><label className="block text-sm font-medium mb-2">Description</label><textarea className="input-field" rows={3} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+        <ImageUpload currentImage={form.image} label="City Image" onUpload={(assetId, url) => setForm({ ...form, imageAssetId: assetId, image: url })} />
+        <div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" className="input-field" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div>
+        <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
+      </form>
+    </Modal>
+  </div>
 }
 
 function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSettings | null; loading: boolean; onSave: (s: SiteSettings) => Promise<void>; saving: boolean }) {
@@ -339,28 +368,31 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
 function AdminDashboard({ user, onLogout }: { user: { name?: string | null; email?: string | null }; onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
+  const [cities, setCities] = useState<City[]>([])
   const [properties, setProperties] = useState<Property[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
   const [settings, setSettings] = useState<SiteSettings | null>(null)
-  const [loading, setLoading] = useState({ n: true, p: true, d: true, s: true })
+  const [loading, setLoading] = useState({ n: true, c: true, p: true, d: true, s: true })
   const [saving, setSaving] = useState(false)
   const [seeding, setSeeding] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const fetchAll = useCallback(async () => {
     try {
-      const [nRes, pRes, dRes, sRes] = await Promise.all([
+      const [nRes, cRes, pRes, dRes, sRes] = await Promise.all([
         fetch('/api/admin/neighborhoods', { credentials: 'include' }),
+        fetch('/api/admin/cities', { credentials: 'include' }),
         fetch('/api/admin/properties', { credentials: 'include' }),
         fetch('/api/admin/deals', { credentials: 'include' }),
         fetch('/api/admin/settings', { credentials: 'include' })
       ])
       if (nRes.ok) setNeighborhoods(await nRes.json())
+      if (cRes.ok) setCities(await cRes.json())
       if (pRes.ok) setProperties(await pRes.json())
       if (dRes.ok) setDeals(await dRes.json())
       if (sRes.ok) setSettings(await sRes.json())
     } catch (e) { setToast({ message: e instanceof Error ? e.message : 'Failed', type: 'error' }) }
-    finally { setLoading({ n: false, p: false, d: false, s: false }) }
+    finally { setLoading({ n: false, c: false, p: false, d: false, s: false }) }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -401,6 +433,7 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'properties', label: 'Properties', icon: Home },
+    { id: 'cities', label: 'Cities', icon: Building2 },
     { id: 'neighborhoods', label: 'Communities', icon: MapPin },
     { id: 'deals', label: 'Deals', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -439,7 +472,8 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
         </div>
         {activeTab === 'dashboard' && <DashboardTab properties={properties} deals={deals} neighborhoods={neighborhoods} onSeed={seed} seeding={seeding} />}
         {activeTab === 'properties' && <PropertiesTab properties={properties} neighborhoods={neighborhoods} loading={loading.p} onSave={(p) => saveEntity('properties', p, p._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('properties', id)} saving={saving} />}
-        {activeTab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} loading={loading.n} onSave={(n) => saveEntity('neighborhoods', n, n._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('neighborhoods', id)} saving={saving} />}
+        {activeTab === 'cities' && <CitiesTab cities={cities} loading={loading.c} onSave={(c) => saveEntity('cities', c, c._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('cities', id)} saving={saving} />}
+        {activeTab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} cities={cities} loading={loading.n} onSave={(n) => saveEntity('neighborhoods', n, n._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('neighborhoods', id)} saving={saving} />}
         {activeTab === 'deals' && <DealsTab />}
         {activeTab === 'settings' && <SettingsTab settings={settings} loading={loading.s} onSave={(s) => saveEntity('settings', s, 'PUT')} saving={saving} />}
       </div>

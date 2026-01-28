@@ -12,14 +12,22 @@ export const metadata = {
 export const revalidate = 60
 
 // Group communities by city
+// Communities without a city reference default to Austin
 function groupByCity(communities: Community[], cities: City[]): Map<City, Community[]> {
   const grouped = new Map<City, Community[]>()
+
+  // Find Austin city for default assignment
+  const austinCity = cities.find(c => c.slug === 'austin')
 
   for (const city of cities) {
     const citySlug = city.slug
     const cityComms = communities.filter(c => {
       // Check both Sanity reference and fallback data
       const commCitySlug = c.city?.slug || c.citySlug
+      // If no city assigned and this is Austin, include it
+      if (!commCitySlug && citySlug === 'austin') {
+        return true
+      }
       return commCitySlug === citySlug
     })
     if (cityComms.length > 0) {

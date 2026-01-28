@@ -65,7 +65,21 @@ export async function POST(request: NextRequest) {
         })
       }
       results.communities = { created: communities.length }
-    } else results.communities = { skipped: nCount }
+    } else {
+      // Link existing communities without a city to Austin
+      const austinId = cityIdMap['austin']
+      if (austinId) {
+        const communitiesWithoutCity = await client.fetch(`*[_type == "neighborhood" && !defined(city)]{ _id }`)
+        let linkedCount = 0
+        for (const c of communitiesWithoutCity) {
+          await client.patch(c._id).set({ city: { _type: 'reference', _ref: austinId } }).commit()
+          linkedCount++
+        }
+        results.communities = { skipped: nCount, linkedToAustin: linkedCount }
+      } else {
+        results.communities = { skipped: nCount }
+      }
+    }
 
     const pCount = await client.fetch(`count(*[_type == "property"])`)
     if (pCount === 0) {
