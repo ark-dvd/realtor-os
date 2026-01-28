@@ -5,6 +5,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { JsonLd } from '@/components/JsonLd'
 import { DemoModeBanner } from '@/components/DemoModeBanner'
+import { Providers } from './providers'
 import { getSettings, isDemoMode, getDemoReason } from '@/lib/data-fetchers'
 
 // Google Analytics Measurement ID
@@ -107,10 +108,12 @@ export default async function RootLayout({
         </Script>
       </head>
       <body className="min-h-screen bg-brand-cream">
-        <DemoModeBanner isDemoMode={isDemoMode()} reason={getDemoReason() || undefined} />
-        <Header settings={settings} />
-        <main>{children}</main>
-        <Footer settings={settings} />
+        <Providers>
+          <DemoModeBanner isDemoMode={isDemoMode()} reason={getDemoReason() || undefined} />
+          <Header settings={settings} />
+          <main>{children}</main>
+          <Footer settings={settings} />
+        </Providers>
       </body>
     </html>
   )

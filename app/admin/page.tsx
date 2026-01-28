@@ -449,7 +449,10 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
 }
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
+  // Handle undefined during SSR prerender (treat as loading)
+  const sessionResult = useSession()
+  const session = sessionResult?.data
+  const status = sessionResult?.status ?? 'loading'
 
   if (status === 'loading') {
     return (
