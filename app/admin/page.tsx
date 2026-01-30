@@ -74,7 +74,7 @@ interface Neighborhood { _id?: string; name: string; slug: string; cityId?: stri
 interface Property { _id?: string; title: string; slug: string; status: string; price: number; address?: { street?: string; city?: string; state?: string; zip?: string }; neighborhoodId?: string; beds?: number; baths?: number; sqft?: number; heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string; shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string }
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
 interface LegalLink { _key?: string; title: string; url?: string }
-interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; privacyPolicy?: string; termsOfService?: string; agentLicenseNumber?: string; brokerName?: string; brokerLicenseNumber?: string; showFairHousing?: boolean; logo?: string; logoAssetId?: string }
+interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; privacyPolicy?: string; termsOfService?: string; agentLicenseNumber?: string; brokerName?: string; brokerLicenseNumber?: string; showFairHousing?: boolean; equalHousingLogo?: string; equalHousingLogoAssetId?: string; logo?: string; logoAssetId?: string }
 
 const formatPrice = (p: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p || 0)
 const STATUS_STYLES: Record<string, string> = { 'for-sale': 'bg-green-100 text-green-700', 'pending': 'bg-amber-100 text-amber-700', 'sold': 'bg-blue-100 text-blue-700' }
@@ -405,6 +405,12 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
         <div><label className="block text-sm font-medium mb-2">Broker License Number</label><input type="text" className="input-field" value={form.brokerLicenseNumber || ''} onChange={(e) => setForm({ ...form, brokerLicenseNumber: e.target.value })} placeholder="e.g., 789012" /></div>
         <div className="flex items-end pb-2"><label className="flex items-center gap-2"><input type="checkbox" checked={form.showFairHousing !== false} onChange={(e) => setForm({ ...form, showFairHousing: e.target.checked })} className="rounded" /><span className="text-sm">Show Fair Housing Statement in Footer</span></label></div>
       </div>
+      {form.showFairHousing !== false && (
+        <div className="mt-4 pt-4 border-t">
+          <ImageUpload currentImage={form.equalHousingLogo} label="Equal Housing Logo (optional)" onUpload={(assetId, url) => setForm({ ...form, equalHousingLogoAssetId: assetId, equalHousingLogo: url })} />
+          <p className="text-xs text-neutral-500 mt-2">Recommended: white PNG with transparent background. If not uploaded, a default logo will be shown.</p>
+        </div>
+      )}
     </div>
     <div className="flex justify-end"><button onClick={handleSave} className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Settings</button></div>
   </div>

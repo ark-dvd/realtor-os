@@ -275,6 +275,12 @@ export default {
       description: 'Display Fair Housing logo and statement in footer',
       initialValue: true,
     },
+    {
+      name: 'equalHousingLogo',
+      title: 'Equal Housing Logo',
+      type: 'image',
+      description: 'Upload Equal Housing Opportunity logo (recommended: white PNG with transparent background)',
+    },
   ],
   preview: {
     prepare() {

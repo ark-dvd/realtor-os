@@ -81,6 +81,7 @@ export interface SiteSettings {
   brokerName?: string
   brokerLicenseNumber?: string
   showFairHousing?: boolean
+  equalHousingLogo?: string
   logo?: string
 }
 
@@ -314,6 +315,7 @@ export async function getSettings(): Promise<SiteSettings> {
         brokerName,
         brokerLicenseNumber,
         showFairHousing,
+        "equalHousingLogo": equalHousingLogo.asset->url,
         "logo": logo.asset->url
       }
     `)

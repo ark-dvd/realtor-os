@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
         brokerName,
         brokerLicenseNumber,
         showFairHousing,
+        "equalHousingLogo": equalHousingLogo.asset->url,
+        "equalHousingLogoAssetId": equalHousingLogo.asset._ref,
         "logo": logo.asset->url,
         "logoAssetId": logo.asset._ref
       }
@@ -147,6 +149,11 @@ export async function PUT(request: NextRequest) {
     if (body.brokerName !== undefined) updates.brokerName = body.brokerName
     if (body.brokerLicenseNumber !== undefined) updates.brokerLicenseNumber = body.brokerLicenseNumber
     if (body.showFairHousing !== undefined) updates.showFairHousing = body.showFairHousing
+    if (body.equalHousingLogoAssetId) {
+      updates.equalHousingLogo = { _type: 'image', asset: { _type: 'reference', _ref: body.equalHousingLogoAssetId } }
+    } else if (body.equalHousingLogoAssetId === '') {
+      updates.equalHousingLogo = null
+    }
 
     // Branding
     if (body.logoAssetId) {

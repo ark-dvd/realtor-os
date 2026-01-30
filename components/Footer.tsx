@@ -20,25 +20,36 @@ export function Footer({ settings }: FooterProps) {
   const brokerName = settings?.brokerName
   const brokerLicenseNumber = settings?.brokerLicenseNumber
   const showFairHousing = settings?.showFairHousing !== false
+  const equalHousingLogo = settings?.equalHousingLogo
   const hasPrivacyPolicy = !!settings?.privacyPolicy
   const hasTermsOfService = !!settings?.termsOfService
+
+  // Default Equal Housing SVG fallback (white, ~50px height)
+  const EqualHousingSVG = () => (
+    <svg width="50" height="50" viewBox="0 0 100 100" fill="currentColor" className="text-white/70">
+      <path d="M50 5L5 45h15v50h60V45h15L50 5zm25 80H25V40h50v45z"/>
+      <rect x="35" y="50" width="30" height="5"/>
+      <rect x="35" y="60" width="30" height="5"/>
+      <rect x="35" y="70" width="30" height="5"/>
+    </svg>
+  )
 
   return (
     <footer className="bg-brand-navy text-white">
       {/* Main Footer */}
-      <div className="container-wide section-padding-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="container-wide py-10 md:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="font-display text-3xl font-medium">
+            <Link href="/" className="font-display text-2xl font-medium">
               {agentName}
             </Link>
-            <p className="mt-4 text-white/70 leading-relaxed">
-              Your trusted partner for luxury real estate in Austin. 
+            <p className="mt-3 text-white/70 leading-relaxed text-sm">
+              Your trusted partner for luxury real estate in Austin.
               Personalized service, local expertise, exceptional results.
             </p>
             {/* Social Links */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 mt-4">
               {settings?.instagram && (
                 <a 
                   href={settings.instagram}
@@ -120,8 +131,8 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-display text-xl mb-6">Quick Links</h4>
-            <ul className="space-y-3">
+            <h4 className="font-display text-lg mb-4">Quick Links</h4>
+            <ul className="space-y-2">
               <li>
                 <Link href="/properties" className="text-white/70 hover:text-brand-gold transition-colors">
                   Browse Properties
@@ -152,8 +163,8 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Neighborhoods */}
           <div>
-            <h4 className="font-display text-xl mb-6">Austin Areas</h4>
-            <ul className="space-y-3">
+            <h4 className="font-display text-lg mb-4">Austin Areas</h4>
+            <ul className="space-y-2">
               <li>
                 <Link href="/neighborhoods/downtown-austin" className="text-white/70 hover:text-brand-gold transition-colors">
                   Downtown Austin
@@ -184,8 +195,8 @@ export function Footer({ settings }: FooterProps) {
 
           {/* Contact */}
           <div>
-            <h4 className="font-display text-xl mb-6">Contact</h4>
-            <ul className="space-y-4">
+            <h4 className="font-display text-lg mb-4">Contact</h4>
+            <ul className="space-y-3">
               <li>
                 <a 
                   href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
@@ -216,8 +227,8 @@ export function Footer({ settings }: FooterProps) {
 
         {/* License Info & Fair Housing */}
         {(agentLicenseNumber || brokerName || showFairHousing) && (
-          <div className="mt-12 pt-8 border-t border-white/10">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               {/* License Information */}
               {(agentLicenseNumber || brokerName) && (
                 <div className="text-white/50 text-sm">
@@ -235,14 +246,18 @@ export function Footer({ settings }: FooterProps) {
 
               {/* Fair Housing Statement */}
               {showFairHousing && (
-                <div className="flex items-center gap-4">
-                  <Image
-                    src="/images/equal-housing-logo.png"
-                    alt="Equal Housing Opportunity"
-                    width={40}
-                    height={40}
-                    className="opacity-70"
-                  />
+                <div className="flex items-center gap-3">
+                  {equalHousingLogo ? (
+                    <Image
+                      src={equalHousingLogo}
+                      alt="Equal Housing Opportunity"
+                      width={50}
+                      height={50}
+                      className="opacity-80"
+                    />
+                  ) : (
+                    <EqualHousingSVG />
+                  )}
                   <p className="text-white/50 text-xs max-w-xs">
                     We are committed to the Fair Housing Act and Equal Opportunity Housing.
                   </p>
@@ -255,11 +270,11 @@ export function Footer({ settings }: FooterProps) {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="container-wide py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="container-wide py-4 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-white/50 text-sm">
             © {new Date().getFullYear()} {agentName} Real Estate. All rights reserved.
           </p>
-          <div className="flex flex-wrap items-center gap-6 text-sm">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
             {hasPrivacyPolicy && (
               <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
                 Privacy Policy
