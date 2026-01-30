@@ -51,12 +51,12 @@ export default async function PropertiesPage() {
       {/* Properties Grid */}
       <section className="section-padding bg-brand-cream">
         <div className="container-wide">
-          {/* Filter placeholder */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-12 pb-8 border-b border-neutral-200">
-            <p className="text-neutral-600">
+          {/* Filter bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-8 sm:mb-12 pb-6 sm:pb-8 border-b border-neutral-200">
+            <p className="text-neutral-600 text-center sm:text-left">
               Showing <span className="font-medium text-brand-navy">{properties.length}</span> properties
             </p>
-            <select className="input-field w-auto">
+            <select className="input-field w-full sm:w-auto h-12 text-base">
               <option>Sort by: Newest</option>
               <option>Price: Low to High</option>
               <option>Price: High to Low</option>

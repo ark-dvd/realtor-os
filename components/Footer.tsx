@@ -274,14 +274,14 @@ export function Footer({ settings }: FooterProps) {
           <p className="text-white/50 text-sm">
             © {new Date().getFullYear()} {agentName} Real Estate. All rights reserved.
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-sm">
             {hasPrivacyPolicy && (
-              <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
+              <Link href="/privacy" className="text-white/50 hover:text-white active:text-white transition-colors py-2 -my-2">
                 Privacy Policy
               </Link>
             )}
             {hasTermsOfService && (
-              <Link href="/terms" className="text-white/50 hover:text-white transition-colors">
+              <Link href="/terms" className="text-white/50 hover:text-white active:text-white transition-colors py-2 -my-2">
                 Terms of Service
               </Link>
             )}
@@ -292,12 +292,12 @@ export function Footer({ settings }: FooterProps) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white/50 hover:text-white transition-colors"
+                  className="text-white/50 hover:text-white active:text-white transition-colors py-2 -my-2"
                 >
                   {link.title}
                 </a>
               ) : (
-                <span key={link._key || link.title} className="text-white/50">
+                <span key={link._key || link.title} className="text-white/50 py-2 -my-2">
                   {link.title}
                 </span>
               )
@@ -307,24 +307,25 @@ export function Footer({ settings }: FooterProps) {
                 href={iabsDocumentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/50 hover:text-white transition-colors flex items-center gap-1"
+                className="text-white/50 hover:text-white active:text-white transition-colors flex items-center gap-1 py-2 -my-2"
               >
                 <FileText size={14} />
-                Information About Brokerage Services
+                <span className="hidden sm:inline">Information About Brokerage Services</span>
+                <span className="sm:hidden">IABS</span>
               </a>
             )}
-            <span className="text-white/30">|</span>
-            <a 
-              href="https://daflash.co.il" 
-              target="_blank" 
+            <span className="text-white/30 hidden md:inline">|</span>
+            <a
+              href="https://daflash.co.il"
+              target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-white/50 hover:text-white active:text-white transition-colors py-2 -my-2"
             >
               Website by
-              <Image 
-                src="/images/daflash-logo.png" 
-                alt="daflash" 
-                width={60} 
+              <Image
+                src="/images/daflash-logo.png"
+                alt="daflash"
+                width={60}
                 height={20}
                 className="opacity-70 hover:opacity-100 transition-opacity"
               />

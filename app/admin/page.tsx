@@ -88,12 +88,36 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 function Modal({ isOpen, onClose, title, children, size = 'lg' }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode; size?: 'md' | 'lg' | 'xl' }) {
   if (!isOpen) return null
   const maxW = size === 'xl' ? 'max-w-6xl' : size === 'lg' ? 'max-w-4xl' : 'max-w-2xl'
-  return <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto"><div className={`bg-white w-full ${maxW} my-8 rounded-lg shadow-xl`}><div className="sticky top-0 bg-white px-6 py-4 border-b flex items-center justify-between rounded-t-lg z-10"><h2 className="font-display text-xl text-brand-navy">{title}</h2><button onClick={onClose} className="p-2 hover:bg-neutral-100 rounded-full"><X size={20} /></button></div><div className="p-6 max-h-[80vh] overflow-y-auto">{children}</div></div></div>
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-0 md:p-4 overflow-y-auto">
+      <div className={`bg-white w-full ${maxW} min-h-screen md:min-h-0 md:my-8 md:rounded-lg shadow-xl flex flex-col`}>
+        <div className="sticky top-0 bg-white px-4 md:px-6 py-4 border-b flex items-center justify-between md:rounded-t-lg z-10">
+          <h2 className="font-display text-lg md:text-xl text-brand-navy">{title}</h2>
+          <button onClick={onClose} className="p-3 -mr-2 hover:bg-neutral-100 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center">
+            <X size={24} />
+          </button>
+        </div>
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</div>
+      </div>
+    </div>
+  )
 }
 
 function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
-  return <div className="border rounded-lg"><button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-4 text-left font-medium text-brand-navy hover:bg-neutral-50">{title}{isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>{isOpen && <div className="p-4 pt-0 border-t">{children}</div>}</div>
+  return (
+    <div className="border rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 min-h-[56px] text-left font-medium text-brand-navy hover:bg-neutral-50 active:bg-neutral-100"
+      >
+        {title}
+        {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+      {isOpen && <div className="p-4 pt-2 border-t">{children}</div>}
+    </div>
+  )
 }
 
 function ImageUpload({ currentImage, onUpload, label }: { currentImage?: string; onUpload: (assetId: string, url: string) => void; label?: string }) {
@@ -106,7 +130,6 @@ function ImageUpload({ currentImage, onUpload, label }: { currentImage?: string;
     const reader = new FileReader(); reader.onload = (ev) => setPreview(ev.target?.result as string); reader.readAsDataURL(file)
     setUploading(true)
     try {
-      // Compress image before upload
       const compressedFile = await compressImage(file)
       const formData = new FormData(); formData.append('file', compressedFile)
       const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
@@ -118,19 +141,55 @@ function ImageUpload({ currentImage, onUpload, label }: { currentImage?: string;
     } catch (err) { alert(err instanceof Error ? err.message : 'Failed'); setPreview(currentImage) }
     finally { setUploading(false) }
   }
-  return <div><label className="block text-sm font-medium mb-2">{label || 'Image'}</label><div className="flex items-center gap-4"><div className="w-32 h-32 bg-neutral-100 rounded-lg overflow-hidden flex items-center justify-center border">{preview ? <img src={preview} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-400" size={32} />}</div><div><input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Upload size={16} /> Choose</>}</button>{preview && <button type="button" onClick={() => { setPreview(''); onUpload('', '') }} className="block mt-2 text-sm text-red-500">Remove</button>}</div></div></div>
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-2">{label || 'Image'}</label>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+        <div className="w-full sm:w-32 h-40 sm:h-32 bg-neutral-100 rounded-lg overflow-hidden flex items-center justify-center border">
+          {preview ? <img src={preview} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-400" size={32} />}
+        </div>
+        <div className="flex-1">
+          <input ref={inputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="w-full sm:w-auto h-14 sm:h-auto btn-secondary flex items-center justify-center gap-2 text-base"
+          >
+            {uploading ? (
+              <><Loader2 className="animate-spin" size={20} /> Uploading...</>
+            ) : (
+              <><Upload size={20} /> Tap to upload photo</>
+            )}
+          </button>
+          {preview && (
+            <button
+              type="button"
+              onClick={() => { setPreview(''); onUpload('', '') }}
+              className="w-full sm:w-auto mt-2 h-12 sm:h-auto px-4 py-2 text-red-500 border border-red-200 rounded-lg hover:bg-red-50"
+            >
+              Remove image
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function GalleryUpload({ images, onChange, label }: { images: GalleryImage[]; onChange: (images: GalleryImage[]) => void; label?: string }) {
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files; if (!files || files.length === 0) return
     setUploading(true)
+    setUploadProgress(0)
     try {
       const newImages: GalleryImage[] = []
-      for (const file of Array.from(files)) {
-        // Compress each image before upload
+      const totalFiles = files.length
+      for (let i = 0; i < totalFiles; i++) {
+        const file = files[i]
         const compressedFile = await compressImage(file)
         const formData = new FormData(); formData.append('file', compressedFile)
         const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
@@ -139,12 +198,48 @@ function GalleryUpload({ images, onChange, label }: { images: GalleryImage[]; on
           const data = JSON.parse(text)
           if (res.ok) newImages.push({ _key: genKey(), url: data.url, assetId: data.assetId, alt: '' })
         } catch { console.error('Upload response:', text) }
+        setUploadProgress(Math.round(((i + 1) / totalFiles) * 100))
       }
       onChange([...images, ...newImages])
     } catch (err) { alert(err instanceof Error ? err.message : 'Failed') }
-    finally { setUploading(false); if (inputRef.current) inputRef.current.value = '' }
+    finally { setUploading(false); setUploadProgress(0); if (inputRef.current) inputRef.current.value = '' }
   }
-  return <div><label className="block text-sm font-medium mb-2">{label || 'Gallery'}</label><div className="grid grid-cols-4 gap-3 mb-3">{images.map((img, i) => <div key={img._key || i} className="relative group"><div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden"><img src={img.url} alt={img.alt || ''} className="w-full h-full object-cover" /></div><button type="button" onClick={() => onChange(images.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100"><X size={14} /></button></div>)}</div><input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary w-full">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Plus size={16} /> Add Images</>}</button></div>
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-2">{label || 'Gallery'} {images.length > 0 && <span className="text-neutral-400">({images.length})</span>}</label>
+      {images.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
+          {images.map((img, i) => (
+            <div key={img._key || i} className="relative">
+              <div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden">
+                <img src={img.url} alt={img.alt || ''} className="w-full h-full object-cover" />
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange(images.filter((_, idx) => idx !== i))}
+                className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg active:bg-red-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" multiple capture="environment" className="hidden" onChange={handleFiles} />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="w-full h-16 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center gap-3 text-neutral-600 hover:border-brand-gold hover:text-brand-gold active:bg-brand-gold/5 transition-colors"
+      >
+        {uploading ? (
+          <><Loader2 className="animate-spin" size={24} /> Uploading... {uploadProgress}%</>
+        ) : (
+          <><ImageIcon size={24} /> Tap to add photos</>
+        )}
+      </button>
+    </div>
+  )
 }
 
 function PdfUpload({ currentUrl, currentFilename, onUpload, label }: { currentUrl?: string; currentFilename?: string; onUpload: (assetId: string, url: string) => void; label?: string }) {
@@ -250,18 +345,109 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
   return <div className="space-y-4">
-    <div className="flex items-center justify-between gap-4"><div className="relative flex-1 max-w-md"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} /><input type="text" placeholder="Search properties..." className="input-field pl-10 w-full" value={search} onChange={(e) => setSearch(e.target.value)} /></div><button onClick={() => setModal({ open: true })} className="btn-gold"><Plus size={18} /> Add Property</button></div>
-    <div className="bg-white rounded-xl border overflow-hidden"><table className="w-full"><thead className="bg-neutral-50 border-b"><tr><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Property</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Price</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Status</th><th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th></tr></thead><tbody className="divide-y">{filtered.map(p => <tr key={p._id} className="hover:bg-neutral-50"><td className="px-4 py-3"><div className="flex items-center gap-3">{p.heroImage && <img src={p.heroImage} alt="" className="w-12 h-12 object-cover rounded" />}<div><div className="font-medium text-brand-navy">{p.title}</div><div className="text-sm text-neutral-500">{p.beds} bed • {p.baths} bath</div></div></div></td><td className="px-4 py-3 font-medium">{formatPrice(p.price)}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[p.status] || 'bg-neutral-100'}`}>{p.status}</span></td><td className="px-4 py-3 text-right"><button onClick={() => setModal({ open: true, property: p })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button><button onClick={() => p._id && confirm('Delete?') && onDelete(p._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button></td></tr>)}</tbody></table>{filtered.length === 0 && <div className="p-8 text-center text-neutral-500">No properties found</div>}</div>
+    {/* Search and Add */}
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+        <input type="text" placeholder="Search properties..." className="input-field pl-10 w-full h-12" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+      <button onClick={() => setModal({ open: true })} className="btn-gold h-12 justify-center">
+        <Plus size={18} /> Add Property
+      </button>
+    </div>
+
+    {/* Mobile Card View */}
+    <div className="md:hidden space-y-3">
+      {filtered.map(p => (
+        <div key={p._id} className="bg-white rounded-xl border overflow-hidden">
+          <div className="flex">
+            {p.heroImage && (
+              <div className="w-24 h-24 flex-shrink-0">
+                <img src={p.heroImage} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1 p-3 flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium text-brand-navy line-clamp-1">{p.title}</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_STYLES[p.status] || 'bg-neutral-100'}`}>{p.status}</span>
+                </div>
+                <p className="text-sm text-neutral-500">{p.beds} bed • {p.baths} bath</p>
+              </div>
+              <p className="font-semibold text-brand-gold">{formatPrice(p.price)}</p>
+            </div>
+          </div>
+          <div className="flex border-t">
+            <button onClick={() => setModal({ open: true, property: p })} className="flex-1 py-3 flex items-center justify-center gap-2 text-brand-navy hover:bg-neutral-50 active:bg-neutral-100">
+              <Edit size={16} /> Edit
+            </button>
+            <button onClick={() => p._id && confirm('Delete this property?') && onDelete(p._id)} className="flex-1 py-3 flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 active:bg-red-100 border-l">
+              <Trash2 size={16} /> Delete
+            </button>
+          </div>
+        </div>
+      ))}
+      {filtered.length === 0 && <div className="bg-white rounded-xl p-8 text-center text-neutral-500">No properties found</div>}
+    </div>
+
+    {/* Desktop Table View */}
+    <div className="hidden md:block bg-white rounded-xl border overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-neutral-50 border-b">
+          <tr>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Property</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Price</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Status</th>
+            <th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {filtered.map(p => (
+            <tr key={p._id} className="hover:bg-neutral-50">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  {p.heroImage && <img src={p.heroImage} alt="" className="w-12 h-12 object-cover rounded" />}
+                  <div>
+                    <div className="font-medium text-brand-navy">{p.title}</div>
+                    <div className="text-sm text-neutral-500">{p.beds} bed • {p.baths} bath</div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-4 py-3 font-medium">{formatPrice(p.price)}</td>
+              <td className="px-4 py-3">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[p.status] || 'bg-neutral-100'}`}>{p.status}</span>
+              </td>
+              <td className="px-4 py-3 text-right">
+                <button onClick={() => setModal({ open: true, property: p })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button>
+                <button onClick={() => p._id && confirm('Delete?') && onDelete(p._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {filtered.length === 0 && <div className="p-8 text-center text-neutral-500">No properties found</div>}
+    </div>
     <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.property ? 'Edit Property' : 'Add Property'} size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Title *</label><input type="text" required className="input-field" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div><div><label className="block text-sm font-medium mb-2">Status</label><select className="input-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="for-sale">For Sale</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div></div>
-        <div className="grid grid-cols-4 gap-4"><div><label className="block text-sm font-medium mb-2">Price *</label><input type="number" required className="input-field" value={form.price || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div><div><label className="block text-sm font-medium mb-2">Beds</label><input type="number" className="input-field" value={form.beds || ''} onChange={(e) => setForm({ ...form, beds: Number(e.target.value) })} /></div><div><label className="block text-sm font-medium mb-2">Baths</label><input type="number" step="0.5" className="input-field" value={form.baths || ''} onChange={(e) => setForm({ ...form, baths: Number(e.target.value) })} /></div><div><label className="block text-sm font-medium mb-2">Sqft</label><input type="number" className="input-field" value={form.sqft || ''} onChange={(e) => setForm({ ...form, sqft: Number(e.target.value) })} /></div></div>
-        <Accordion title="Address"><div className="grid grid-cols-2 gap-4"><div className="col-span-2"><label className="block text-sm font-medium mb-2">Street</label><input type="text" className="input-field" value={form.address?.street || ''} onChange={(e) => setForm({ ...form, address: { ...form.address, street: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">City</label><input type="text" className="input-field" value={form.address?.city || 'Austin'} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Community</label><select className="input-field" value={form.neighborhoodId || ''} onChange={(e) => setForm({ ...form, neighborhoodId: e.target.value })}><option value="">Select...</option>{neighborhoods.map(n => <option key={n._id} value={n._id}>{n.name}</option>)}</select></div></div></Accordion>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label className="block text-sm font-medium mb-2">Title *</label><input type="text" required className="input-field h-12" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Status</label><select className="input-field h-12" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="for-sale">For Sale</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div><label className="block text-sm font-medium mb-2">Price *</label><input type="number" inputMode="numeric" required className="input-field h-12" value={form.price || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Beds</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.beds || ''} onChange={(e) => setForm({ ...form, beds: Number(e.target.value) })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Baths</label><input type="number" inputMode="decimal" step="0.5" className="input-field h-12" value={form.baths || ''} onChange={(e) => setForm({ ...form, baths: Number(e.target.value) })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Sqft</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.sqft || ''} onChange={(e) => setForm({ ...form, sqft: Number(e.target.value) })} /></div>
+        </div>
+        <Accordion title="Address"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div className="sm:col-span-2"><label className="block text-sm font-medium mb-2">Street</label><input type="text" className="input-field h-12" value={form.address?.street || ''} onChange={(e) => setForm({ ...form, address: { ...form.address, street: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">City</label><input type="text" className="input-field h-12" value={form.address?.city || 'Austin'} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Community</label><select className="input-field h-12" value={form.neighborhoodId || ''} onChange={(e) => setForm({ ...form, neighborhoodId: e.target.value })}><option value="">Select...</option>{neighborhoods.map(n => <option key={n._id} value={n._id}>{n.name}</option>)}</select></div></div></Accordion>
         <Accordion title="Description"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">Short Description</label><textarea className="input-field" rows={2} value={form.shortDescription || ''} onChange={(e) => setForm({ ...form, shortDescription: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Full Description</label><textarea className="input-field" rows={6} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div></div></Accordion>
         <Accordion title="Features"><div className="space-y-3"><div className="flex gap-2"><input type="text" className="input-field flex-1" placeholder="Add feature..." value={newFeature} onChange={(e) => setNewFeature(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())} /><button type="button" onClick={addFeature} className="btn-secondary"><Plus size={16} /></button></div><div className="flex flex-wrap gap-2">{features.map((f, i) => <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-neutral-100 rounded-full text-sm">{f}<button type="button" onClick={() => setFeatures(features.filter((_, idx) => idx !== i))} className="hover:text-red-500"><X size={14} /></button></span>)}</div></div></Accordion>
         <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.heroImage} label="Main Image *" onUpload={(assetId, url) => setForm({ ...form, heroImageAssetId: assetId, heroImage: url })} /><div><label className="block text-sm font-medium mb-2">Video URL</label><input type="url" className="input-field" value={form.heroVideo || ''} onChange={(e) => setForm({ ...form, heroVideo: e.target.value })} /></div><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" /><ImageUpload currentImage={form.floorPlan} label="Floor Plan" onUpload={(assetId, url) => setForm({ ...form, floorPlanAssetId: assetId, floorPlan: url })} /></div></Accordion>
-        <Accordion title="SEO"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">SEO Title</label><input type="text" className="input-field" value={form.seoTitle || ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">SEO Description</label><textarea className="input-field" rows={2} value={form.seoDescription || ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div></div></Accordion>
-        <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
+        <Accordion title="SEO"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">SEO Title</label><input type="text" className="input-field h-12" value={form.seoTitle || ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">SEO Description</label><textarea className="input-field" rows={2} value={form.seoDescription || ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div></div></Accordion>
+        <div className="sticky bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-4 bg-white border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+          <button type="button" onClick={() => setModal({ open: false })} className="btn-secondary h-12 justify-center">Cancel</button>
+          <button type="submit" className="btn-gold h-12 justify-center" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Property</button>
+        </div>
       </form>
     </Modal>
   </div>
@@ -295,17 +481,29 @@ function NeighborhoodsTab({ neighborhoods, cities, loading, onSave, onDelete, sa
     {neighborhoods.length === 0 && <div className="bg-white rounded-xl border p-8 text-center text-neutral-500">No communities yet. Click Load Demo Data in Dashboard.</div>}
     <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.neighborhood ? 'Edit Community' : 'Add Community'} size="xl">
       <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-6">
-        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name *</label><input type="text" required className="input-field" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div><div><label className="block text-sm font-medium mb-2">City *</label><select required className="input-field" value={form.cityId || form.city?._id || ''} onChange={(e) => setForm({ ...form, cityId: e.target.value })}><option value="">Select City...</option>{cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select></div></div>
-        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Tagline *</label><input type="text" required className="input-field" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Avg Price *</label><input type="text" required className="input-field" placeholder="$500K - $700K" value={form.avgPrice} onChange={(e) => setForm({ ...form, avgPrice: e.target.value })} /></div></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label className="block text-sm font-medium mb-2">Name *</label><input type="text" required className="input-field h-12" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div>
+          <div><label className="block text-sm font-medium mb-2">City *</label><select required className="input-field h-12" value={form.cityId || form.city?._id || ''} onChange={(e) => setForm({ ...form, cityId: e.target.value })}><option value="">Select City...</option>{cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label className="block text-sm font-medium mb-2">Tagline *</label><input type="text" required className="input-field h-12" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Avg Price *</label><input type="text" required className="input-field h-12" placeholder="$500K - $700K" value={form.avgPrice} onChange={(e) => setForm({ ...form, avgPrice: e.target.value })} /></div>
+        </div>
         <div><label className="block text-sm font-medium mb-2">Vibe *</label><textarea className="input-field" rows={2} value={form.vibe} onChange={(e) => setForm({ ...form, vibe: e.target.value })} /></div>
         <div><label className="block text-sm font-medium mb-2">Description *</label><textarea required className="input-field" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-        <Accordion title="Location Details"><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">School District</label><input type="text" className="input-field" value={form.schoolDistrict || ''} onChange={(e) => setForm({ ...form, schoolDistrict: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Population</label><input type="text" className="input-field" value={form.population || ''} onChange={(e) => setForm({ ...form, population: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Downtown</label><input type="text" className="input-field" value={form.commute?.toDowntown || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDowntown: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Domain</label><input type="text" className="input-field" value={form.commute?.toDomain || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDomain: e.target.value } })} /></div></div></Accordion>
+        <Accordion title="Location Details"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">School District</label><input type="text" className="input-field h-12" value={form.schoolDistrict || ''} onChange={(e) => setForm({ ...form, schoolDistrict: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Population</label><input type="text" className="input-field h-12" value={form.population || ''} onChange={(e) => setForm({ ...form, population: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Downtown</label><input type="text" className="input-field h-12" value={form.commute?.toDowntown || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDowntown: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Commute to Domain</label><input type="text" className="input-field h-12" value={form.commute?.toDomain || ''} onChange={(e) => setForm({ ...form, commute: { ...form.commute, toDomain: e.target.value } })} /></div></div></Accordion>
         <Accordion title={`Schools (${schools.length})`}><div className="space-y-3">{schools.map((s, i) => <div key={s._key || i} className="flex gap-2 items-center p-2 bg-neutral-50 rounded"><input type="text" className="input-field flex-1" placeholder="Name" value={s.name} onChange={(e) => updateSchool(i, 'name', e.target.value)} /><select className="input-field w-28" value={s.type} onChange={(e) => updateSchool(i, 'type', e.target.value)}><option>Elementary</option><option>Middle</option><option>High School</option></select><div className="flex items-center gap-1"><Star size={14} className="text-brand-gold" /><input type="number" min="1" max="10" className="input-field w-14" value={s.rating} onChange={(e) => updateSchool(i, 'rating', Number(e.target.value))} /></div><button type="button" onClick={() => setSchools(schools.filter((_, idx) => idx !== i))} className="p-1 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addSchool} className="btn-secondary w-full"><Plus size={16} /> Add School</button></div></Accordion>
         <Accordion title={`Why People Love It (${whyLove.length})`}><div className="space-y-3">{whyLove.map((r, i) => <div key={i} className="flex gap-2"><textarea className="input-field flex-1" rows={2} value={r} onChange={(e) => updateWhyLove(i, e.target.value)} /><button type="button" onClick={() => setWhyLove(whyLove.filter((_, idx) => idx !== i))} className="p-1 text-red-500 self-start"><X size={16} /></button></div>)}<button type="button" onClick={addWhyLove} className="btn-secondary w-full"><Plus size={16} /> Add</button></div></Accordion>
         <Accordion title={`Highlights (${highlights.length})`}><div className="space-y-3">{highlights.map((h, i) => <div key={h._key || i} className="flex gap-2"><input type="text" className="input-field w-1/3" placeholder="Name" value={h.name} onChange={(e) => updateHighlight(i, 'name', e.target.value)} /><input type="text" className="input-field flex-1" placeholder="Description" value={h.description} onChange={(e) => updateHighlight(i, 'description', e.target.value)} /><button type="button" onClick={() => setHighlights(highlights.filter((_, idx) => idx !== i))} className="p-1 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addHighlight} className="btn-secondary w-full"><Plus size={16} /> Add</button></div></Accordion>
         <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.image} label="Cover Image *" onUpload={(assetId, url) => setForm({ ...form, imageAssetId: assetId, image: url })} /><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" /></div></Accordion>
-        <div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" className="input-field" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div><div className="flex items-end pb-2"><label className="flex items-center gap-2"><input type="checkbox" checked={form.isActive !== false} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="rounded" /><span className="text-sm">Show on website</span></label></div></div>
-        <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div>
+          <div className="flex items-center h-12 mt-6 sm:mt-0 sm:pt-6"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={form.isActive !== false} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-5 h-5 rounded" /><span className="text-sm">Show on website</span></label></div>
+        </div>
+        <div className="sticky bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-4 bg-white border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+          <button type="button" onClick={() => setModal({ open: false })} className="btn-secondary h-12 justify-center">Cancel</button>
+          <button type="submit" className="btn-gold h-12 justify-center" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Community</button>
+        </div>
       </form>
     </Modal>
   </div>
@@ -328,16 +526,79 @@ function CitiesTab({ cities, loading, onSave, onDelete, saving }: { cities: City
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
   return <div className="space-y-4">
-    <div className="flex items-center justify-between"><h2 className="font-display text-xl text-brand-navy">Cities ({cities.length})</h2><button onClick={() => setModal({ open: true })} className="btn-gold"><Plus size={18} /> Add City</button></div>
-    <div className="bg-white rounded-xl border overflow-hidden"><table className="w-full"><thead className="bg-neutral-50 border-b"><tr><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">City</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Slug</th><th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Order</th><th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th></tr></thead><tbody className="divide-y">{cities.map(c => <tr key={c._id} className="hover:bg-neutral-50"><td className="px-4 py-3"><div className="flex items-center gap-3">{c.image && <img src={c.image} alt="" className="w-12 h-12 object-cover rounded" />}<div className="font-medium text-brand-navy">{c.name}</div></div></td><td className="px-4 py-3 text-neutral-500">{c.slug}</td><td className="px-4 py-3 text-neutral-500">{c.order}</td><td className="px-4 py-3 text-right"><button onClick={() => setModal({ open: true, city: c })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button><button onClick={() => c._id && confirm('Delete city? Communities will lose their city reference.') && onDelete(c._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button></td></tr>)}</tbody></table>{cities.length === 0 && <div className="p-8 text-center text-neutral-500">No cities yet. Click Load Demo Data in Dashboard to seed cities.</div>}</div>
+    <div className="flex items-center justify-between">
+      <h2 className="font-display text-lg md:text-xl text-brand-navy">Cities ({cities.length})</h2>
+      <button onClick={() => setModal({ open: true })} className="btn-gold h-12"><Plus size={18} /> <span className="hidden sm:inline">Add</span> City</button>
+    </div>
+
+    {/* Mobile Card View */}
+    <div className="md:hidden space-y-3">
+      {cities.map(c => (
+        <div key={c._id} className="bg-white rounded-xl border overflow-hidden">
+          <div className="flex items-center p-3 gap-3">
+            {c.image && <img src={c.image} alt="" className="w-16 h-16 object-cover rounded flex-shrink-0" />}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-brand-navy">{c.name}</h3>
+              <p className="text-sm text-neutral-500 truncate">{c.slug}</p>
+              {c.order && <p className="text-xs text-neutral-400">Order: {c.order}</p>}
+            </div>
+          </div>
+          <div className="flex border-t">
+            <button onClick={() => setModal({ open: true, city: c })} className="flex-1 py-3 flex items-center justify-center gap-2 text-brand-navy active:bg-neutral-100">
+              <Edit size={16} /> Edit
+            </button>
+            <button onClick={() => c._id && confirm('Delete city?') && onDelete(c._id)} className="flex-1 py-3 flex items-center justify-center gap-2 text-red-500 active:bg-red-100 border-l">
+              <Trash2 size={16} /> Delete
+            </button>
+          </div>
+        </div>
+      ))}
+      {cities.length === 0 && <div className="bg-white rounded-xl p-8 text-center text-neutral-500">No cities yet. Load Demo Data to seed.</div>}
+    </div>
+
+    {/* Desktop Table View */}
+    <div className="hidden md:block bg-white rounded-xl border overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-neutral-50 border-b">
+          <tr>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">City</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Slug</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Order</th>
+            <th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {cities.map(c => (
+            <tr key={c._id} className="hover:bg-neutral-50">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  {c.image && <img src={c.image} alt="" className="w-12 h-12 object-cover rounded" />}
+                  <div className="font-medium text-brand-navy">{c.name}</div>
+                </div>
+              </td>
+              <td className="px-4 py-3 text-neutral-500">{c.slug}</td>
+              <td className="px-4 py-3 text-neutral-500">{c.order}</td>
+              <td className="px-4 py-3 text-right">
+                <button onClick={() => setModal({ open: true, city: c })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button>
+                <button onClick={() => c._id && confirm('Delete city?') && onDelete(c._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {cities.length === 0 && <div className="p-8 text-center text-neutral-500">No cities yet. Click Load Demo Data in Dashboard to seed cities.</div>}
+    </div>
     <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.city ? 'Edit City' : 'Add City'} size="md">
       <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-4">
-        <div><label className="block text-sm font-medium mb-2">City Name *</label><input type="text" required className="input-field" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div>
-        <div><label className="block text-sm font-medium mb-2">Slug *</label><input type="text" required className="input-field" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
+        <div><label className="block text-sm font-medium mb-2">City Name *</label><input type="text" required className="input-field h-12" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })} /></div>
+        <div><label className="block text-sm font-medium mb-2">Slug *</label><input type="text" required className="input-field h-12" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
         <div><label className="block text-sm font-medium mb-2">Description</label><textarea className="input-field" rows={3} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
         <ImageUpload currentImage={form.image} label="City Image" onUpload={(assetId, url) => setForm({ ...form, imageAssetId: assetId, image: url })} />
-        <div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" className="input-field" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div>
-        <div className="flex gap-4 justify-end pt-4 border-t"><button type="button" onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button><button type="submit" className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save</button></div>
+        <div><label className="block text-sm font-medium mb-2">Display Order</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.order || ''} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} /></div>
+        <div className="sticky bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-4 bg-white border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+          <button type="button" onClick={() => setModal({ open: false })} className="btn-secondary h-12 justify-center">Cancel</button>
+          <button type="submit" className="btn-gold h-12 justify-center" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save City</button>
+        </div>
       </form>
     </Modal>
   </div>
@@ -378,32 +639,32 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
   const handleSave = async () => { await onSave({ ...form, heroImages, aboutStats: stats, legalLinks }) }
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
-  return <div className="max-w-4xl space-y-6">
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Hero Section</h3><div><label className="block text-sm font-medium mb-2">Headline</label><input type="text" className="input-field" value={form.heroHeadline || ''} onChange={(e) => setForm({ ...form, heroHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Subheadline</label><textarea className="input-field" rows={2} value={form.heroSubheadline || ''} onChange={(e) => setForm({ ...form, heroSubheadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Hero Type</label><div className="flex gap-4"><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType !== 'video'} onChange={() => setForm({ ...form, heroMediaType: 'images' })} /><span>Image Slider</span></label><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType === 'video'} onChange={() => setForm({ ...form, heroMediaType: 'video' })} /><span>Video</span></label></div></div>
+  return <div className="max-w-4xl space-y-4 md:space-y-6">
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Hero Section</h3><div><label className="block text-sm font-medium mb-2">Headline</label><input type="text" className="input-field" value={form.heroHeadline || ''} onChange={(e) => setForm({ ...form, heroHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Subheadline</label><textarea className="input-field" rows={2} value={form.heroSubheadline || ''} onChange={(e) => setForm({ ...form, heroSubheadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Hero Type</label><div className="flex gap-4"><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType !== 'video'} onChange={() => setForm({ ...form, heroMediaType: 'images' })} /><span>Image Slider</span></label><label className="flex items-center gap-2"><input type="radio" name="heroMediaType" checked={form.heroMediaType === 'video'} onChange={() => setForm({ ...form, heroMediaType: 'video' })} /><span>Video</span></label></div></div>
       {form.heroMediaType !== 'video' ? <Accordion title={`Hero Images (${heroImages.length})`} defaultOpen><div className="space-y-3">{heroImages.map((img, i) => <div key={img._key || i} className="flex gap-3 items-center p-3 bg-neutral-50 rounded-lg"><div className="w-24 h-16 bg-neutral-200 rounded overflow-hidden flex-shrink-0 flex items-center justify-center">{img.url ? <img src={img.url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-neutral-400" size={20} />}</div><div className="flex-1 space-y-2"><input type="file" accept="image/*" className="text-sm" onChange={(e) => e.target.files?.[0] && handleHeroImageUpload(e.target.files[0], i)} disabled={uploadingIndex === i} />{uploadingIndex === i && <span className="text-xs text-brand-gold">Uploading...</span>}<input type="text" className="input-field text-sm" placeholder="Alt text" value={img.alt || ''} onChange={(e) => updateHeroImageAlt(i, e.target.value)} /></div><button type="button" onClick={() => setHeroImages(heroImages.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addHeroImage} className="btn-secondary w-full"><Plus size={16} /> Add Hero Image</button></div></Accordion> : <div><label className="block text-sm font-medium mb-2">Hero Video URL</label><input type="url" className="input-field" value={form.heroVideoUrl || ''} onChange={(e) => setForm({ ...form, heroVideoUrl: e.target.value })} placeholder="Direct MP4 URL" /></div>}
     </div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Branding</h3><ImageUpload currentImage={form.logo} label="Logo" onUpload={(assetId, url) => setForm({ ...form, logoAssetId: assetId, logo: url })} /></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Agent Information</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name</label><input type="text" className="input-field" value={form.agentName || ''} onChange={(e) => setForm({ ...form, agentName: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Title</label><input type="text" className="input-field" value={form.agentTitle || ''} onChange={(e) => setForm({ ...form, agentTitle: e.target.value })} /></div></div><ImageUpload currentImage={form.agentPhoto} label="Agent Photo" onUpload={(assetId, url) => setForm({ ...form, agentPhotoAssetId: assetId, agentPhoto: url })} /></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">About Section</h3><div><label className="block text-sm font-medium mb-2">About Headline</label><input type="text" className="input-field" value={form.aboutHeadline || ''} onChange={(e) => setForm({ ...form, aboutHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">About Text</label><textarea className="input-field" rows={6} value={form.aboutText || ''} onChange={(e) => setForm({ ...form, aboutText: e.target.value })} /></div><Accordion title={`Stats (${stats.length})`}><div className="space-y-3">{stats.map((s, i) => <div key={s._key || i} className="grid grid-cols-12 gap-2"><input type="text" className="input-field col-span-4" placeholder="Value" value={s.value} onChange={(e) => updateStat(i, 'value', e.target.value)} /><input type="text" className="input-field col-span-7" placeholder="Label" value={s.label} onChange={(e) => updateStat(i, 'label', e.target.value)} /><button type="button" onClick={() => setStats(stats.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addStat} className="btn-secondary w-full"><Plus size={16} /> Add Stat</button></div></Accordion></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Contact Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" className="input-field" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Email</label><input type="email" className="input-field" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div></div><div><label className="block text-sm font-medium mb-2">Address</label><input type="text" className="input-field" value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Office Hours</label><textarea className="input-field" rows={3} value={form.officeHours || ''} onChange={(e) => setForm({ ...form, officeHours: e.target.value })} /></div></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Social Media</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Instagram</label><input type="url" className="input-field" value={form.instagram || ''} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Facebook</label><input type="url" className="input-field" value={form.facebook || ''} onChange={(e) => setForm({ ...form, facebook: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">LinkedIn</label><input type="url" className="input-field" value={form.linkedin || ''} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">YouTube</label><input type="url" className="input-field" value={form.youtube || ''} onChange={(e) => setForm({ ...form, youtube: e.target.value })} /></div></div></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal</h3>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Branding</h3><ImageUpload currentImage={form.logo} label="Logo" onUpload={(assetId, url) => setForm({ ...form, logoAssetId: assetId, logo: url })} /></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Agent Information</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Name</label><input type="text" className="input-field h-12" value={form.agentName || ''} onChange={(e) => setForm({ ...form, agentName: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Title</label><input type="text" className="input-field h-12" value={form.agentTitle || ''} onChange={(e) => setForm({ ...form, agentTitle: e.target.value })} /></div></div><ImageUpload currentImage={form.agentPhoto} label="Agent Photo" onUpload={(assetId, url) => setForm({ ...form, agentPhotoAssetId: assetId, agentPhoto: url })} /></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">About Section</h3><div><label className="block text-sm font-medium mb-2">About Headline</label><input type="text" className="input-field" value={form.aboutHeadline || ''} onChange={(e) => setForm({ ...form, aboutHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">About Text</label><textarea className="input-field" rows={6} value={form.aboutText || ''} onChange={(e) => setForm({ ...form, aboutText: e.target.value })} /></div><Accordion title={`Stats (${stats.length})`}><div className="space-y-3">{stats.map((s, i) => <div key={s._key || i} className="grid grid-cols-12 gap-2"><input type="text" className="input-field col-span-4" placeholder="Value" value={s.value} onChange={(e) => updateStat(i, 'value', e.target.value)} /><input type="text" className="input-field col-span-7" placeholder="Label" value={s.label} onChange={(e) => updateStat(i, 'label', e.target.value)} /><button type="button" onClick={() => setStats(stats.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addStat} className="btn-secondary w-full"><Plus size={16} /> Add Stat</button></div></Accordion></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Contact Info</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" inputMode="tel" className="input-field h-12" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Email</label><input type="email" inputMode="email" className="input-field h-12" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div></div><div><label className="block text-sm font-medium mb-2">Address</label><input type="text" className="input-field h-12" value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Office Hours</label><textarea className="input-field" rows={3} value={form.officeHours || ''} onChange={(e) => setForm({ ...form, officeHours: e.target.value })} /></div></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Social Media</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Instagram</label><input type="url" inputMode="url" className="input-field h-12" value={form.instagram || ''} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Facebook</label><input type="url" inputMode="url" className="input-field h-12" value={form.facebook || ''} onChange={(e) => setForm({ ...form, facebook: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">LinkedIn</label><input type="url" inputMode="url" className="input-field h-12" value={form.linkedin || ''} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">YouTube</label><input type="url" inputMode="url" className="input-field h-12" value={form.youtube || ''} onChange={(e) => setForm({ ...form, youtube: e.target.value })} /></div></div></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal</h3>
       <div><label className="block text-sm font-medium mb-3">Legal Links</label><p className="text-xs text-neutral-500 mb-3">Links displayed in the footer. Drag to reorder.</p>
         <div className="space-y-2 mb-3">{legalLinks.map((link, i) => <div key={link._key || i} className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg"><div className="flex flex-col gap-1"><button type="button" onClick={() => moveLegalLink(i, 'up')} disabled={i === 0} className="p-1 hover:bg-neutral-200 rounded disabled:opacity-30"><ChevronUp size={14} /></button><button type="button" onClick={() => moveLegalLink(i, 'down')} disabled={i === legalLinks.length - 1} className="p-1 hover:bg-neutral-200 rounded disabled:opacity-30"><ChevronDown size={14} /></button></div><input type="text" className="input-field flex-1" placeholder="Title" value={link.title} onChange={(e) => updateLegalLink(i, 'title', e.target.value)} /><input type="url" className="input-field flex-1" placeholder="URL (optional)" value={link.url || ''} onChange={(e) => updateLegalLink(i, 'url', e.target.value)} /><button type="button" onClick={() => setLegalLinks(legalLinks.filter((_, idx) => idx !== i))} className="p-2 text-red-500 hover:bg-red-50 rounded"><X size={16} /></button></div>)}</div>
         <button type="button" onClick={addLegalLink} className="btn-secondary w-full"><Plus size={16} /> Add Legal Link</button>
       </div>
       <PdfUpload currentUrl={form.iabsDocumentUrl} label="IABS Document (Information About Brokerage Services)" onUpload={(assetId, url) => setForm({ ...form, iabsDocumentAssetId: assetId, iabsDocumentUrl: url })} />
     </div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal Documents</h3>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal Documents</h3>
       <div><label className="block text-sm font-medium mb-2">Privacy Policy</label><p className="text-xs text-neutral-500 mb-2">Full privacy policy text. Will be displayed on /privacy page.</p><textarea className="input-field" rows={8} value={form.privacyPolicy || ''} onChange={(e) => setForm({ ...form, privacyPolicy: e.target.value })} placeholder="Enter your privacy policy here..." /></div>
       <div><label className="block text-sm font-medium mb-2">Terms of Service</label><p className="text-xs text-neutral-500 mb-2">Full terms of service text. Will be displayed on /terms page.</p><textarea className="input-field" rows={8} value={form.termsOfService || ''} onChange={(e) => setForm({ ...form, termsOfService: e.target.value })} placeholder="Enter your terms of service here..." /></div>
     </div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">License & Compliance</h3>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="block text-sm font-medium mb-2">Agent License Number</label><input type="text" className="input-field" value={form.agentLicenseNumber || ''} onChange={(e) => setForm({ ...form, agentLicenseNumber: e.target.value })} placeholder="e.g., 123456" /></div>
-        <div><label className="block text-sm font-medium mb-2">Broker Name</label><input type="text" className="input-field" value={form.brokerName || ''} onChange={(e) => setForm({ ...form, brokerName: e.target.value })} placeholder="e.g., eXp Realty, LLC" /></div>
-        <div><label className="block text-sm font-medium mb-2">Broker License Number</label><input type="text" className="input-field" value={form.brokerLicenseNumber || ''} onChange={(e) => setForm({ ...form, brokerLicenseNumber: e.target.value })} placeholder="e.g., 789012" /></div>
-        <div className="flex items-end pb-2"><label className="flex items-center gap-2"><input type="checkbox" checked={form.showFairHousing !== false} onChange={(e) => setForm({ ...form, showFairHousing: e.target.checked })} className="rounded" /><span className="text-sm">Show Fair Housing Statement in Footer</span></label></div>
+    <div className="bg-white p-4 md:p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">License & Compliance</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div><label className="block text-sm font-medium mb-2">Agent License Number</label><input type="text" className="input-field h-12" value={form.agentLicenseNumber || ''} onChange={(e) => setForm({ ...form, agentLicenseNumber: e.target.value })} placeholder="e.g., 123456" /></div>
+        <div><label className="block text-sm font-medium mb-2">Broker Name</label><input type="text" className="input-field h-12" value={form.brokerName || ''} onChange={(e) => setForm({ ...form, brokerName: e.target.value })} placeholder="e.g., eXp Realty, LLC" /></div>
+        <div><label className="block text-sm font-medium mb-2">Broker License Number</label><input type="text" className="input-field h-12" value={form.brokerLicenseNumber || ''} onChange={(e) => setForm({ ...form, brokerLicenseNumber: e.target.value })} placeholder="e.g., 789012" /></div>
+        <div className="flex items-center h-12 mt-2 sm:mt-6"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={form.showFairHousing !== false} onChange={(e) => setForm({ ...form, showFairHousing: e.target.checked })} className="w-5 h-5 rounded" /><span className="text-sm">Show Fair Housing Statement</span></label></div>
       </div>
       {form.showFairHousing !== false && (
         <div className="mt-4 pt-4 border-t">
@@ -412,7 +673,12 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
         </div>
       )}
     </div>
-    <div className="flex justify-end"><button onClick={handleSave} className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Settings</button></div>
+    {/* Sticky Save Button */}
+    <div className="sticky bottom-20 md:bottom-0 py-4">
+      <button onClick={handleSave} className="btn-gold w-full sm:w-auto h-14 justify-center text-base" disabled={saving}>
+        {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} Save All Settings
+      </button>
+    </div>
   </div>
 }
 
@@ -482,33 +748,36 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-    { id: 'properties', label: 'Properties', icon: Home },
-    { id: 'cities', label: 'Cities', icon: Building2 },
-    { id: 'neighborhoods', label: 'Communities', icon: MapPin },
-    { id: 'deals', label: 'Deals', icon: FileText },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', icon: TrendingUp },
+    { id: 'properties', label: 'Properties', shortLabel: 'Props', icon: Home },
+    { id: 'cities', label: 'Cities', shortLabel: 'Cities', icon: Building2 },
+    { id: 'neighborhoods', label: 'Communities', shortLabel: 'Areas', icon: MapPin },
+    { id: 'deals', label: 'Deals', shortLabel: 'Deals', icon: FileText },
+    { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings }
   ]
 
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen bg-neutral-100 pb-20 md:pb-0">
+      {/* Header */}
       <header className="bg-brand-navy text-white sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="font-display text-xl hover:text-brand-gold">Merrav Berko</Link>
-            <span className="text-white/40">|</span>
-            <span className="text-white/70 text-sm">Back Office</span>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link href="/" className="font-display text-lg md:text-xl hover:text-brand-gold">Merrav Berko</Link>
+            <span className="hidden md:inline text-white/40">|</span>
+            <span className="hidden md:inline text-white/70 text-sm">Back Office</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-white/70">{user.email}</span>
-            <button onClick={onLogout} className="p-2 hover:bg-white/10 rounded-full" title="Logout">
+          <div className="flex items-center gap-2 md:gap-4">
+            <span className="hidden sm:inline text-sm text-white/70 truncate max-w-[150px] md:max-w-none">{user.email}</span>
+            <button onClick={onLogout} className="p-3 hover:bg-white/10 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center" title="Logout">
               <LogOut size={20} />
             </button>
           </div>
         </div>
       </header>
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+
+      {/* Desktop Tab Navigation */}
+      <div className="hidden md:block max-w-7xl mx-auto px-6 py-6">
+        <div className="flex gap-2 overflow-x-auto pb-2">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -521,6 +790,30 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 safe-area-pb">
+        <div className="grid grid-cols-6 h-16">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === t.id
+                  ? 'text-brand-gold bg-brand-gold/5'
+                  : 'text-neutral-500 active:bg-neutral-100'
+              }`}
+            >
+              <t.icon size={20} />
+              <span className="text-[10px] font-medium">{t.shortLabel}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-2">
         {activeTab === 'dashboard' && <DashboardTab properties={properties} deals={deals} neighborhoods={neighborhoods} onSeed={seed} seeding={seeding} />}
         {activeTab === 'properties' && <PropertiesTab properties={properties} neighborhoods={neighborhoods} loading={loading.p} onSave={(p) => saveEntity('properties', p, p._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('properties', id)} saving={saving} />}
         {activeTab === 'cities' && <CitiesTab cities={cities} loading={loading.c} onSave={(c) => saveEntity('cities', c, c._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('cities', id)} saving={saving} />}

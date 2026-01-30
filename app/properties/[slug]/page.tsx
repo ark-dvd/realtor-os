@@ -90,12 +90,13 @@ export default async function PropertyPage({ params }: { params: { slug: string 
         {/* Back Button */}
         <div className="absolute top-24 left-0 right-0">
           <div className="container-wide">
-            <Link 
-              href="/properties" 
-              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white active:text-white/60 transition-colors py-2 -my-2 px-1 -mx-1"
             >
               <ArrowLeft size={20} />
-              Back to Properties
+              <span className="hidden sm:inline">Back to Properties</span>
+              <span className="sm:hidden">Back</span>
             </Link>
           </div>
         </div>
@@ -283,13 +284,13 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                         href={doc.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors group"
+                        className="flex items-center gap-3 p-4 min-h-[56px] bg-neutral-50 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors group"
                       >
-                        <FileText size={20} className="text-brand-gold" />
+                        <FileText size={20} className="text-brand-gold flex-shrink-0" />
                         <span className="flex-1 text-neutral-700 group-hover:text-brand-navy">
                           {doc.title}
                         </span>
-                        <span className="text-sm text-brand-gold">Download →</span>
+                        <span className="text-sm text-brand-gold whitespace-nowrap">Download →</span>
                       </a>
                     ))}
                   </div>
@@ -325,11 +326,11 @@ export default async function PropertyPage({ params }: { params: { slug: string 
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-32 space-y-6">
+              <div className="sticky top-32 space-y-4 sm:space-y-6">
                 {/* Contact Card */}
-                <div className="bg-brand-cream p-8 border border-neutral-200">
+                <div className="bg-brand-cream p-6 sm:p-8 border border-neutral-200">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                    <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex-shrink-0">
                       <Image
                         src={settings.agentPhoto || '/images/merav-berko.jpg'}
                         alt={agentName}
@@ -343,38 +344,38 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-6">
-                    <a 
+                  <div className="space-y-2 mb-6">
+                    <a
                       href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
-                      className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
+                      className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold active:text-brand-gold/70 transition-colors py-2 -my-1"
                     >
-                      <Phone size={18} className="text-brand-gold" />
+                      <Phone size={18} className="text-brand-gold flex-shrink-0" />
                       {phone}
                     </a>
-                    <a 
+                    <a
                       href={`mailto:${email}`}
-                      className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold transition-colors"
+                      className="flex items-center gap-3 text-neutral-600 hover:text-brand-gold active:text-brand-gold/70 transition-colors py-2 -my-1 break-all"
                     >
-                      <Mail size={18} className="text-brand-gold" />
+                      <Mail size={18} className="text-brand-gold flex-shrink-0" />
                       {email}
                     </a>
                   </div>
 
-                  <Link href="/contact" className="btn-gold w-full justify-center mb-3">
+                  <Link href="/contact" className="btn-gold w-full justify-center mb-3 h-12 sm:h-auto">
                     Schedule a Showing
                   </Link>
-                  <Link href="/contact" className="btn-secondary w-full justify-center">
+                  <Link href="/contact" className="btn-secondary w-full justify-center h-12 sm:h-auto">
                     Ask a Question
                   </Link>
                 </div>
 
                 {/* Share */}
                 <div className="flex gap-3">
-                  <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-neutral-200 text-neutral-600 hover:border-brand-gold hover:text-brand-gold transition-colors rounded">
+                  <button className="flex-1 flex items-center justify-center gap-2 h-12 border border-neutral-200 text-neutral-600 hover:border-brand-gold hover:text-brand-gold active:bg-neutral-50 transition-colors rounded">
                     <Share2 size={18} />
                     Share
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-neutral-200 text-neutral-600 hover:border-brand-gold hover:text-brand-gold transition-colors rounded">
+                  <button className="flex-1 flex items-center justify-center gap-2 h-12 border border-neutral-200 text-neutral-600 hover:border-brand-gold hover:text-brand-gold active:bg-neutral-50 transition-colors rounded">
                     <Heart size={18} />
                     Save
                   </button>
@@ -382,9 +383,9 @@ export default async function PropertyPage({ params }: { params: { slug: string 
 
                 {/* Neighborhood Link */}
                 {property.neighborhoodSlug && (
-                  <Link 
+                  <Link
                     href={`/neighborhoods/${property.neighborhoodSlug}`}
-                    className="block p-4 bg-white border border-neutral-200 rounded-lg hover:border-brand-gold transition-colors"
+                    className="block p-4 bg-white border border-neutral-200 rounded-lg hover:border-brand-gold active:bg-neutral-50 transition-colors"
                   >
                     <p className="text-sm text-neutral-500 mb-1">Explore the Neighborhood</p>
                     <p className="font-display text-brand-navy">{property.neighborhood} →</p>

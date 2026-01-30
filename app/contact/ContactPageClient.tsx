@@ -100,7 +100,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
         <div className="container-wide">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
             {/* Contact Form */}
-            <div className="bg-white p-8 lg:p-12 border border-neutral-200 order-2 lg:order-1">
+            <div className="bg-white p-6 sm:p-8 lg:p-12 border border-neutral-200 order-2 lg:order-1">
               {isSubmitted ? (
                 <div className="text-center py-12">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
@@ -145,7 +145,8 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                         id="name"
                         name="name"
                         required
-                        className="input-field"
+                        autoComplete="name"
+                        className="input-field h-12 text-base"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
@@ -160,7 +161,9 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                         id="email"
                         name="email"
                         required
-                        className="input-field"
+                        autoComplete="email"
+                        inputMode="email"
+                        className="input-field h-12 text-base"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
@@ -174,7 +177,9 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                         type="tel"
                         id="phone"
                         name="phone"
-                        className="input-field"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        className="input-field h-12 text-base"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
@@ -187,7 +192,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                       <select
                         id="interest"
                         name="interest"
-                        className="input-field"
+                        className="input-field h-12 text-base"
                         value={formData.interest}
                         onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
                       >
@@ -208,7 +213,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                         name="message"
                         rows={5}
                         required
-                        className="input-field resize-none"
+                        className="input-field resize-none text-base"
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       />
@@ -217,7 +222,7 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-gold w-full justify-center"
+                      className="btn-gold w-full justify-center h-14 text-base"
                     >
                       {isSubmitting ? (
                         'Sending...'
@@ -256,8 +261,8 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
               </div>
 
               {/* Contact Details */}
-              <div className="space-y-6 mb-10">
-                <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} className="flex items-start gap-4 group">
+              <div className="space-y-4 mb-10">
+                <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-4 group p-3 -m-3 rounded-lg active:bg-brand-gold/5">
                   <div className="w-12 h-12 rounded-full bg-brand-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-gold transition-colors">
                     <Phone size={20} className="text-brand-gold group-hover:text-white transition-colors" />
                   </div>
@@ -269,13 +274,13 @@ export default function ContactPageClient({ settings }: ContactPageClientProps) 
                   </div>
                 </a>
 
-                <a href={`mailto:${email}`} className="flex items-start gap-4 group">
+                <a href={`mailto:${email}`} className="flex items-center gap-4 group p-3 -m-3 rounded-lg active:bg-brand-gold/5">
                   <div className="w-12 h-12 rounded-full bg-brand-gold/10 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-gold transition-colors">
                     <Mail size={20} className="text-brand-gold group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <p className="text-sm text-neutral-500 uppercase tracking-wider mb-1">Email</p>
-                    <p className="text-lg text-brand-navy group-hover:text-brand-gold transition-colors">
+                    <p className="text-lg text-brand-navy group-hover:text-brand-gold transition-colors break-all">
                       {email}
                     </p>
                   </div>

@@ -170,7 +170,7 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 active:text-neutral-800 w-10 h-10 flex items-center justify-center"
                 >
                   <X size={18} />
                 </button>
@@ -180,7 +180,7 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
             {/* Filter Toggle Button (Mobile) */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="sm:hidden flex items-center justify-center gap-2 px-4 py-3 border border-neutral-200 rounded-lg hover:bg-neutral-50"
+              className="sm:hidden flex items-center justify-center gap-2 px-4 h-12 border border-neutral-200 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 text-base"
             >
               <SlidersHorizontal size={20} />
               <span>Filters</span>
@@ -260,14 +260,14 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
 
           {/* Mobile Filters Panel */}
           {showFilters && (
-            <div className="sm:hidden mt-4 pt-4 border-t space-y-3">
+            <div className="sm:hidden mt-4 pt-4 border-t space-y-4">
               {/* Price Filter */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Price Range</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">Price Range</label>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white"
+                  className="w-full px-4 h-12 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white text-base"
                 >
                   {PRICE_RANGES.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
@@ -277,11 +277,11 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
 
               {/* School District Filter */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">School District</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">School District</label>
                 <select
                   value={schoolDistrict}
                   onChange={(e) => setSchoolDistrict(e.target.value)}
-                  className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white"
+                  className="w-full px-4 h-12 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white text-base"
                 >
                   {SCHOOL_DISTRICTS.map(district => (
                     <option key={district} value={district}>{district}</option>
@@ -291,12 +291,12 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
 
               {/* Commute Filter */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-1">Commute Time</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">Commute Time</label>
                 <div className="flex gap-2">
                   <select
                     value={commuteFilter}
                     onChange={(e) => setCommuteFilter(e.target.value)}
-                    className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white"
+                    className="flex-1 px-4 h-12 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white text-base"
                   >
                     {COMMUTE_RANGES.map(range => (
                       <option key={range.value} value={range.value}>{range.label}</option>
@@ -306,7 +306,7 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
                     <select
                       value={commuteTo}
                       onChange={(e) => setCommuteTo(e.target.value as 'downtown' | 'domain')}
-                      className="px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white"
+                      className="px-4 h-12 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-gold/50 bg-white text-base"
                     >
                       <option value="downtown">Downtown</option>
                       <option value="domain">Domain</option>
@@ -319,7 +319,7 @@ export function CommunitiesExplorer({ communities, cities }: CommunitiesExplorer
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
+                  className="w-full flex items-center justify-center gap-2 h-12 text-red-600 border border-red-200 rounded-lg hover:bg-red-50 active:bg-red-100 text-base"
                 >
                   <X size={16} />
                   Clear All Filters

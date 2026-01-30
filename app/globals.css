@@ -74,10 +74,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-gold {
-  @apply inline-flex items-center justify-center gap-2 px-8 py-4 
+  @apply inline-flex items-center justify-center gap-2 px-8 py-4
          bg-brand-gold text-brand-navy font-medium tracking-wide
          transition-all duration-300 ease-out
-         hover:bg-brand-gold/90 hover:shadow-lg;
+         hover:bg-brand-gold/90 hover:shadow-lg
+         active:scale-[0.98];
+}
+
+.btn-gold-sm {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3
+         bg-brand-gold text-brand-navy font-medium tracking-wide text-sm
+         transition-all duration-300 ease-out
+         hover:bg-brand-gold/90 hover:shadow-lg
+         active:scale-[0.98];
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -182,14 +191,28 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .input-field {
-  @apply w-full px-4 py-3 bg-white border border-neutral-200 
+  @apply w-full px-4 py-3 bg-white border border-neutral-200
          text-brand-navy placeholder:text-neutral-400
          transition-all duration-300
          focus:border-brand-gold focus:ring-1 focus:ring-brand-gold focus:outline-none;
+  /* Prevent iOS zoom on focus */
+  font-size: max(16px, 1em);
 }
 
 .input-field:hover {
   @apply border-neutral-300;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE SAFE AREAS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -145,35 +145,35 @@ export function Header({ settings }: HeaderProps) {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-white"
+              className="lg:hidden p-3 -mr-2 text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Toggle menu"
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden mt-6 pb-6 border-t border-white/10">
-            <nav className="pt-6 space-y-4">
+          <div className="lg:hidden mt-4 pb-6 border-t border-white/10">
+            <nav className="pt-4 space-y-1">
               {navigation.map((item) => (
                 <div key={item.name}>
                   <Link
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-white/90 hover:text-brand-gold transition-colors py-2 text-lg"
+                    className="block text-white/90 hover:text-brand-gold active:bg-white/10 transition-colors py-3 px-2 -mx-2 rounded text-lg"
                   >
                     {item.name}
                   </Link>
                   {item.submenu && (
-                    <div className="ml-4 space-y-2 mt-2">
+                    <div className="ml-4 space-y-1 mt-1 mb-2">
                       {item.submenu.map((subItem) => (
                         <Link
                           key={subItem.name}
                           href={subItem.href}
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="block text-white/60 hover:text-brand-gold transition-colors py-1"
+                          className="block text-white/60 hover:text-brand-gold active:bg-white/10 transition-colors py-2 px-2 -mx-2 rounded"
                         >
                           {subItem.name}
                         </Link>
@@ -184,17 +184,17 @@ export function Header({ settings }: HeaderProps) {
               ))}
             </nav>
             <div className="mt-6 pt-6 border-t border-white/10">
-              <a 
+              <a
                 href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
-                className="flex items-center gap-2 text-white/80 mb-4"
+                className="flex items-center gap-3 text-white/80 py-3 px-2 -mx-2 rounded active:bg-white/10"
               >
-                <Phone size={16} />
-                <span>{phone}</span>
+                <Phone size={20} />
+                <span className="text-lg">{phone}</span>
               </a>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="btn-gold w-full justify-center"
+                className="btn-gold w-full justify-center mt-4 h-14 text-base"
               >
                 Get In Touch
               </Link>
