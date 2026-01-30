@@ -4,9 +4,19 @@ import { Bed, Bath, Square, MapPin } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
 import { getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
 
-export const metadata = {
-  title: 'Properties',
-  description: 'Browse luxury homes and properties for sale in Austin, Texas.',
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Austin Homes for Sale | Merrav Berko Real Estate',
+  description: 'Browse available homes for sale in Greater Austin. From Downtown condos to Hill Country estates. Contact Merrav Berko for personalized assistance.',
+  openGraph: {
+    title: 'Austin Homes for Sale | Merrav Berko Real Estate',
+    description: 'Browse available homes for sale in Greater Austin. From Downtown condos to Hill Country estates. Contact Merrav Berko for personalized assistance.',
+    url: 'https://www.merravberko.com/properties',
+  },
+  alternates: {
+    canonical: 'https://www.merravberko.com/properties',
+  },
 }
 
 export const revalidate = 60

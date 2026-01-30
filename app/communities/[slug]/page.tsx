@@ -30,12 +30,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const cityName = community.city?.name || 'Greater Austin'
 
   return {
-    title: `${community.name}, ${cityName} - Greater Austin Communities`,
+    title: `${community.name} | ${cityName} TX Real Estate | Merrav Berko`,
     description: `${community.tagline}. ${community.vibe?.slice(0, 100)}`,
     openGraph: {
-      title: `${community.name} - ${cityName} Real Estate`,
+      title: `${community.name} | ${cityName} TX Real Estate | Merrav Berko`,
       description: community.tagline,
+      url: `https://www.merravberko.com/communities/${slug}`,
       images: community.image ? [{ url: community.image, width: 1200, height: 630, alt: community.name }] : [],
+    },
+    alternates: {
+      canonical: `https://www.merravberko.com/communities/${slug}`,
     },
   }
 }

@@ -25,7 +25,7 @@ export function JsonLd({ type, settings, property, neighborhood, article }: Json
       name: settings.agentName || 'Merrav Berko',
       description: 'Luxury real estate services in Austin, Texas',
       url: 'https://www.merravberko.com',
-      telephone: settings.phone || '(512) 599-9995',
+      telephone: settings.phone ? `+1-${settings.phone.replace(/[^0-9]/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3')}` : '+1-512-599-9995',
       email: settings.email || 'merrav@merrav.com',
       address: {
         '@type': 'PostalAddress',
@@ -33,10 +33,19 @@ export function JsonLd({ type, settings, property, neighborhood, article }: Json
         addressRegion: 'TX',
         addressCountry: 'US',
       },
-      areaServed: {
-        '@type': 'City',
-        name: 'Austin',
-        sameAs: 'https://en.wikipedia.org/wiki/Austin,_Texas',
+      areaServed: [
+        'Austin',
+        'Cedar Park',
+        'Round Rock',
+        'Pflugerville',
+        'Leander',
+        'Georgetown',
+        'Bee Cave',
+        'Lakeway',
+      ],
+      broker: {
+        '@type': 'RealEstateAgent',
+        name: 'eXp Realty, LLC',
       },
       image: settings.agentPhoto || 'https://www.merravberko.com/images/merav-berko.jpg',
       sameAs: [
@@ -114,7 +123,7 @@ export function JsonLd({ type, settings, property, neighborhood, article }: Json
       url: 'https://www.merravberko.com',
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://www.merravberko.com/properties?q={search_term_string}',
+        target: 'https://www.merravberko.com/communities?search={search_term_string}',
         'query-input': 'required name=search_term_string',
       },
     }

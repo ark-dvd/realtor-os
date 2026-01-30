@@ -3,9 +3,19 @@ import { CTASection } from '@/components/CTASection'
 import { CommunitiesExplorer } from '@/components/CommunitiesExplorer'
 import { getCommunities, getCities, getSettings } from '@/lib/data-fetchers'
 
-export const metadata = {
-  title: 'Communities',
-  description: 'Explore Greater Austin\'s most desirable communities and find your perfect neighborhood across Austin, Bee Cave, Cedar Park, Georgetown, Lakeway, Leander, Pflugerville, and Round Rock.',
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Greater Austin Communities & Neighborhoods | Merrav Berko',
+  description: 'Explore 50+ communities across Austin, Cedar Park, Round Rock, Pflugerville, Leander, and more. Find your perfect Greater Austin neighborhood.',
+  openGraph: {
+    title: 'Greater Austin Communities & Neighborhoods | Merrav Berko',
+    description: 'Explore 50+ communities across Austin, Cedar Park, Round Rock, Pflugerville, Leander, and more. Find your perfect Greater Austin neighborhood.',
+    url: 'https://www.merravberko.com/communities',
+  },
+  alternates: {
+    canonical: 'https://www.merravberko.com/communities',
+  },
 }
 
 export const revalidate = 60

@@ -4,9 +4,19 @@ import { Phone, Mail, Award, Users, Home, Star } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
 import { getSettings } from '@/lib/data-fetchers'
 
-export const metadata = {
-  title: 'About',
-  description: 'Learn more about Merrav Berko, your trusted Austin real estate expert.',
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'About Merrav Berko | Austin Real Estate Agent',
+  description: 'Meet Merrav Berko - 12+ years in Austin, expert in Greater Austin real estate. Bachelor\'s in Management, deep local knowledge, client-focused service.',
+  openGraph: {
+    title: 'About Merrav Berko | Austin Real Estate Agent',
+    description: 'Meet Merrav Berko - 12+ years in Austin, expert in Greater Austin real estate. Bachelor\'s in Management, deep local knowledge, client-focused service.',
+    url: 'https://www.merravberko.com/about',
+  },
+  alternates: {
+    canonical: 'https://www.merravberko.com/about',
+  },
 }
 
 export const revalidate = 60
