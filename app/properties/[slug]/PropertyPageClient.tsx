@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { X, ChevronLeft, ChevronRight, Play, Maximize2, Images } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Play, Maximize2, GalleryHorizontal } from 'lucide-react'
 
 interface PropertyGalleryClientProps {
   images: string[]
@@ -83,7 +83,7 @@ export function PropertyGalleryClient({ images, title, videoUrl }: PropertyGalle
   return (
     <div className="mb-12">
       <h2 className="font-display text-2xl text-brand-navy mb-4 flex items-center gap-2">
-        <Images size={24} className="text-brand-gold" />
+        <GalleryHorizontal size={24} className="text-brand-gold" />
         Gallery
         <span className="text-neutral-400 font-sans text-base ml-2">
           {images.length} photos{embedUrl ? ' + video' : ''}
@@ -111,7 +111,7 @@ export function PropertyGalleryClient({ images, title, videoUrl }: PropertyGalle
           </div>
           {/* Image count badge */}
           <div className="absolute bottom-4 right-4 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
-            <Images size={16} />
+            <GalleryHorizontal size={16} />
             <span>1 / {images.length}</span>
           </div>
         </button>
@@ -215,7 +215,7 @@ export function PropertyGalleryClient({ images, title, videoUrl }: PropertyGalle
             >
               {isVideoPlaying ? (
                 <>
-                  <Images size={18} /> Photos
+                  <GalleryHorizontal size={18} /> Photos
                 </>
               ) : (
                 <>
@@ -318,7 +318,7 @@ export function HeroViewAllButton({
       onClick={onClick}
       className="absolute bottom-6 right-6 z-20 flex items-center gap-2 bg-white/95 hover:bg-white text-brand-navy px-5 py-3 rounded-full font-medium text-sm transition-all shadow-lg hover:shadow-xl active:scale-95"
     >
-      <Images size={18} />
+      <GalleryHorizontal size={18} />
       View all {imageCount} photos
     </button>
   )
