@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
         facebook,
         linkedin,
         youtube,
-        trecLink,
+        legalLinks[]{ _key, title, url },
+        "iabsDocumentUrl": iabsDocument.asset->url,
+        "iabsDocumentAssetId": iabsDocument.asset._ref,
         "logo": logo.asset->url,
         "logoAssetId": logo.asset._ref
       }
@@ -116,8 +118,21 @@ export async function PUT(request: NextRequest) {
     if (body.linkedin !== undefined) updates.linkedin = body.linkedin
     if (body.youtube !== undefined) updates.youtube = body.youtube
     
-    // Legal / Branding
-    if (body.trecLink !== undefined) updates.trecLink = body.trecLink
+    // Legal
+    if (body.legalLinks && Array.isArray(body.legalLinks)) {
+      updates.legalLinks = body.legalLinks.map((link: { _key?: string; title: string; url?: string }, i: number) => ({
+        _key: link._key || `legal-${i}-${Date.now()}`,
+        title: link.title,
+        url: link.url || '',
+      }))
+    }
+    if (body.iabsDocumentAssetId) {
+      updates.iabsDocument = { _type: 'file', asset: { _type: 'reference', _ref: body.iabsDocumentAssetId } }
+    } else if (body.iabsDocumentAssetId === '') {
+      updates.iabsDocument = null
+    }
+
+    // Branding
     if (body.logoAssetId) {
       updates.logo = { _type: 'image', asset: { _type: 'reference', _ref: body.logoAssetId } }
     }

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, Youtube } from 'lucide-react'
+import { Phone, Mail, MapPin, Instagram, Facebook, Linkedin, Youtube, FileText } from 'lucide-react'
 import { SiteSettings } from '@/lib/data-fetchers'
 
 interface FooterProps {
@@ -12,7 +12,10 @@ export function Footer({ settings }: FooterProps) {
   const phone = settings?.phone || '(512) 599-9995'
   const email = settings?.email || 'merrav@merrav.com'
   const address = settings?.address || 'Austin, Texas'
-  const trecLink = settings?.trecLink || 'https://www.trec.texas.gov/forms/consumer-protection-notice'
+  const legalLinks = settings?.legalLinks?.length ? settings.legalLinks : [
+    { _key: 'trec', title: 'TREC Consumer Protection', url: 'https://www.trec.texas.gov/forms/consumer-protection-notice' },
+  ]
+  const iabsDocumentUrl = settings?.iabsDocumentUrl
 
   return (
     <footer className="bg-brand-navy text-white">
@@ -213,20 +216,34 @@ export function Footer({ settings }: FooterProps) {
             © {new Date().getFullYear()} {agentName} Real Estate. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-6 text-sm">
-            <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="text-white/50 hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <a 
-              href={trecLink}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-white/50 hover:text-white transition-colors"
-            >
-              TREC Consumer Protection
-            </a>
+            {legalLinks.map((link) => (
+              link.url ? (
+                <a
+                  key={link._key || link.title}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/50 hover:text-white transition-colors"
+                >
+                  {link.title}
+                </a>
+              ) : (
+                <span key={link._key || link.title} className="text-white/50">
+                  {link.title}
+                </span>
+              )
+            ))}
+            {iabsDocumentUrl && (
+              <a
+                href={iabsDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/50 hover:text-white transition-colors flex items-center gap-1"
+              >
+                <FileText size={14} />
+                IABS (PDF)
+              </a>
+            )}
             <span className="text-white/30">|</span>
             <a 
               href="https://daflash.co.il" 

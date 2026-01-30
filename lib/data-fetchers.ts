@@ -45,6 +45,12 @@ function setDemoMode(reason: string) {
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
+export interface LegalLink {
+  _key?: string
+  title: string
+  url?: string
+}
+
 export interface SiteSettings {
   _id?: string
   siteTitle?: string
@@ -67,7 +73,8 @@ export interface SiteSettings {
   facebook?: string
   linkedin?: string
   youtube?: string
-  trecLink?: string
+  legalLinks?: LegalLink[]
+  iabsDocumentUrl?: string
   logo?: string
 }
 
@@ -198,7 +205,12 @@ With a refined eye for design, a strong foundation in investment strategy, and m
   email: 'merrav@merrav.com',
   address: 'Austin, Texas',
   officeHours: 'Monday - Friday: 9am - 6pm\nSaturday: 10am - 4pm\nSunday: By appointment',
-  trecLink: 'https://www.trec.texas.gov/forms/consumer-protection-notice',
+  legalLinks: [
+    { _key: 'trec', title: 'TREC Consumer Protection', url: 'https://www.trec.texas.gov/forms/consumer-protection-notice' },
+    { _key: 'fair-housing', title: 'Fair Housing Statement', url: '' },
+    { _key: 'privacy', title: 'Privacy Policy', url: '' },
+    { _key: 'terms', title: 'Terms of Use', url: '' },
+  ],
 }
 
 export const defaultProperties: Property[] = [
@@ -282,7 +294,8 @@ export async function getSettings(): Promise<SiteSettings> {
         facebook,
         linkedin,
         youtube,
-        trecLink,
+        legalLinks[]{ _key, title, url },
+        "iabsDocumentUrl": iabsDocument.asset->url,
         "logo": logo.asset->url
       }
     `)
@@ -303,6 +316,7 @@ export async function getSettings(): Promise<SiteSettings> {
       ...settings,
       heroImages: settings.heroImages?.length > 0 ? settings.heroImages : defaultSettings.heroImages,
       aboutStats: settings.aboutStats?.length > 0 ? settings.aboutStats : defaultSettings.aboutStats,
+      legalLinks: settings.legalLinks?.length > 0 ? settings.legalLinks : defaultSettings.legalLinks,
     }
   } catch (error) {
     // Sanity query failed - likely permissions issue with private dataset

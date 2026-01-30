@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn, Building2 } from 'lucide-react'
+import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn, Building2, GripVertical, FileDown } from 'lucide-react'
 
 // Image compression function - resizes and compresses large images before upload
 async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.85): Promise<File> {
@@ -73,7 +73,8 @@ interface City { _id?: string; name: string; slug: string; description?: string;
 interface Neighborhood { _id?: string; name: string; slug: string; cityId?: string; city?: City; tagline: string; vibe: string; description: string; population?: string; commute?: { toDowntown?: string; toDomain?: string }; schoolDistrict?: string; schools?: School[]; whyPeopleLove?: string[]; highlights?: Highlight[]; avgPrice: string; image?: string; imageAssetId?: string; gallery?: GalleryImage[]; order?: number; isActive?: boolean }
 interface Property { _id?: string; title: string; slug: string; status: string; price: number; address?: { street?: string; city?: string; state?: string; zip?: string }; neighborhoodId?: string; beds?: number; baths?: number; sqft?: number; heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string; shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string }
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
-interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; trecLink?: string; logo?: string; logoAssetId?: string }
+interface LegalLink { _key?: string; title: string; url?: string }
+interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; logo?: string; logoAssetId?: string }
 
 const formatPrice = (p: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p || 0)
 const STATUS_STYLES: Record<string, string> = { 'for-sale': 'bg-green-100 text-green-700', 'pending': 'bg-amber-100 text-amber-700', 'sold': 'bg-blue-100 text-blue-700' }
@@ -144,6 +145,28 @@ function GalleryUpload({ images, onChange, label }: { images: GalleryImage[]; on
     finally { setUploading(false); if (inputRef.current) inputRef.current.value = '' }
   }
   return <div><label className="block text-sm font-medium mb-2">{label || 'Gallery'}</label><div className="grid grid-cols-4 gap-3 mb-3">{images.map((img, i) => <div key={img._key || i} className="relative group"><div className="aspect-square bg-neutral-100 rounded-lg overflow-hidden"><img src={img.url} alt={img.alt || ''} className="w-full h-full object-cover" /></div><button type="button" onClick={() => onChange(images.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100"><X size={14} /></button></div>)}</div><input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary w-full">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Plus size={16} /> Add Images</>}</button></div>
+}
+
+function PdfUpload({ currentUrl, currentFilename, onUpload, label }: { currentUrl?: string; currentFilename?: string; onUpload: (assetId: string, url: string) => void; label?: string }) {
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return
+    if (file.type !== 'application/pdf') { alert('Please upload a PDF file'); return }
+    setUploading(true)
+    try {
+      const formData = new FormData(); formData.append('file', file)
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
+      const text = await res.text()
+      let data
+      try { data = JSON.parse(text) } catch { throw new Error(text || 'Upload failed - invalid response') }
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      onUpload(data.assetId, data.url)
+    } catch (err) { alert(err instanceof Error ? err.message : 'Failed') }
+    finally { setUploading(false) }
+  }
+  const filename = currentFilename || (currentUrl ? currentUrl.split('/').pop() : '')
+  return <div><label className="block text-sm font-medium mb-2">{label || 'PDF Document'}</label><div className="flex items-center gap-4"><div className="flex-1">{currentUrl ? <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg"><FileDown className="text-red-500" size={20} /><a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-brand-navy hover:underline truncate">{filename || 'View Document'}</a></div> : <div className="p-3 bg-neutral-50 rounded-lg text-neutral-400 text-sm">No document uploaded</div>}</div><div className="flex gap-2"><input ref={inputRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={handleFile} /><button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} className="btn-secondary">{uploading ? <><Loader2 className="animate-spin" size={16} /> Uploading...</> : <><Upload size={16} /> {currentUrl ? 'Replace' : 'Upload'}</>}</button>{currentUrl && <button type="button" onClick={() => onUpload('', '')} className="btn-secondary text-red-500 hover:bg-red-50"><X size={16} /></button>}</div></div></div>
 }
 
 function LoginScreen() {
@@ -324,9 +347,10 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
   const [form, setForm] = useState<SiteSettings>(settings || {})
   const [heroImages, setHeroImages] = useState<HeroImage[]>([])
   const [stats, setStats] = useState<Stat[]>([])
+  const [legalLinks, setLegalLinks] = useState<LegalLink[]>([])
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
 
-  useEffect(() => { if (settings) { setForm(settings); setHeroImages(settings.heroImages || []); setStats(settings.aboutStats || []) } }, [settings])
+  useEffect(() => { if (settings) { setForm(settings); setHeroImages(settings.heroImages || []); setStats(settings.aboutStats || []); setLegalLinks(settings.legalLinks || []) } }, [settings])
 
   const handleHeroImageUpload = async (file: File, index: number) => {
     setUploadingIndex(index)
@@ -348,7 +372,10 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
   const updateHeroImageAlt = (i: number, alt: string) => { const updated = [...heroImages]; updated[i] = { ...updated[i], alt }; setHeroImages(updated) }
   const addStat = () => setStats([...stats, { _key: genKey(), value: '', label: '' }])
   const updateStat = (i: number, field: keyof Stat, value: string) => { const updated = [...stats]; updated[i] = { ...updated[i], [field]: value }; setStats(updated) }
-  const handleSave = async () => { await onSave({ ...form, heroImages, aboutStats: stats }) }
+  const addLegalLink = () => setLegalLinks([...legalLinks, { _key: genKey(), title: '', url: '' }])
+  const updateLegalLink = (i: number, field: keyof LegalLink, value: string) => { const updated = [...legalLinks]; updated[i] = { ...updated[i], [field]: value }; setLegalLinks(updated) }
+  const moveLegalLink = (i: number, direction: 'up' | 'down') => { const updated = [...legalLinks]; const newIndex = direction === 'up' ? i - 1 : i + 1; if (newIndex < 0 || newIndex >= updated.length) return; [updated[i], updated[newIndex]] = [updated[newIndex], updated[i]]; setLegalLinks(updated) }
+  const handleSave = async () => { await onSave({ ...form, heroImages, aboutStats: stats, legalLinks }) }
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
   return <div className="max-w-4xl space-y-6">
@@ -360,7 +387,13 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">About Section</h3><div><label className="block text-sm font-medium mb-2">About Headline</label><input type="text" className="input-field" value={form.aboutHeadline || ''} onChange={(e) => setForm({ ...form, aboutHeadline: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">About Text</label><textarea className="input-field" rows={6} value={form.aboutText || ''} onChange={(e) => setForm({ ...form, aboutText: e.target.value })} /></div><Accordion title={`Stats (${stats.length})`}><div className="space-y-3">{stats.map((s, i) => <div key={s._key || i} className="grid grid-cols-12 gap-2"><input type="text" className="input-field col-span-4" placeholder="Value" value={s.value} onChange={(e) => updateStat(i, 'value', e.target.value)} /><input type="text" className="input-field col-span-7" placeholder="Label" value={s.label} onChange={(e) => updateStat(i, 'label', e.target.value)} /><button type="button" onClick={() => setStats(stats.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><X size={16} /></button></div>)}<button type="button" onClick={addStat} className="btn-secondary w-full"><Plus size={16} /> Add Stat</button></div></Accordion></div>
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Contact Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" className="input-field" value={form.phone || ''} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Email</label><input type="email" className="input-field" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div></div><div><label className="block text-sm font-medium mb-2">Address</label><input type="text" className="input-field" value={form.address || ''} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Office Hours</label><textarea className="input-field" rows={3} value={form.officeHours || ''} onChange={(e) => setForm({ ...form, officeHours: e.target.value })} /></div></div>
     <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Social Media</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm font-medium mb-2">Instagram</label><input type="url" className="input-field" value={form.instagram || ''} onChange={(e) => setForm({ ...form, instagram: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Facebook</label><input type="url" className="input-field" value={form.facebook || ''} onChange={(e) => setForm({ ...form, facebook: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">LinkedIn</label><input type="url" className="input-field" value={form.linkedin || ''} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">YouTube</label><input type="url" className="input-field" value={form.youtube || ''} onChange={(e) => setForm({ ...form, youtube: e.target.value })} /></div></div></div>
-    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal</h3><div><label className="block text-sm font-medium mb-2">TREC Link</label><input type="url" className="input-field" value={form.trecLink || ''} onChange={(e) => setForm({ ...form, trecLink: e.target.value })} /></div></div>
+    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal</h3>
+      <div><label className="block text-sm font-medium mb-3">Legal Links</label><p className="text-xs text-neutral-500 mb-3">Links displayed in the footer. Drag to reorder.</p>
+        <div className="space-y-2 mb-3">{legalLinks.map((link, i) => <div key={link._key || i} className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg"><div className="flex flex-col gap-1"><button type="button" onClick={() => moveLegalLink(i, 'up')} disabled={i === 0} className="p-1 hover:bg-neutral-200 rounded disabled:opacity-30"><ChevronUp size={14} /></button><button type="button" onClick={() => moveLegalLink(i, 'down')} disabled={i === legalLinks.length - 1} className="p-1 hover:bg-neutral-200 rounded disabled:opacity-30"><ChevronDown size={14} /></button></div><input type="text" className="input-field flex-1" placeholder="Title" value={link.title} onChange={(e) => updateLegalLink(i, 'title', e.target.value)} /><input type="url" className="input-field flex-1" placeholder="URL (optional)" value={link.url || ''} onChange={(e) => updateLegalLink(i, 'url', e.target.value)} /><button type="button" onClick={() => setLegalLinks(legalLinks.filter((_, idx) => idx !== i))} className="p-2 text-red-500 hover:bg-red-50 rounded"><X size={16} /></button></div>)}</div>
+        <button type="button" onClick={addLegalLink} className="btn-secondary w-full"><Plus size={16} /> Add Legal Link</button>
+      </div>
+      <PdfUpload currentUrl={form.iabsDocumentUrl} label="IABS Document (Information About Brokerage Services)" onUpload={(assetId, url) => setForm({ ...form, iabsDocumentAssetId: assetId, iabsDocumentUrl: url })} />
+    </div>
     <div className="flex justify-end"><button onClick={handleSave} className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Settings</button></div>
   </div>
 }

@@ -206,10 +206,31 @@ export default {
 
     // Legal
     {
-      name: 'trecLink',
-      title: 'TREC Consumer Protection Link',
-      type: 'url',
-      initialValue: 'https://www.trec.texas.gov/forms/consumer-protection-notice',
+      name: 'legalLinks',
+      title: 'Legal Links',
+      type: 'array',
+      description: 'Links displayed in the footer (Privacy Policy, Terms of Service, TREC, etc.)',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'title', title: 'Title', type: 'string', validation: (Rule: { required: () => unknown }) => Rule.required() },
+            { name: 'url', title: 'URL', type: 'url' },
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'url' },
+          },
+        },
+      ],
+    },
+    {
+      name: 'iabsDocument',
+      title: 'IABS Document (Information About Brokerage Services)',
+      type: 'file',
+      options: {
+        accept: '.pdf',
+      },
+      description: 'Upload the IABS PDF document for Texas real estate disclosure',
     },
   ],
   preview: {
