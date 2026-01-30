@@ -35,6 +35,12 @@ export async function GET(request: NextRequest) {
         legalLinks[]{ _key, title, url },
         "iabsDocumentUrl": iabsDocument.asset->url,
         "iabsDocumentAssetId": iabsDocument.asset._ref,
+        privacyPolicy,
+        termsOfService,
+        agentLicenseNumber,
+        brokerName,
+        brokerLicenseNumber,
+        showFairHousing,
         "logo": logo.asset->url,
         "logoAssetId": logo.asset._ref
       }
@@ -131,6 +137,16 @@ export async function PUT(request: NextRequest) {
     } else if (body.iabsDocumentAssetId === '') {
       updates.iabsDocument = null
     }
+
+    // Legal Documents
+    if (body.privacyPolicy !== undefined) updates.privacyPolicy = body.privacyPolicy
+    if (body.termsOfService !== undefined) updates.termsOfService = body.termsOfService
+
+    // License & Compliance
+    if (body.agentLicenseNumber !== undefined) updates.agentLicenseNumber = body.agentLicenseNumber
+    if (body.brokerName !== undefined) updates.brokerName = body.brokerName
+    if (body.brokerLicenseNumber !== undefined) updates.brokerLicenseNumber = body.brokerLicenseNumber
+    if (body.showFairHousing !== undefined) updates.showFairHousing = body.showFairHousing
 
     // Branding
     if (body.logoAssetId) {

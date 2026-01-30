@@ -75,6 +75,12 @@ export interface SiteSettings {
   youtube?: string
   legalLinks?: LegalLink[]
   iabsDocumentUrl?: string
+  privacyPolicy?: string
+  termsOfService?: string
+  agentLicenseNumber?: string
+  brokerName?: string
+  brokerLicenseNumber?: string
+  showFairHousing?: boolean
   logo?: string
 }
 
@@ -211,6 +217,12 @@ With a refined eye for design, a strong foundation in investment strategy, and m
     { _key: 'privacy', title: 'Privacy Policy', url: '' },
     { _key: 'terms', title: 'Terms of Use', url: '' },
   ],
+  privacyPolicy: '',
+  termsOfService: '',
+  agentLicenseNumber: '',
+  brokerName: '',
+  brokerLicenseNumber: '',
+  showFairHousing: true,
 }
 
 export const defaultProperties: Property[] = [
@@ -296,6 +308,12 @@ export async function getSettings(): Promise<SiteSettings> {
         youtube,
         legalLinks[]{ _key, title, url },
         "iabsDocumentUrl": iabsDocument.asset->url,
+        privacyPolicy,
+        termsOfService,
+        agentLicenseNumber,
+        brokerName,
+        brokerLicenseNumber,
+        showFairHousing,
         "logo": logo.asset->url
       }
     `)

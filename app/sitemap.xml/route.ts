@@ -14,6 +14,8 @@ export async function GET() {
     '/communities',
     '/about',
     '/contact',
+    '/privacy',
+    '/terms',
     '/buyers/search',
     '/sellers/valuation',
     '/relocation-to-austin/housing-real-estate',

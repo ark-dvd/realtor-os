@@ -16,6 +16,12 @@ export function Footer({ settings }: FooterProps) {
     { _key: 'trec', title: 'TREC Consumer Protection', url: 'https://www.trec.texas.gov/forms/consumer-protection-notice' },
   ]
   const iabsDocumentUrl = settings?.iabsDocumentUrl
+  const agentLicenseNumber = settings?.agentLicenseNumber
+  const brokerName = settings?.brokerName
+  const brokerLicenseNumber = settings?.brokerLicenseNumber
+  const showFairHousing = settings?.showFairHousing !== false
+  const hasPrivacyPolicy = !!settings?.privacyPolicy
+  const hasTermsOfService = !!settings?.termsOfService
 
   return (
     <footer className="bg-brand-navy text-white">
@@ -207,6 +213,44 @@ export function Footer({ settings }: FooterProps) {
             </ul>
           </div>
         </div>
+
+        {/* License Info & Fair Housing */}
+        {(agentLicenseNumber || brokerName || showFairHousing) && (
+          <div className="mt-12 pt-8 border-t border-white/10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* License Information */}
+              {(agentLicenseNumber || brokerName) && (
+                <div className="text-white/50 text-sm">
+                  {agentName && agentLicenseNumber && (
+                    <p>{agentName} | License #{agentLicenseNumber}</p>
+                  )}
+                  {brokerName && (
+                    <p className="mt-1">
+                      {brokerName}
+                      {brokerLicenseNumber && ` | License #${brokerLicenseNumber}`}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Fair Housing Statement */}
+              {showFairHousing && (
+                <div className="flex items-center gap-4">
+                  <Image
+                    src="/images/equal-housing-logo.png"
+                    alt="Equal Housing Opportunity"
+                    width={40}
+                    height={40}
+                    className="opacity-70"
+                  />
+                  <p className="text-white/50 text-xs max-w-xs">
+                    We are committed to the Fair Housing Act and Equal Opportunity Housing.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Bar */}
@@ -216,6 +260,16 @@ export function Footer({ settings }: FooterProps) {
             © {new Date().getFullYear()} {agentName} Real Estate. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-6 text-sm">
+            {hasPrivacyPolicy && (
+              <Link href="/privacy" className="text-white/50 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+            )}
+            {hasTermsOfService && (
+              <Link href="/terms" className="text-white/50 hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+            )}
             {legalLinks.map((link) => (
               link.url ? (
                 <a

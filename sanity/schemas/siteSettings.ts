@@ -232,6 +232,49 @@ export default {
       },
       description: 'Upload the IABS PDF document for Texas real estate disclosure',
     },
+
+    // Legal Documents
+    {
+      name: 'privacyPolicy',
+      title: 'Privacy Policy',
+      type: 'text',
+      rows: 20,
+      description: 'Full privacy policy text. Will be displayed on /privacy page.',
+    },
+    {
+      name: 'termsOfService',
+      title: 'Terms of Service',
+      type: 'text',
+      rows: 20,
+      description: 'Full terms of service text. Will be displayed on /terms page.',
+    },
+
+    // License & Compliance
+    {
+      name: 'agentLicenseNumber',
+      title: 'Agent License Number',
+      type: 'string',
+      description: 'Your Texas real estate license number',
+    },
+    {
+      name: 'brokerName',
+      title: 'Broker Name',
+      type: 'string',
+      description: 'Name of your sponsoring broker',
+    },
+    {
+      name: 'brokerLicenseNumber',
+      title: 'Broker License Number',
+      type: 'string',
+      description: 'Your broker\'s license number',
+    },
+    {
+      name: 'showFairHousing',
+      title: 'Show Fair Housing Statement',
+      type: 'boolean',
+      description: 'Display Fair Housing logo and statement in footer',
+      initialValue: true,
+    },
   ],
   preview: {
     prepare() {

@@ -74,7 +74,7 @@ interface Neighborhood { _id?: string; name: string; slug: string; cityId?: stri
 interface Property { _id?: string; title: string; slug: string; status: string; price: number; address?: { street?: string; city?: string; state?: string; zip?: string }; neighborhoodId?: string; beds?: number; baths?: number; sqft?: number; heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string; shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string }
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
 interface LegalLink { _key?: string; title: string; url?: string }
-interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; logo?: string; logoAssetId?: string }
+interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; privacyPolicy?: string; termsOfService?: string; agentLicenseNumber?: string; brokerName?: string; brokerLicenseNumber?: string; showFairHousing?: boolean; logo?: string; logoAssetId?: string }
 
 const formatPrice = (p: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p || 0)
 const STATUS_STYLES: Record<string, string> = { 'for-sale': 'bg-green-100 text-green-700', 'pending': 'bg-amber-100 text-amber-700', 'sold': 'bg-blue-100 text-blue-700' }
@@ -393,6 +393,18 @@ function SettingsTab({ settings, loading, onSave, saving }: { settings: SiteSett
         <button type="button" onClick={addLegalLink} className="btn-secondary w-full"><Plus size={16} /> Add Legal Link</button>
       </div>
       <PdfUpload currentUrl={form.iabsDocumentUrl} label="IABS Document (Information About Brokerage Services)" onUpload={(assetId, url) => setForm({ ...form, iabsDocumentAssetId: assetId, iabsDocumentUrl: url })} />
+    </div>
+    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">Legal Documents</h3>
+      <div><label className="block text-sm font-medium mb-2">Privacy Policy</label><p className="text-xs text-neutral-500 mb-2">Full privacy policy text. Will be displayed on /privacy page.</p><textarea className="input-field" rows={8} value={form.privacyPolicy || ''} onChange={(e) => setForm({ ...form, privacyPolicy: e.target.value })} placeholder="Enter your privacy policy here..." /></div>
+      <div><label className="block text-sm font-medium mb-2">Terms of Service</label><p className="text-xs text-neutral-500 mb-2">Full terms of service text. Will be displayed on /terms page.</p><textarea className="input-field" rows={8} value={form.termsOfService || ''} onChange={(e) => setForm({ ...form, termsOfService: e.target.value })} placeholder="Enter your terms of service here..." /></div>
+    </div>
+    <div className="bg-white p-6 border rounded-xl space-y-4"><h3 className="font-display text-lg text-brand-navy">License & Compliance</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <div><label className="block text-sm font-medium mb-2">Agent License Number</label><input type="text" className="input-field" value={form.agentLicenseNumber || ''} onChange={(e) => setForm({ ...form, agentLicenseNumber: e.target.value })} placeholder="e.g., 123456" /></div>
+        <div><label className="block text-sm font-medium mb-2">Broker Name</label><input type="text" className="input-field" value={form.brokerName || ''} onChange={(e) => setForm({ ...form, brokerName: e.target.value })} placeholder="e.g., eXp Realty, LLC" /></div>
+        <div><label className="block text-sm font-medium mb-2">Broker License Number</label><input type="text" className="input-field" value={form.brokerLicenseNumber || ''} onChange={(e) => setForm({ ...form, brokerLicenseNumber: e.target.value })} placeholder="e.g., 789012" /></div>
+        <div className="flex items-end pb-2"><label className="flex items-center gap-2"><input type="checkbox" checked={form.showFairHousing !== false} onChange={(e) => setForm({ ...form, showFairHousing: e.target.checked })} className="rounded" /><span className="text-sm">Show Fair Housing Statement in Footer</span></label></div>
+      </div>
     </div>
     <div className="flex justify-end"><button onClick={handleSave} className="btn-gold" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Settings</button></div>
   </div>
