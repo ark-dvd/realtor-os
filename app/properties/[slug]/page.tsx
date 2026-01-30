@@ -5,6 +5,7 @@ import { Bed, Bath, Square, MapPin, Calendar, Phone, Mail, ArrowLeft, Share2, He
 import { CTASection } from '@/components/CTASection'
 import { JsonLd } from '@/components/JsonLd'
 import { getPropertyBySlug, getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
+import { PropertyGalleryClient } from './PropertyPageClient'
 
 export const revalidate = 60
 
@@ -33,21 +34,6 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-// Helper to extract YouTube/Vimeo video ID
-function getVideoEmbedUrl(url: string): string | null {
-  if (!url) return null
-  
-  // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&?/]+)/)
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
-  
-  // Vimeo
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
-  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`
-  
-  return null
-}
-
 export default async function PropertyPage({ params }: { params: { slug: string } }) {
   const [property, settings] = await Promise.all([
     getPropertyBySlug(params.slug),
@@ -69,8 +55,6 @@ export default async function PropertyPage({ params }: { params: { slug: string 
   const agentName = settings.agentName || 'Merrav Berko'
   const phone = settings.phone || '(512) 599-9995'
   const email = settings.email || 'merrav@merrav.com'
-  
-  const videoEmbedUrl = property.heroVideo ? getVideoEmbedUrl(property.heroVideo) : null
 
   return (
     <>
@@ -197,25 +181,6 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                 )}
               </div>
 
-              {/* Video Tour */}
-              {videoEmbedUrl && (
-                <div className="mb-12">
-                  <h2 className="font-display text-2xl text-brand-navy mb-4 flex items-center gap-2">
-                    <Play size={24} className="text-brand-gold" />
-                    Video Tour
-                  </h2>
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-neutral-100">
-                    <iframe
-                      src={videoEmbedUrl}
-                      className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title="Property Video Tour"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Description */}
               <div className="mb-12">
                 <h2 className="font-display text-2xl text-brand-navy mb-4">About This Property</h2>
@@ -304,23 +269,13 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                 </div>
               )}
 
-              {/* Gallery */}
-              {images.length > 1 && (
-                <div>
-                  <h2 className="font-display text-2xl text-brand-navy mb-4">Gallery</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {images.slice(1).map((image: string, index: number) => (
-                      <div key={index} className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                        <Image
-                          src={image}
-                          alt={`${property.title} - Image ${index + 2}`}
-                          fill
-                          className="object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* Gallery with Lightbox */}
+              {images.length > 0 && (
+                <PropertyGalleryClient
+                  images={images}
+                  title={property.title}
+                  videoUrl={property.heroVideo}
+                />
               )}
             </div>
 

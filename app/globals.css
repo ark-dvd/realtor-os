@@ -215,6 +215,16 @@ h1, h2, h3, h4, h5, h6 {
   padding-top: env(safe-area-inset-top, 0);
 }
 
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════════════════════════════ */
