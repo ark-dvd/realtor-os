@@ -155,7 +155,7 @@ function PdfUpload({ currentUrl, currentFilename, onUpload, label }: { currentUr
     if (file.type !== 'application/pdf') { alert('Please upload a PDF file'); return }
     setUploading(true)
     try {
-      const formData = new FormData(); formData.append('file', file)
+      const formData = new FormData(); formData.append('file', file); formData.append('type', 'file')
       const res = await fetch('/api/admin/upload', { method: 'POST', body: formData, credentials: 'include' })
       const text = await res.text()
       let data

@@ -241,7 +241,7 @@ export function Footer({ settings }: FooterProps) {
                 className="text-white/50 hover:text-white transition-colors flex items-center gap-1"
               >
                 <FileText size={14} />
-                IABS (PDF)
+                Information About Brokerage Services
               </a>
             )}
             <span className="text-white/30">|</span>
