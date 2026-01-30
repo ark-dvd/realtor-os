@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
         "equalHousingLogo": equalHousingLogo.asset->url,
         "equalHousingLogoAssetId": equalHousingLogo.asset._ref,
         "logo": logo.asset->url,
-        "logoAssetId": logo.asset._ref
+        "logoAssetId": logo.asset._ref,
+        "pwaIcon": pwaIcon.asset->url,
+        "pwaIconAssetId": pwaIcon.asset._ref
       }
     `)
     return NextResponse.json(data || {})
@@ -158,8 +160,15 @@ export async function PUT(request: NextRequest) {
     // Branding
     if (body.logoAssetId) {
       updates.logo = { _type: 'image', asset: { _type: 'reference', _ref: body.logoAssetId } }
+    } else if (body.logoAssetId === '') {
+      updates.logo = null
     }
-    
+    if (body.pwaIconAssetId) {
+      updates.pwaIcon = { _type: 'image', asset: { _type: 'reference', _ref: body.pwaIconAssetId } }
+    } else if (body.pwaIconAssetId === '') {
+      updates.pwaIcon = null
+    }
+
     let result
     if (existing) {
       result = await client.patch(existing).set(updates).commit()

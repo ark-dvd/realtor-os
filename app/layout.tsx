@@ -88,7 +88,11 @@ export default async function RootLayout({
           rel="stylesheet" 
         />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/api/pwa-icon" />
+        <link rel="manifest" href="/api/manifest" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Admin" />
         <JsonLd type="RealEstateAgent" settings={settings} />
         <JsonLd type="WebSite" settings={settings} />
         {/* Google Analytics */}

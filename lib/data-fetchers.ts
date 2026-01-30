@@ -83,6 +83,7 @@ export interface SiteSettings {
   showFairHousing?: boolean
   equalHousingLogo?: string
   logo?: string
+  pwaIcon?: string
 }
 
 export interface Property {
@@ -316,7 +317,8 @@ export async function getSettings(): Promise<SiteSettings> {
         brokerLicenseNumber,
         showFairHousing,
         "equalHousingLogo": equalHousingLogo.asset->url,
-        "logo": logo.asset->url
+        "logo": logo.asset->url,
+        "pwaIcon": pwaIcon.asset->url
       }
     `)
 

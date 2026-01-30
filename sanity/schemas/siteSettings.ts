@@ -177,6 +177,13 @@ export default {
       group: 'branding',
       description: 'Upload your logo. If not set, the agent name will be displayed.',
     },
+    {
+      name: 'pwaIcon',
+      title: 'App Icon (PWA)',
+      type: 'image',
+      group: 'branding',
+      description: 'Square icon for mobile app (512x512 recommended). If empty, site logo will be used.',
+    },
 
     // Social Media
     {
