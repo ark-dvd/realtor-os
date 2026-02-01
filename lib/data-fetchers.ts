@@ -91,7 +91,8 @@ export interface Property {
   title: string
   slug: string
   status: string
-  price: number
+  price?: number | null
+  priceLabel?: string
   address?: {
     street?: string
     city?: string
@@ -100,6 +101,8 @@ export interface Property {
   }
   neighborhood?: string
   neighborhoodSlug?: string
+  listingType?: 'own' | 'other'
+  listingAgent?: string
   beds?: number
   baths?: number
   sqft?: number
@@ -117,6 +120,37 @@ export interface Property {
   features?: string[]
   seoTitle?: string
   seoDescription?: string
+  // Facts & Features - Interior
+  fullBathrooms?: number
+  halfBathrooms?: number
+  stories?: number
+  flooring?: string
+  fireplace?: string
+  appliances?: string
+  interiorFeatures?: string
+  // Facts & Features - Exterior
+  propertyType?: 'residential' | 'condo' | 'multi-family' | 'land' | 'commercial'
+  roofType?: string
+  foundation?: string
+  exteriorFeatures?: string
+  pool?: string
+  parkingFeatures?: string
+  heatingType?: string
+  coolingType?: string
+  // Facts & Features - Lot & Area
+  lotFeatures?: string
+  viewDescription?: string
+  waterSource?: string
+  sewer?: string
+  utilities?: string
+  // Facts & Features - Schools
+  elementarySchool?: string
+  middleSchool?: string
+  highSchool?: string
+  schoolDistrict?: string
+  // Facts & Features - Financial
+  hoaFee?: string
+  taxRate?: string
 }
 
 export interface School {
@@ -368,9 +402,12 @@ export async function getProperties(status?: string): Promise<Property[]> {
         "slug": slug.current,
         status,
         price,
+        priceLabel,
         address,
         "neighborhood": neighborhood->name,
         "neighborhoodSlug": neighborhood->slug.current,
+        listingType,
+        listingAgent,
         beds,
         baths,
         sqft,
@@ -420,9 +457,12 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
         "slug": slug.current,
         status,
         price,
+        priceLabel,
         address,
         "neighborhood": neighborhood->name,
         "neighborhoodSlug": neighborhood->slug.current,
+        listingType,
+        listingAgent,
         beds,
         baths,
         sqft,
@@ -439,7 +479,33 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
         description,
         features,
         seoTitle,
-        seoDescription
+        seoDescription,
+        fullBathrooms,
+        halfBathrooms,
+        stories,
+        flooring,
+        fireplace,
+        appliances,
+        interiorFeatures,
+        propertyType,
+        roofType,
+        foundation,
+        exteriorFeatures,
+        pool,
+        parkingFeatures,
+        heatingType,
+        coolingType,
+        lotFeatures,
+        viewDescription,
+        waterSource,
+        sewer,
+        utilities,
+        elementarySchool,
+        middleSchool,
+        highSchool,
+        schoolDistrict,
+        hoaFee,
+        taxRate
       }
     `, { slug })
 
@@ -587,12 +653,21 @@ export async function getNeighborhoodBySlug(slug: string): Promise<Community | n
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function formatPrice(price: number): string {
+export function formatPrice(price: number | null | undefined): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
   }).format(price || 0)
+}
+
+/**
+ * Display price with support for priceLabel override and "Call For Price" fallback
+ */
+export function displayPrice(property: { price?: number | null; priceLabel?: string }): string {
+  if (property.priceLabel) return property.priceLabel
+  if (property.price && property.price > 0) return formatPrice(property.price)
+  return 'Call For Price'
 }
 
 export function getStatusLabel(status: string): string {

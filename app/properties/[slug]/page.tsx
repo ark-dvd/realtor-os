@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { Bed, Bath, Square, MapPin, Calendar, Phone, Mail, ArrowLeft, Share2, Heart, Car, Ruler, FileText, Play, Maximize } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
 import { JsonLd } from '@/components/JsonLd'
-import { getPropertyBySlug, getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
+import { getPropertyBySlug, getProperties, getSettings, displayPrice, getStatusLabel, Property } from '@/lib/data-fetchers'
 import { PropertyGalleryClient } from './PropertyPageClient'
 
 export const revalidate = 60
@@ -106,10 +106,16 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                   <MapPin size={18} />
                   {property.address?.street ? `${property.address.street}, ${property.address.city || 'Austin'}, ${property.address.state || 'TX'}` : property.neighborhood || 'Austin, TX'}
                 </p>
+                {/* Listing Agent Attribution */}
+                {property.listingType === 'other' && property.listingAgent && (
+                  <p className="text-white/60 text-sm mt-2 italic">
+                    {property.listingAgent}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <p className="font-display text-4xl md:text-5xl text-brand-gold">
-                  {formatPrice(property.price)}
+                  {displayPrice(property)}
                 </p>
               </div>
             </div>
@@ -210,6 +216,9 @@ export default async function PropertyPage({ params }: { params: { slug: string 
                   </ul>
                 </div>
               )}
+
+              {/* Facts & Features */}
+              <FactsAndFeatures property={property} />
 
               {/* Floor Plan */}
               {property.floorPlan && (
@@ -354,5 +363,123 @@ export default async function PropertyPage({ params }: { params: { slug: string 
 
       <CTASection settings={settings} />
     </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FACTS & FEATURES COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  'residential': 'Residential / Single Family',
+  'condo': 'Condo / Townhome',
+  'multi-family': 'Multi-Family',
+  'land': 'Land / Lot',
+  'commercial': 'Commercial',
+}
+
+interface FactRow {
+  label: string
+  value: string | number | undefined | null
+}
+
+function FactsSection({ title, facts }: { title: string; facts: FactRow[] }) {
+  // Filter out empty/null values
+  const validFacts = facts.filter(f => f.value !== undefined && f.value !== null && f.value !== '')
+  if (validFacts.length === 0) return null
+
+  return (
+    <div className="mb-8">
+      <h3 className="font-display text-lg text-brand-navy mb-4 pb-2 border-b border-neutral-200">
+        {title}
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+        {validFacts.map((fact, index) => (
+          <div key={index} className="flex justify-between py-1">
+            <span className="text-neutral-500">{fact.label}</span>
+            <span className="text-neutral-800 font-medium text-right">{fact.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FactsAndFeatures({ property }: { property: Property }) {
+  // Interior facts
+  const interiorFacts: FactRow[] = [
+    { label: 'Total Bedrooms', value: property.beds },
+    { label: 'Total Bathrooms', value: property.baths },
+    { label: 'Full Bathrooms', value: property.fullBathrooms },
+    { label: 'Half Bathrooms', value: property.halfBathrooms },
+    { label: 'Stories', value: property.stories },
+    { label: 'Flooring', value: property.flooring },
+    { label: 'Fireplace', value: property.fireplace },
+    { label: 'Appliances', value: property.appliances },
+    { label: 'Other Interior Features', value: property.interiorFeatures },
+  ]
+
+  // Exterior & Construction facts
+  const exteriorFacts: FactRow[] = [
+    { label: 'Property Type', value: property.propertyType ? PROPERTY_TYPE_LABELS[property.propertyType] : undefined },
+    { label: 'Year Built', value: property.yearBuilt },
+    { label: 'Square Feet', value: property.sqft?.toLocaleString() },
+    { label: 'Roof', value: property.roofType },
+    { label: 'Foundation', value: property.foundation },
+    { label: 'Garage Spaces', value: property.garage },
+    { label: 'Parking', value: property.parkingFeatures },
+    { label: 'Pool', value: property.pool },
+    { label: 'Heating', value: property.heatingType },
+    { label: 'Cooling', value: property.coolingType },
+    { label: 'Exterior Features', value: property.exteriorFeatures },
+  ]
+
+  // Lot & Area facts
+  const lotFacts: FactRow[] = [
+    { label: 'Lot Size', value: property.lotSize ? `${property.lotSize} acres` : undefined },
+    { label: 'Lot Features', value: property.lotFeatures },
+    { label: 'View', value: property.viewDescription },
+    { label: 'Water Source', value: property.waterSource },
+    { label: 'Sewer', value: property.sewer },
+    { label: 'Utilities', value: property.utilities },
+  ]
+
+  // Schools facts
+  const schoolFacts: FactRow[] = [
+    { label: 'Elementary School', value: property.elementarySchool },
+    { label: 'Middle School', value: property.middleSchool },
+    { label: 'High School', value: property.highSchool },
+    { label: 'School District', value: property.schoolDistrict },
+  ]
+
+  // Financial facts
+  const financialFacts: FactRow[] = [
+    { label: 'HOA Fee', value: property.hoaFee },
+    { label: 'Annual Taxes', value: property.taxRate },
+  ]
+
+  // Check if any section has data
+  const hasInterior = interiorFacts.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+  const hasExterior = exteriorFacts.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+  const hasLot = lotFacts.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+  const hasSchools = schoolFacts.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+  const hasFinancial = financialFacts.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+
+  // If no facts & features data, don't render the section
+  if (!hasInterior && !hasExterior && !hasLot && !hasSchools && !hasFinancial) {
+    return null
+  }
+
+  return (
+    <div className="mb-12">
+      <h2 className="font-display text-2xl text-brand-navy mb-6">Facts & Features</h2>
+      <div className="bg-neutral-50 rounded-xl p-6">
+        <FactsSection title="Interior" facts={interiorFacts} />
+        <FactsSection title="Exterior & Construction" facts={exteriorFacts} />
+        <FactsSection title="Lot & Area" facts={lotFacts} />
+        <FactsSection title="Schools" facts={schoolFacts} />
+        <FactsSection title="Financial" facts={financialFacts} />
+      </div>
+    </div>
   )
 }

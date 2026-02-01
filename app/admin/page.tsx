@@ -71,7 +71,26 @@ interface Stat { _key?: string; value: string; label: string }
 interface GalleryImage { _key?: string; url: string; alt?: string; assetId?: string }
 interface City { _id?: string; name: string; slug: string; description?: string; image?: string; imageAssetId?: string; order?: number }
 interface Neighborhood { _id?: string; name: string; slug: string; cityId?: string; city?: City; tagline: string; vibe: string; description: string; population?: string; commute?: { toDowntown?: string; toDomain?: string }; schoolDistrict?: string; schools?: School[]; whyPeopleLove?: string[]; highlights?: Highlight[]; avgPrice: string; image?: string; imageAssetId?: string; gallery?: GalleryImage[]; order?: number; isActive?: boolean }
-interface Property { _id?: string; title: string; slug: string; status: string; price: number; address?: { street?: string; city?: string; state?: string; zip?: string }; neighborhoodId?: string; beds?: number; baths?: number; sqft?: number; heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string; shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string }
+interface Property {
+  _id?: string; title: string; slug: string; status: string;
+  price?: number | null; priceLabel?: string;
+  address?: { street?: string; city?: string; state?: string; zip?: string };
+  neighborhoodId?: string;
+  listingType?: 'own' | 'other'; listingAgent?: string;
+  beds?: number; baths?: number; sqft?: number; lotSize?: number; yearBuilt?: number; garage?: number; mlsNumber?: string;
+  heroImage?: string; heroImageAssetId?: string; heroVideo?: string; gallery?: GalleryImage[]; floorPlan?: string; floorPlanAssetId?: string;
+  shortDescription?: string; description?: string; features?: string[]; seoTitle?: string; seoDescription?: string;
+  // Facts & Features - Interior
+  fullBathrooms?: number; halfBathrooms?: number; stories?: number; flooring?: string; fireplace?: string; appliances?: string; interiorFeatures?: string;
+  // Facts & Features - Exterior
+  propertyType?: 'residential' | 'condo' | 'multi-family' | 'land' | 'commercial'; roofType?: string; foundation?: string; exteriorFeatures?: string; pool?: string; parkingFeatures?: string; heatingType?: string; coolingType?: string;
+  // Facts & Features - Lot & Area
+  lotFeatures?: string; viewDescription?: string; waterSource?: string; sewer?: string; utilities?: string;
+  // Facts & Features - Schools
+  elementarySchool?: string; middleSchool?: string; highSchool?: string; schoolDistrict?: string;
+  // Facts & Features - Financial
+  hoaFee?: string; taxRate?: string;
+}
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
 interface LegalLink { _key?: string; title: string; url?: string }
 interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; privacyPolicy?: string; termsOfService?: string; agentLicenseNumber?: string; brokerName?: string; brokerLicenseNumber?: string; showFairHousing?: boolean; equalHousingLogo?: string; equalHousingLogoAssetId?: string; logo?: string; logoAssetId?: string; pwaIcon?: string; pwaIconAssetId?: string }
@@ -328,7 +347,7 @@ function DashboardTab({ properties, deals, neighborhoods, onSeed, seeding }: { p
 
 function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, saving }: { properties: Property[]; neighborhoods: Neighborhood[]; loading: boolean; onSave: (p: Property) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
   const [modal, setModal] = useState<{ open: boolean; property?: Property }>({ open: false })
-  const [form, setForm] = useState<Property>({ title: '', slug: '', status: 'for-sale', price: 0 })
+  const [form, setForm] = useState<Property>({ title: '', slug: '', status: 'for-sale', listingType: 'own' })
   const [search, setSearch] = useState('')
   const [features, setFeatures] = useState<string[]>([])
   const [newFeature, setNewFeature] = useState('')
@@ -336,7 +355,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
 
   useEffect(() => {
     if (modal.property) { setForm(modal.property); setFeatures(modal.property.features || []); setGallery(modal.property.gallery || []) }
-    else { setForm({ title: '', slug: '', status: 'for-sale', price: 0, address: { city: 'Austin', state: 'TX' } }); setFeatures([]); setGallery([]) }
+    else { setForm({ title: '', slug: '', status: 'for-sale', listingType: 'own', address: { city: 'Austin', state: 'TX' } }); setFeatures([]); setGallery([]) }
   }, [modal])
 
   const addFeature = () => { if (newFeature.trim()) { setFeatures([...features, newFeature.trim()]); setNewFeature('') } }
@@ -374,7 +393,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
                 </div>
                 <p className="text-sm text-neutral-500">{p.beds} bed • {p.baths} bath</p>
               </div>
-              <p className="font-semibold text-brand-gold">{formatPrice(p.price)}</p>
+              <p className="font-semibold text-brand-gold">{p.priceLabel || (p.price ? formatPrice(p.price) : 'Call For Price')}</p>
             </div>
           </div>
           <div className="flex border-t">
@@ -413,7 +432,7 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
                   </div>
                 </div>
               </td>
-              <td className="px-4 py-3 font-medium">{formatPrice(p.price)}</td>
+              <td className="px-4 py-3 font-medium">{p.priceLabel || (p.price ? formatPrice(p.price) : 'Call For Price')}</td>
               <td className="px-4 py-3">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[p.status] || 'bg-neutral-100'}`}>{p.status}</span>
               </td>
@@ -434,14 +453,88 @@ function PropertiesTab({ properties, neighborhoods, loading, onSave, onDelete, s
           <div><label className="block text-sm font-medium mb-2">Status</label><select className="input-field h-12" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="for-sale">For Sale</option><option value="pending">Pending</option><option value="sold">Sold</option></select></div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div><label className="block text-sm font-medium mb-2">Price *</label><input type="number" inputMode="numeric" required className="input-field h-12" value={form.price || ''} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Price</label><input type="number" inputMode="numeric" className="input-field h-12" placeholder="Leave empty for 'Call For Price'" value={form.price || ''} onChange={(e) => setForm({ ...form, price: e.target.value ? Number(e.target.value) : undefined })} /></div>
+          <div><label className="block text-sm font-medium mb-2">Price Override</label><input type="text" className="input-field h-12" placeholder="e.g., 'Price Upon Request'" value={form.priceLabel || ''} onChange={(e) => setForm({ ...form, priceLabel: e.target.value })} /></div>
           <div><label className="block text-sm font-medium mb-2">Beds</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.beds || ''} onChange={(e) => setForm({ ...form, beds: Number(e.target.value) })} /></div>
           <div><label className="block text-sm font-medium mb-2">Baths</label><input type="number" inputMode="decimal" step="0.5" className="input-field h-12" value={form.baths || ''} onChange={(e) => setForm({ ...form, baths: Number(e.target.value) })} /></div>
           <div><label className="block text-sm font-medium mb-2">Sqft</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.sqft || ''} onChange={(e) => setForm({ ...form, sqft: Number(e.target.value) })} /></div>
         </div>
         <Accordion title="Address"><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div className="sm:col-span-2"><label className="block text-sm font-medium mb-2">Street</label><input type="text" className="input-field h-12" value={form.address?.street || ''} onChange={(e) => setForm({ ...form, address: { ...form.address, street: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">City</label><input type="text" className="input-field h-12" value={form.address?.city || 'Austin'} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} /></div><div><label className="block text-sm font-medium mb-2">Community</label><select className="input-field h-12" value={form.neighborhoodId || ''} onChange={(e) => setForm({ ...form, neighborhoodId: e.target.value })}><option value="">Select...</option>{neighborhoods.map(n => <option key={n._id} value={n._id}>{n.name}</option>)}</select></div></div></Accordion>
+        <Accordion title="Listing Attribution">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Listing Type</label>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="listingType" checked={form.listingType !== 'other'} onChange={() => setForm({ ...form, listingType: 'own', listingAgent: '' })} className="w-4 h-4" />
+                  <span>My Listing</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="listingType" checked={form.listingType === 'other'} onChange={() => setForm({ ...form, listingType: 'other' })} className="w-4 h-4" />
+                  <span>Co-Listed / Other Agent</span>
+                </label>
+              </div>
+            </div>
+            {form.listingType === 'other' && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Listing Agent Attribution</label>
+                <input type="text" className="input-field h-12" placeholder="e.g., Privately Listed by Noa Levy, The Boutique Real Estate, eXp Realty LLC" value={form.listingAgent || ''} onChange={(e) => setForm({ ...form, listingAgent: e.target.value })} />
+                <p className="text-xs text-neutral-500 mt-1">This text will be displayed on the listing</p>
+              </div>
+            )}
+          </div>
+        </Accordion>
         <Accordion title="Description"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">Short Description</label><textarea className="input-field" rows={2} value={form.shortDescription || ''} onChange={(e) => setForm({ ...form, shortDescription: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">Full Description</label><textarea className="input-field" rows={6} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div></div></Accordion>
         <Accordion title="Features"><div className="space-y-3"><div className="flex gap-2"><input type="text" className="input-field flex-1" placeholder="Add feature..." value={newFeature} onChange={(e) => setNewFeature(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())} /><button type="button" onClick={addFeature} className="btn-secondary"><Plus size={16} /></button></div><div className="flex flex-wrap gap-2">{features.map((f, i) => <span key={i} className="inline-flex items-center gap-1 px-3 py-1 bg-neutral-100 rounded-full text-sm">{f}<button type="button" onClick={() => setFeatures(features.filter((_, idx) => idx !== i))} className="hover:text-red-500"><X size={14} /></button></span>)}</div></div></Accordion>
+        <Accordion title="Facts & Features: Interior">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div><label className="block text-sm font-medium mb-2">Full Bathrooms</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.fullBathrooms || ''} onChange={(e) => setForm({ ...form, fullBathrooms: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Half Bathrooms</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.halfBathrooms || ''} onChange={(e) => setForm({ ...form, halfBathrooms: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Stories</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.stories || ''} onChange={(e) => setForm({ ...form, stories: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Flooring</label><input type="text" className="input-field h-12" placeholder="e.g., Stone, Tile, Wood" value={form.flooring || ''} onChange={(e) => setForm({ ...form, flooring: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Fireplace</label><input type="text" className="input-field h-12" placeholder="e.g., Family Room, Living Room — leave empty if none" value={form.fireplace || ''} onChange={(e) => setForm({ ...form, fireplace: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Appliances</label><input type="text" className="input-field h-12" placeholder="e.g., Dishwasher, Gas Cooktop, Double Oven, Refrigerator" value={form.appliances || ''} onChange={(e) => setForm({ ...form, appliances: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Other Interior Features</label><textarea className="input-field" rows={2} placeholder="e.g., Beamed Ceilings, High Ceilings, Granite Counters, Walk-In Closet(s)" value={form.interiorFeatures || ''} onChange={(e) => setForm({ ...form, interiorFeatures: e.target.value })} /></div>
+          </div>
+        </Accordion>
+        <Accordion title="Facts & Features: Exterior">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Property Type</label><select className="input-field h-12" value={form.propertyType || ''} onChange={(e) => setForm({ ...form, propertyType: e.target.value as Property['propertyType'] })}><option value="">Select...</option><option value="residential">Residential / Single Family</option><option value="condo">Condo / Townhome</option><option value="multi-family">Multi-Family</option><option value="land">Land / Lot</option><option value="commercial">Commercial</option></select></div>
+            <div><label className="block text-sm font-medium mb-2">Lot Size (acres)</label><input type="number" inputMode="decimal" step="0.01" className="input-field h-12" value={form.lotSize || ''} onChange={(e) => setForm({ ...form, lotSize: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Year Built</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.yearBuilt || ''} onChange={(e) => setForm({ ...form, yearBuilt: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Garage Spaces</label><input type="number" inputMode="numeric" className="input-field h-12" value={form.garage || ''} onChange={(e) => setForm({ ...form, garage: e.target.value ? Number(e.target.value) : undefined })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Roof</label><input type="text" className="input-field h-12" placeholder="e.g., Metal, Composition, Tile" value={form.roofType || ''} onChange={(e) => setForm({ ...form, roofType: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Foundation</label><input type="text" className="input-field h-12" placeholder="e.g., Slab, Pier & Beam" value={form.foundation || ''} onChange={(e) => setForm({ ...form, foundation: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Pool</label><input type="text" className="input-field h-12" placeholder="e.g., In Ground, Outdoor Pool — leave empty if none" value={form.pool || ''} onChange={(e) => setForm({ ...form, pool: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Parking Features</label><input type="text" className="input-field h-12" placeholder="e.g., Attached, Driveway, Garage Faces Side" value={form.parkingFeatures || ''} onChange={(e) => setForm({ ...form, parkingFeatures: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Heating</label><input type="text" className="input-field h-12" placeholder="e.g., Central, Forced Air" value={form.heatingType || ''} onChange={(e) => setForm({ ...form, heatingType: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Cooling / AC</label><input type="text" className="input-field h-12" placeholder="e.g., Central Air" value={form.coolingType || ''} onChange={(e) => setForm({ ...form, coolingType: e.target.value })} /></div>
+            <div className="sm:col-span-3"><label className="block text-sm font-medium mb-2">Exterior Features</label><textarea className="input-field" rows={2} placeholder="e.g., Barbecue, Gutters, Private Yard, Tennis Court" value={form.exteriorFeatures || ''} onChange={(e) => setForm({ ...form, exteriorFeatures: e.target.value })} /></div>
+          </div>
+        </Accordion>
+        <Accordion title="Facts & Features: Lot & Area">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2"><label className="block text-sm font-medium mb-2">Lot Features</label><textarea className="input-field" rows={2} placeholder="e.g., Back to Park/Greenbelt, Level, Sprinklers, Many Trees" value={form.lotFeatures || ''} onChange={(e) => setForm({ ...form, lotFeatures: e.target.value })} /></div>
+            <div className="sm:col-span-2"><label className="block text-sm font-medium mb-2">View</label><input type="text" className="input-field h-12" placeholder="e.g., Hill Country, Park/Greenbelt, Trees/Woods" value={form.viewDescription || ''} onChange={(e) => setForm({ ...form, viewDescription: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Water Source</label><input type="text" className="input-field h-12" placeholder="e.g., MUD, City" value={form.waterSource || ''} onChange={(e) => setForm({ ...form, waterSource: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Sewer</label><input type="text" className="input-field h-12" placeholder="e.g., MUD, City Sewer" value={form.sewer || ''} onChange={(e) => setForm({ ...form, sewer: e.target.value })} /></div>
+            <div className="sm:col-span-2"><label className="block text-sm font-medium mb-2">Utilities</label><input type="text" className="input-field h-12" placeholder="e.g., Electricity Available, Natural Gas Available" value={form.utilities || ''} onChange={(e) => setForm({ ...form, utilities: e.target.value })} /></div>
+          </div>
+        </Accordion>
+        <Accordion title="Facts & Features: Schools">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label className="block text-sm font-medium mb-2">Elementary School</label><input type="text" className="input-field h-12" value={form.elementarySchool || ''} onChange={(e) => setForm({ ...form, elementarySchool: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Middle School</label><input type="text" className="input-field h-12" value={form.middleSchool || ''} onChange={(e) => setForm({ ...form, middleSchool: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">High School</label><input type="text" className="input-field h-12" value={form.highSchool || ''} onChange={(e) => setForm({ ...form, highSchool: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">School District</label><input type="text" className="input-field h-12" placeholder="e.g., Austin ISD, Eanes ISD" value={form.schoolDistrict || ''} onChange={(e) => setForm({ ...form, schoolDistrict: e.target.value })} /></div>
+          </div>
+        </Accordion>
+        <Accordion title="Facts & Features: Financial">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label className="block text-sm font-medium mb-2">HOA Fee</label><input type="text" className="input-field h-12" placeholder="e.g., $175/month, $525/quarter, None" value={form.hoaFee || ''} onChange={(e) => setForm({ ...form, hoaFee: e.target.value })} /></div>
+            <div><label className="block text-sm font-medium mb-2">Tax Rate / Annual Taxes</label><input type="text" className="input-field h-12" placeholder="e.g., $49,468/year or 2.1%" value={form.taxRate || ''} onChange={(e) => setForm({ ...form, taxRate: e.target.value })} /></div>
+          </div>
+        </Accordion>
         <Accordion title="Media" defaultOpen><div className="space-y-6"><ImageUpload currentImage={form.heroImage} label="Main Image *" onUpload={(assetId, url) => setForm({ ...form, heroImageAssetId: assetId, heroImage: url })} /><div><label className="block text-sm font-medium mb-2">Video URL</label><input type="url" className="input-field" value={form.heroVideo || ''} onChange={(e) => setForm({ ...form, heroVideo: e.target.value })} /></div><GalleryUpload images={gallery} onChange={setGallery} label="Gallery" /><ImageUpload currentImage={form.floorPlan} label="Floor Plan" onUpload={(assetId, url) => setForm({ ...form, floorPlanAssetId: assetId, floorPlan: url })} /></div></Accordion>
         <Accordion title="SEO"><div className="space-y-4"><div><label className="block text-sm font-medium mb-2">SEO Title</label><input type="text" className="input-field h-12" value={form.seoTitle || ''} onChange={(e) => setForm({ ...form, seoTitle: e.target.value })} /></div><div><label className="block text-sm font-medium mb-2">SEO Description</label><textarea className="input-field" rows={2} value={form.seoDescription || ''} onChange={(e) => setForm({ ...form, seoDescription: e.target.value })} /></div></div></Accordion>
         <div className="sticky bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-4 bg-white border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">

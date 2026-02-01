@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Bed, Bath, Square, MapPin } from 'lucide-react'
 import { CTASection } from '@/components/CTASection'
-import { getProperties, getSettings, formatPrice, getStatusLabel } from '@/lib/data-fetchers'
+import { getProperties, getSettings, displayPrice, getStatusLabel } from '@/lib/data-fetchers'
 
 import { Metadata } from 'next'
 
@@ -96,7 +96,7 @@ export default async function PropertiesPage() {
                 {/* Content */}
                 <div className="p-6">
                   <p className="text-2xl font-display text-brand-navy mb-2">
-                    {formatPrice(property.price)}
+                    {displayPrice(property)}
                   </p>
                   <h3 className="font-display text-xl text-brand-navy group-hover:text-brand-gold transition-colors mb-2">
                     {property.title}
@@ -127,6 +127,13 @@ export default async function PropertiesPage() {
                       </span>
                     )}
                   </div>
+
+                  {/* Listing Agent Attribution */}
+                  {property.listingType === 'other' && property.listingAgent && (
+                    <p className="text-xs text-neutral-400 mt-3 pt-3 border-t border-neutral-100 italic">
+                      {property.listingAgent}
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}

@@ -5,6 +5,7 @@ export default {
   groups: [
     { name: 'basic', title: 'Basic Info' },
     { name: 'details', title: 'Property Details' },
+    { name: 'factsFeatures', title: 'Facts & Features' },
     { name: 'description', title: 'Description' },
     { name: 'media', title: 'Photos & Media' },
     { name: 'seo', title: 'SEO' },
@@ -48,7 +49,15 @@ export default {
       title: 'Price',
       type: 'number',
       group: 'basic',
-      validation: (Rule: any) => Rule.required().positive(),
+      validation: (Rule: any) => Rule.positive(),
+      description: 'Leave empty for "Call For Price"',
+    },
+    {
+      name: 'priceLabel',
+      title: 'Price Display Override',
+      type: 'string',
+      group: 'basic',
+      description: 'Optional override text shown instead of price (e.g., "Call For Price", "Price Upon Request")',
     },
     {
       name: 'address',
@@ -68,6 +77,29 @@ export default {
       type: 'reference',
       to: [{ type: 'neighborhood' }],
       group: 'basic',
+    },
+    {
+      name: 'listingType',
+      title: 'Listing Type',
+      type: 'string',
+      group: 'basic',
+      options: {
+        list: [
+          { title: 'My Listing', value: 'own' },
+          { title: 'Co-Listed / Other Agent', value: 'other' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'own',
+      description: 'Select "Other Agent" for co-listings or MLS-sourced properties',
+    },
+    {
+      name: 'listingAgent',
+      title: 'Listing Agent Attribution',
+      type: 'string',
+      group: 'basic',
+      description: 'e.g., "Privately Listed by Noa Levy, The Boutique Real Estate, eXp Realty LLC"',
+      hidden: ({ parent }: any) => parent?.listingType !== 'other',
     },
 
     // Property Details
@@ -221,24 +253,236 @@ export default {
       group: 'seo',
       description: 'Meta description for search results (optional)',
     },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACTS & FEATURES - Interior
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'fullBathrooms',
+      title: 'Full Bathrooms',
+      type: 'number',
+      group: 'factsFeatures',
+      validation: (Rule: any) => Rule.min(0),
+    },
+    {
+      name: 'halfBathrooms',
+      title: 'Half Bathrooms',
+      type: 'number',
+      group: 'factsFeatures',
+      validation: (Rule: any) => Rule.min(0),
+    },
+    {
+      name: 'stories',
+      title: 'Stories',
+      type: 'number',
+      group: 'factsFeatures',
+      validation: (Rule: any) => Rule.min(1),
+    },
+    {
+      name: 'flooring',
+      title: 'Flooring',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Stone, Tile, Wood" or "Hardwood"',
+    },
+    {
+      name: 'fireplace',
+      title: 'Fireplace',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Family Room, Living Room, Outside" — leave empty if none',
+    },
+    {
+      name: 'appliances',
+      title: 'Appliances',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Dishwasher, Disposal, Gas Cooktop, Double Oven, Refrigerator, Stainless Steel"',
+    },
+    {
+      name: 'interiorFeatures',
+      title: 'Other Interior Features',
+      type: 'text',
+      rows: 3,
+      group: 'factsFeatures',
+      description: 'e.g., "Beamed Ceilings, High Ceilings, Granite Counters, Walk-In Closet(s), Wet Bar, Wired for Sound"',
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACTS & FEATURES - Exterior
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'propertyType',
+      title: 'Property Type',
+      type: 'string',
+      group: 'factsFeatures',
+      options: {
+        list: [
+          { title: 'Residential / Single Family', value: 'residential' },
+          { title: 'Condo / Townhome', value: 'condo' },
+          { title: 'Multi-Family', value: 'multi-family' },
+          { title: 'Land / Lot', value: 'land' },
+          { title: 'Commercial', value: 'commercial' },
+        ],
+      },
+    },
+    {
+      name: 'roofType',
+      title: 'Roof',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Metal", "Composition", "Tile"',
+    },
+    {
+      name: 'foundation',
+      title: 'Foundation',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Slab", "Pier & Beam"',
+    },
+    {
+      name: 'exteriorFeatures',
+      title: 'Exterior Features',
+      type: 'text',
+      rows: 3,
+      group: 'factsFeatures',
+      description: 'e.g., "Barbecue, Gutters Full, Private Yard, Tennis Court(s), RV Hookup"',
+    },
+    {
+      name: 'pool',
+      title: 'Pool',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "In Ground, Outdoor Pool, Pool/Spa Combo" — leave empty if none',
+    },
+    {
+      name: 'parkingFeatures',
+      title: 'Parking',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Attached, Driveway, Garage Faces Side" (garage count is already in Details tab)',
+    },
+    {
+      name: 'heatingType',
+      title: 'Heating',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Central", "Forced Air, Gas"',
+    },
+    {
+      name: 'coolingType',
+      title: 'Cooling / AC',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Central Air", "Ceiling Fan(s), Central Air"',
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACTS & FEATURES - Lot & Area
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'lotFeatures',
+      title: 'Lot Features',
+      type: 'text',
+      rows: 2,
+      group: 'factsFeatures',
+      description: 'e.g., "Back to Park/Greenbelt, Level, Sprinklers, Many Trees"',
+    },
+    {
+      name: 'viewDescription',
+      title: 'View',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Hill Country, Park/Greenbelt, Trees/Woods"',
+    },
+    {
+      name: 'waterSource',
+      title: 'Water Source',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Municipal Utility District (MUD)", "City"',
+    },
+    {
+      name: 'sewer',
+      title: 'Sewer',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Municipal Utility District (MUD)", "City Sewer"',
+    },
+    {
+      name: 'utilities',
+      title: 'Utilities',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Electricity Available, Natural Gas Available, Phone Connected"',
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACTS & FEATURES - Schools
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'elementarySchool',
+      title: 'Elementary School',
+      type: 'string',
+      group: 'factsFeatures',
+    },
+    {
+      name: 'middleSchool',
+      title: 'Middle School',
+      type: 'string',
+      group: 'factsFeatures',
+    },
+    {
+      name: 'highSchool',
+      title: 'High School',
+      type: 'string',
+      group: 'factsFeatures',
+    },
+    {
+      name: 'schoolDistrict',
+      title: 'School District',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "Austin ISD", "Eanes ISD"',
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACTS & FEATURES - Financial
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+      name: 'hoaFee',
+      title: 'HOA Fee',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "$175/month", "$525/quarter", "None"',
+    },
+    {
+      name: 'taxRate',
+      title: 'Tax Rate / Annual Taxes',
+      type: 'string',
+      group: 'factsFeatures',
+      description: 'e.g., "$49,468/year" or "2.1%"',
+    },
   ],
   preview: {
     select: {
       title: 'title',
       price: 'price',
+      priceLabel: 'priceLabel',
       status: 'status',
       media: 'heroImage',
     },
-    prepare({ title, price, status, media }: any) {
+    prepare({ title, price, priceLabel, status, media }: any) {
       const statusLabels: any = {
         'for-sale': '🟢 For Sale',
         pending: '🟡 Pending',
         sold: '⚪ Sold',
         'off-market': '⚫ Off Market',
       }
+      const priceDisplay = priceLabel || (price ? `$${price.toLocaleString()}` : 'Call For Price')
       return {
         title,
-        subtitle: `$${price?.toLocaleString() || 0} - ${statusLabels[status] || status}`,
+        subtitle: `${priceDisplay} - ${statusLabels[status] || status}`,
         media,
       }
     },

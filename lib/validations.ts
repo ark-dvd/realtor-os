@@ -51,7 +51,8 @@ export const PropertyInputSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
   slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase with hyphens'),
   status: z.enum(['for-sale', 'pending', 'sold', 'off-market']).default('for-sale'),
-  price: z.number().min(0).max(100000000),
+  price: z.number().min(0).max(100000000).optional().nullable(),
+  priceLabel: z.string().max(100).optional(),
   address: z.object({
     street: z.string().max(200).optional(),
     city: z.string().max(100).optional(),
@@ -69,6 +70,46 @@ export const PropertyInputSchema = z.object({
   features: z.array(z.string().max(100)).max(50).optional(),
   heroImageAssetId: z.string().optional(),
   neighborhoodId: z.string().optional(),
+
+  // Listing Attribution
+  listingType: z.enum(['own', 'other']).default('own').optional(),
+  listingAgent: z.string().max(500).optional(),
+
+  // Facts & Features - Interior
+  fullBathrooms: z.number().min(0).max(50).optional(),
+  halfBathrooms: z.number().min(0).max(20).optional(),
+  stories: z.number().min(1).max(10).optional(),
+  flooring: z.string().max(300).optional(),
+  fireplace: z.string().max(300).optional(),
+  appliances: z.string().max(500).optional(),
+  interiorFeatures: z.string().max(2000).optional(),
+
+  // Facts & Features - Exterior
+  propertyType: z.enum(['residential', 'condo', 'multi-family', 'land', 'commercial']).optional(),
+  roofType: z.string().max(200).optional(),
+  foundation: z.string().max(200).optional(),
+  exteriorFeatures: z.string().max(2000).optional(),
+  pool: z.string().max(300).optional(),
+  parkingFeatures: z.string().max(300).optional(),
+  heatingType: z.string().max(200).optional(),
+  coolingType: z.string().max(200).optional(),
+
+  // Facts & Features - Lot & Area
+  lotFeatures: z.string().max(1000).optional(),
+  viewDescription: z.string().max(300).optional(),
+  waterSource: z.string().max(200).optional(),
+  sewer: z.string().max(200).optional(),
+  utilities: z.string().max(500).optional(),
+
+  // Facts & Features - Schools
+  elementarySchool: z.string().max(200).optional(),
+  middleSchool: z.string().max(200).optional(),
+  highSchool: z.string().max(200).optional(),
+  schoolDistrict: z.string().max(200).optional(),
+
+  // Facts & Features - Financial
+  hoaFee: z.string().max(100).optional(),
+  taxRate: z.string().max(100).optional(),
 })
 
 export type PropertyInput = z.infer<typeof PropertyInputSchema>
