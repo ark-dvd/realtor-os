@@ -316,7 +316,7 @@ export function Footer({ settings }: FooterProps) {
             )}
             <span className="text-white/30 hidden md:inline">|</span>
             <a
-              href="https://daflash.co.il"
+              href="https://daflash.com"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-white/50 hover:text-white active:text-white transition-colors py-2 -my-2"
