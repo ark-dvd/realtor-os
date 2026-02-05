@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn, Building2, GripVertical, FileDown } from 'lucide-react'
+import { Home, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, MapPin, TrendingUp, Save, X, Upload, Loader2, RefreshCw, AlertCircle, CheckCircle, GraduationCap, Star, ImageIcon, ChevronDown, ChevronUp, Construction, LogIn, Building2, GripVertical, FileDown, MessageSquareQuote } from 'lucide-react'
 
 // Image compression function - resizes and compresses large images before upload
 async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.85): Promise<File> {
@@ -92,6 +92,7 @@ interface Property {
   hoaFee?: string; taxRate?: string;
 }
 interface Deal { _id?: string; clientName: string; clientEmail: string; dealType: 'buying' | 'selling'; transactionStage: number; price?: number; isActive: boolean }
+interface Testimonial { _id?: string; clientName: string; clientPhoto?: string; clientPhotoAssetId?: string; quote: string; transactionType?: 'buyer' | 'seller' | 'both'; neighborhood?: string; rating: number; source?: 'google' | 'zillow' | 'realtor' | 'direct'; sourceUrl?: string; isFeatured: boolean; order: number; isActive: boolean }
 interface LegalLink { _key?: string; title: string; url?: string }
 interface SiteSettings { _id?: string; heroHeadline?: string; heroSubheadline?: string; heroMediaType?: 'images' | 'video'; heroImages?: HeroImage[]; heroVideoUrl?: string; heroVideoAssetId?: string; agentName?: string; agentTitle?: string; agentPhoto?: string; agentPhotoAssetId?: string; aboutHeadline?: string; aboutText?: string; aboutStats?: Stat[]; phone?: string; email?: string; address?: string; officeHours?: string; instagram?: string; facebook?: string; linkedin?: string; youtube?: string; legalLinks?: LegalLink[]; iabsDocumentUrl?: string; iabsDocumentAssetId?: string; privacyPolicy?: string; termsOfService?: string; agentLicenseNumber?: string; brokerName?: string; brokerLicenseNumber?: string; showFairHousing?: boolean; equalHousingLogo?: string; equalHousingLogoAssetId?: string; logo?: string; logoAssetId?: string; pwaIcon?: string; pwaIconAssetId?: string }
 
@@ -606,6 +607,250 @@ function DealsTab() {
   return <div className="space-y-6"><div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-8 text-center"><Construction className="mx-auto text-amber-500 mb-4" size={48} /><h2 className="font-display text-2xl text-brand-navy mb-3">מודול זה בבנייה</h2><p className="text-neutral-600 max-w-lg mx-auto">מודול ניהול העסקאות (Deals) נמצא בפיתוח ועדיין לא מוכן לשימוש.</p><p className="text-amber-600 font-medium mt-4">Coming Soon!</p></div></div>
 }
 
+function TestimonialsTab({ testimonials, loading, onSave, onDelete, saving }: { testimonials: Testimonial[]; loading: boolean; onSave: (t: Testimonial) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
+  const [modal, setModal] = useState<{ open: boolean; testimonial?: Testimonial }>({ open: false })
+  const [form, setForm] = useState<Testimonial>({ clientName: '', quote: '', rating: 5, isFeatured: false, order: 0, isActive: true })
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    if (modal.testimonial) { setForm(modal.testimonial) }
+    else { setForm({ clientName: '', quote: '', rating: 5, isFeatured: false, order: 0, isActive: true }) }
+  }, [modal])
+
+  const handleSave = async () => { await onSave(form); setModal({ open: false }) }
+  const filtered = testimonials.filter(t => t.clientName.toLowerCase().includes(search.toLowerCase()) || t.quote.toLowerCase().includes(search.toLowerCase()))
+
+  const transactionLabels: Record<string, string> = { buyer: 'Bought a Home', seller: 'Sold a Home', both: 'Bought & Sold' }
+  const sourceLabels: Record<string, string> = { google: 'Google', zillow: 'Zillow', realtor: 'Realtor.com', direct: 'Direct' }
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="animate-spin text-brand-gold" size={40} /></div>
+
+  return <div className="space-y-4">
+    {/* Search and Add */}
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
+        <input type="text" placeholder="Search testimonials..." className="input-field pl-10 w-full h-12" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+      <button onClick={() => setModal({ open: true })} className="btn-gold h-12 justify-center">
+        <Plus size={18} /> Add Testimonial
+      </button>
+    </div>
+
+    {/* Mobile Card View */}
+    <div className="md:hidden space-y-3">
+      {filtered.map(t => (
+        <div key={t._id} className="bg-white rounded-xl border overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-start gap-3">
+              {t.clientPhoto ? (
+                <img src={t.clientPhoto} alt="" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-brand-navy flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-display text-sm">{t.clientName.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-medium text-brand-navy">{t.clientName}</h3>
+                  {t.isFeatured && <span className="text-brand-gold"><Star size={14} fill="currentColor" /></span>}
+                  {!t.isActive && <span className="px-2 py-0.5 bg-neutral-100 text-neutral-500 text-xs rounded">Inactive</span>}
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= t.rating ? 'text-brand-gold fill-brand-gold' : 'text-neutral-200'} />)}
+                  {t.source && <span className="text-xs text-neutral-400 ml-2">{sourceLabels[t.source]}</span>}
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-neutral-600 mt-3 line-clamp-2 italic">&ldquo;{t.quote}&rdquo;</p>
+            <div className="flex gap-2 mt-2 text-xs text-neutral-500">
+              {t.transactionType && <span>{transactionLabels[t.transactionType]}</span>}
+              {t.neighborhood && <span>• {t.neighborhood}</span>}
+            </div>
+          </div>
+          <div className="flex border-t">
+            <button onClick={() => setModal({ open: true, testimonial: t })} className="flex-1 py-3 flex items-center justify-center gap-2 text-brand-navy hover:bg-neutral-50 active:bg-neutral-100">
+              <Edit size={16} /> Edit
+            </button>
+            <button onClick={() => t._id && confirm('Delete this testimonial?') && onDelete(t._id)} className="flex-1 py-3 flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 active:bg-red-100 border-l">
+              <Trash2 size={16} /> Delete
+            </button>
+          </div>
+        </div>
+      ))}
+      {filtered.length === 0 && <div className="bg-white rounded-xl p-8 text-center text-neutral-500">{testimonials.length === 0 ? 'No testimonials yet. Add your first client testimonial!' : 'No testimonials found'}</div>}
+    </div>
+
+    {/* Desktop Table View */}
+    <div className="hidden md:block bg-white rounded-xl border overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-neutral-50 border-b">
+          <tr>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Client</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Quote</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Rating</th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-neutral-600">Source</th>
+            <th className="px-4 py-3 text-center text-sm font-medium text-neutral-600">Status</th>
+            <th className="px-4 py-3 text-right text-sm font-medium text-neutral-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {filtered.map(t => (
+            <tr key={t._id} className="hover:bg-neutral-50">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  {t.clientPhoto ? (
+                    <img src={t.clientPhoto} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-brand-navy flex items-center justify-center">
+                      <span className="text-white font-display text-xs">{t.clientName.split(' ').map(n => n[0]).join('').slice(0, 2)}</span>
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-brand-navy">{t.clientName}</span>
+                      {t.isFeatured && <Star size={14} className="text-brand-gold fill-brand-gold" />}
+                    </div>
+                    <div className="text-xs text-neutral-500">
+                      {t.transactionType && transactionLabels[t.transactionType]}
+                      {t.neighborhood && ` • ${t.neighborhood}`}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-4 py-3 max-w-xs">
+                <p className="text-sm text-neutral-600 line-clamp-2 italic">&ldquo;{t.quote}&rdquo;</p>
+              </td>
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-0.5">
+                  {[1,2,3,4,5].map(s => <Star key={s} size={14} className={s <= t.rating ? 'text-brand-gold fill-brand-gold' : 'text-neutral-200'} />)}
+                </div>
+              </td>
+              <td className="px-4 py-3 text-sm text-neutral-600">{t.source ? sourceLabels[t.source] : '-'}</td>
+              <td className="px-4 py-3 text-center">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.isActive ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                  {t.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-right">
+                <button onClick={() => setModal({ open: true, testimonial: t })} className="p-2 hover:bg-neutral-100 rounded"><Edit size={16} /></button>
+                <button onClick={() => t._id && confirm('Delete?') && onDelete(t._id)} className="p-2 hover:bg-red-50 text-red-500 rounded"><Trash2 size={16} /></button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {filtered.length === 0 && <div className="p-8 text-center text-neutral-500">{testimonials.length === 0 ? 'No testimonials yet. Add your first client testimonial!' : 'No testimonials found'}</div>}
+    </div>
+
+    {/* Modal */}
+    <Modal isOpen={modal.open} onClose={() => setModal({ open: false })} title={modal.testimonial ? 'Edit Testimonial' : 'Add Testimonial'} size="lg">
+      <form onSubmit={(e) => { e.preventDefault(); handleSave() }} className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium mb-2">Client Name *</label>
+            <input type="text" required className="input-field h-12" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} placeholder="John & Jane Smith" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Testimonial Quote * <span className="text-neutral-400 font-normal">({form.quote.length}/500)</span></label>
+          <textarea
+            required
+            maxLength={500}
+            className="input-field"
+            rows={4}
+            value={form.quote}
+            onChange={(e) => setForm({ ...form, quote: e.target.value })}
+            placeholder="Working with Merrav was an absolute pleasure..."
+          />
+        </div>
+
+        <ImageUpload
+          currentImage={form.clientPhoto}
+          label="Client Photo (optional)"
+          onUpload={(assetId, url) => setForm({ ...form, clientPhotoAssetId: assetId, clientPhoto: url })}
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Transaction Type</label>
+            <select className="input-field h-12" value={form.transactionType || ''} onChange={(e) => setForm({ ...form, transactionType: e.target.value as Testimonial['transactionType'] || undefined })}>
+              <option value="">Select...</option>
+              <option value="buyer">Bought a Home</option>
+              <option value="seller">Sold a Home</option>
+              <option value="both">Both (Bought & Sold)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Neighborhood</label>
+            <input type="text" className="input-field h-12" value={form.neighborhood || ''} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} placeholder="e.g., Westlake, Downtown Austin" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Rating</label>
+            <div className="flex items-center gap-1 h-12">
+              {[1,2,3,4,5].map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm({ ...form, rating: s })}
+                  className="p-1 hover:scale-110 transition-transform"
+                >
+                  <Star size={28} className={s <= form.rating ? 'text-brand-gold fill-brand-gold' : 'text-neutral-300'} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Review Source</label>
+            <select className="input-field h-12" value={form.source || ''} onChange={(e) => setForm({ ...form, source: e.target.value as Testimonial['source'] || undefined })}>
+              <option value="">Select...</option>
+              <option value="google">Google</option>
+              <option value="zillow">Zillow</option>
+              <option value="realtor">Realtor.com</option>
+              <option value="direct">Direct / Personal</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Original Review URL (optional)</label>
+          <input type="url" className="input-field h-12" value={form.sourceUrl || ''} onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })} placeholder="https://..." />
+          <p className="text-xs text-neutral-500 mt-1">Link to the original review for verification</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Display Order</label>
+            <input type="number" inputMode="numeric" className="input-field h-12" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) || 0 })} />
+            <p className="text-xs text-neutral-500 mt-1">Lower = shows first</p>
+          </div>
+          <div className="flex items-center h-12 mt-6">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} className="w-5 h-5 rounded" />
+              <span className="text-sm">Featured on homepage</span>
+            </label>
+          </div>
+          <div className="flex items-center h-12 mt-6">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="w-5 h-5 rounded" />
+              <span className="text-sm">Active (visible on site)</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-4 bg-white border-t flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+          <button type="button" onClick={() => setModal({ open: false })} className="btn-secondary h-12 justify-center">Cancel</button>
+          <button type="submit" className="btn-gold h-12 justify-center" disabled={saving}>{saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Save Testimonial</button>
+        </div>
+      </form>
+    </Modal>
+  </div>
+}
+
 function CitiesTab({ cities, loading, onSave, onDelete, saving }: { cities: City[]; loading: boolean; onSave: (c: City) => Promise<void>; onDelete: (id: string) => void; saving: boolean }) {
   const [modal, setModal] = useState<{ open: boolean; city?: City }>({ open: false })
   const [form, setForm] = useState<City>({ name: '', slug: '' })
@@ -788,28 +1033,31 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
   const [cities, setCities] = useState<City[]>([])
   const [properties, setProperties] = useState<Property[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [settings, setSettings] = useState<SiteSettings | null>(null)
-  const [loading, setLoading] = useState({ n: true, c: true, p: true, d: true, s: true })
+  const [loading, setLoading] = useState({ n: true, c: true, p: true, d: true, t: true, s: true })
   const [saving, setSaving] = useState(false)
   const [seeding, setSeeding] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   const fetchAll = useCallback(async () => {
     try {
-      const [nRes, cRes, pRes, dRes, sRes] = await Promise.all([
+      const [nRes, cRes, pRes, dRes, tRes, sRes] = await Promise.all([
         fetch('/api/admin/neighborhoods', { credentials: 'include' }),
         fetch('/api/admin/cities', { credentials: 'include' }),
         fetch('/api/admin/properties', { credentials: 'include' }),
         fetch('/api/admin/deals', { credentials: 'include' }),
+        fetch('/api/admin/testimonials', { credentials: 'include' }),
         fetch('/api/admin/settings', { credentials: 'include' })
       ])
       if (nRes.ok) setNeighborhoods(await nRes.json())
       if (cRes.ok) setCities(await cRes.json())
       if (pRes.ok) setProperties(await pRes.json())
       if (dRes.ok) setDeals(await dRes.json())
+      if (tRes.ok) setTestimonials(await tRes.json())
       if (sRes.ok) setSettings(await sRes.json())
     } catch (e) { setToast({ message: e instanceof Error ? e.message : 'Failed', type: 'error' }) }
-    finally { setLoading({ n: false, c: false, p: false, d: false, s: false }) }
+    finally { setLoading({ n: false, c: false, p: false, d: false, t: false, s: false }) }
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -853,6 +1101,7 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
     { id: 'cities', label: 'Cities', shortLabel: 'Cities', icon: Building2 },
     { id: 'neighborhoods', label: 'Communities', shortLabel: 'Areas', icon: MapPin },
     { id: 'deals', label: 'Deals', shortLabel: 'Deals', icon: FileText },
+    { id: 'testimonials', label: 'Testimonials', shortLabel: 'Reviews', icon: MessageSquareQuote },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', icon: Settings }
   ]
 
@@ -894,7 +1143,7 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-50 safe-area-pb">
-        <div className="grid grid-cols-6 h-16">
+        <div className="grid grid-cols-7 h-16">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -919,6 +1168,7 @@ function AdminDashboard({ user, onLogout }: { user: { name?: string | null; emai
         {activeTab === 'cities' && <CitiesTab cities={cities} loading={loading.c} onSave={(c) => saveEntity('cities', c, c._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('cities', id)} saving={saving} />}
         {activeTab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} cities={cities} loading={loading.n} onSave={(n) => saveEntity('neighborhoods', n, n._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('neighborhoods', id)} saving={saving} />}
         {activeTab === 'deals' && <DealsTab />}
+        {activeTab === 'testimonials' && <TestimonialsTab testimonials={testimonials} loading={loading.t} onSave={(t) => saveEntity('testimonials', t, t._id ? 'PUT' : 'POST')} onDelete={(id) => deleteEntity('testimonials', id)} saving={saving} />}
         {activeTab === 'settings' && <SettingsTab settings={settings} loading={loading.s} onSave={(s) => saveEntity('settings', s, 'PUT')} saving={saving} />}
       </div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
