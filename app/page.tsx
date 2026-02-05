@@ -3,9 +3,10 @@ import { HeroSlider } from '@/components/HeroSlider'
 import { HeroVideo } from '@/components/HeroVideo'
 import { ServicesSection } from '@/components/ServicesSection'
 import { AboutPreview } from '@/components/AboutPreview'
+import { TestimonialsSection } from '@/components/TestimonialsSection'
 import { NeighborhoodsGrid } from '@/components/NeighborhoodsGrid'
 import { CTASection } from '@/components/CTASection'
-import { getSettings, getNeighborhoods } from '@/lib/data-fetchers'
+import { getSettings, getNeighborhoods, getFeaturedTestimonials } from '@/lib/data-fetchers'
 
 export const metadata: Metadata = {
   title: 'Merrav Berko | Austin Real Estate Agent | Greater Austin Homes',
@@ -23,9 +24,10 @@ export const metadata: Metadata = {
 export const revalidate = 60 // Revalidate every 60 seconds (ISR)
 
 export default async function HomePage() {
-  const [settings, neighborhoods] = await Promise.all([
+  const [settings, neighborhoods, testimonials] = await Promise.all([
     getSettings(),
-    getNeighborhoods()
+    getNeighborhoods(),
+    getFeaturedTestimonials()
   ])
 
   // Determine which hero to show
@@ -40,6 +42,9 @@ export default async function HomePage() {
       )}
       <ServicesSection />
       <AboutPreview settings={settings} />
+      {testimonials.length > 0 && (
+        <TestimonialsSection testimonials={testimonials} />
+      )}
       <NeighborhoodsGrid neighborhoods={neighborhoods.slice(0, 6)} />
       <CTASection settings={settings} />
     </>

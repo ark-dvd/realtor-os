@@ -216,6 +216,21 @@ export interface Deal {
   isActive: boolean
 }
 
+export interface Testimonial {
+  _id: string
+  clientName: string
+  clientPhoto?: string
+  quote: string
+  transactionType?: 'buyer' | 'seller' | 'both'
+  neighborhood?: string
+  rating: number
+  source?: 'google' | 'zillow' | 'realtor' | 'direct'
+  sourceUrl?: string
+  isFeatured: boolean
+  order: number
+  isActive: boolean
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DEFAULT DATA (Demo Mode)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -647,6 +662,74 @@ export async function getCommunityBySlug(slug: string): Promise<Community | null
 // Backward compatibility alias
 export async function getNeighborhoodBySlug(slug: string): Promise<Community | null> {
   return getCommunityBySlug(slug)
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TESTIMONIALS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function getTestimonials(): Promise<Testimonial[]> {
+  // No demo data for testimonials - return empty array if not configured
+  if (!isSanityConfigured()) {
+    return []
+  }
+
+  try {
+    const client = getSanityClient()
+    const testimonials = await client.fetch(`
+      *[_type == "testimonial" && isActive == true] | order(isFeatured desc, order asc) {
+        _id,
+        clientName,
+        "clientPhoto": clientPhoto.asset->url,
+        quote,
+        transactionType,
+        neighborhood,
+        rating,
+        source,
+        sourceUrl,
+        isFeatured,
+        order,
+        isActive
+      }
+    `)
+
+    return testimonials || []
+  } catch (error) {
+    console.error('getTestimonials() Sanity error:', error)
+    return []
+  }
+}
+
+export async function getFeaturedTestimonials(): Promise<Testimonial[]> {
+  // No demo data for testimonials - return empty array if not configured
+  if (!isSanityConfigured()) {
+    return []
+  }
+
+  try {
+    const client = getSanityClient()
+    const testimonials = await client.fetch(`
+      *[_type == "testimonial" && isActive == true && isFeatured == true] | order(order asc) [0...5] {
+        _id,
+        clientName,
+        "clientPhoto": clientPhoto.asset->url,
+        quote,
+        transactionType,
+        neighborhood,
+        rating,
+        source,
+        sourceUrl,
+        isFeatured,
+        order,
+        isActive
+      }
+    `)
+
+    return testimonials || []
+  } catch (error) {
+    console.error('getFeaturedTestimonials() Sanity error:', error)
+    return []
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
